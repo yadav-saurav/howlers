@@ -4,6 +4,7 @@ import { HOWLERS, HowlersMark } from '@/design-system/HowlersMark';
 import { useAuth } from '@/features/auth/hooks';
 import { withNext } from '@/app/guards';
 import { cn } from '@/utils/format';
+import { SectionLink } from './SectionLink';
 import { ThemeToggle } from './ThemeToggle';
 
 /**
@@ -30,9 +31,9 @@ export function PublicHeader({ landing = false }: { landing?: boolean }) {
         </Link>
         {landing && (
           <nav aria-label="On this page" className="hidden items-center gap-1 lg:flex">
-            <a href="#features" className={cn(link, 'lg:block')}>Features</a>
-            <a href="#safety" className={cn(link, 'lg:block')}>Safety</a>
-            <a href="#faq" className={cn(link, 'lg:block')}>FAQ</a>
+            <SectionLink id="features" className={cn(link, 'lg:block')}>Features</SectionLink>
+            <SectionLink id="safety" className={cn(link, 'lg:block')}>Safety</SectionLink>
+            <SectionLink id="faq" className={cn(link, 'lg:block')}>FAQ</SectionLink>
           </nav>
         )}
         <nav aria-label="Primary" className="flex items-center gap-1.5">
@@ -87,9 +88,9 @@ export function PublicFooter({ landing = false }: { landing?: boolean }) {
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           <nav aria-label="Product" className={col}>
             <span className={head}>Product</span>
-            <a href="/#features" className={a}>Features</a>
-            <a href="/#safety" className={a}>Safety</a>
-            <a href="/#faq" className={a}>FAQ</a>
+            <SectionLink id="features" className={a}>Features</SectionLink>
+            <SectionLink id="safety" className={a}>Safety</SectionLink>
+            <SectionLink id="faq" className={a}>FAQ</SectionLink>
           </nav>
           <nav aria-label="Howlers" className={col}>
             <span className={head}>Howlers</span>

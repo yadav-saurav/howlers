@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { withNext } from '@/app/guards';
 import { useAuth } from '@/features/auth/hooks';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useScrollToHashOnLoad } from '@/layouts/SectionLink';
 import { FeatureSections } from './FeatureSections';
 import { HeroArt } from './HeroArt';
 import { useIntro, usePointerEffects, useRevealAndPlayGate } from './motion';
@@ -29,6 +30,7 @@ export default function LandingPage() {
   useIntro(rootRef, artRef);
   useRevealAndPlayGate(rootRef);
   usePointerEffects(rootRef, heroRef);
+  useScrollToHashOnLoad();
 
   return (
     <div ref={rootRef} className="hl">
