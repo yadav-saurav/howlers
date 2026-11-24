@@ -258,4 +258,14 @@ class ReputationAndRecognitionIT extends IntegrationTest {
         recognition.updateSettings(m1, true);
         assertThat(recognition.leaderboard(null, slug, 50, null).entries()).anySatisfy(e -> assertThat(e.moderator().id()).isEqualTo(m1.id()));
     }
+
+    @Test
+    void aMonthWithNoScoresLoadsEmptyInsteadOfFailing() {
+        // A brand-new site has no moderator scores: max(computed_at) is NULL and used to crash the leaderboard (500).
+        var board = recognition.leaderboard("2001-01", null, 50, null);
+        assertThat(board.period()).isEqualTo("2001-01");
+        assertThat(board.entries()).isEmpty();
+        assertThat(board.computedAt()).isNull();
+        assertThat(board.periods()).isNotEmpty();
+    }
 }

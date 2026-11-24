@@ -18,7 +18,12 @@ public interface AiProvider {
 
     record Turn(String role, String text) {}
 
-    record Request(String question, Intent intent, List<Source> sources, List<Turn> history, String scopeNote) {}
+    /**
+     * @param communityFacts facts about the scoped community read from the database (see {@link CommunityFacts}),
+     *                       or null when the question isn't scoped to a community
+     */
+    record Request(String question, Intent intent, List<Source> sources, List<Turn> history, String scopeNote,
+                   String communityFacts) {}
 
     record Answer(String text, List<String> followUps, String notice, Integer inputTokens, Integer outputTokens) {}
 

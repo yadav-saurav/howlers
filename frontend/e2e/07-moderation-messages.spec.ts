@@ -55,11 +55,9 @@ test('23 · send a private message that arrives live', async ({ sessions }) => {
   const receiver = await sessions.open('dev_ostrander', `/messages/${conv.id}`);
   await expect(receiver.getByRole('textbox', { name: 'Message' })).toBeVisible();
 
-  const page = await sessions.open('mira_k', '/messages');
-  await page.getByRole('button', { name: 'Start a new message', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'New message' });
-  await dialog.getByRole('textbox', { name: 'Username' }).fill('dev_ost');
-  await dialog.getByRole('list', { name: 'Matching people' }).getByRole('button', { name: /u\/dev_ostrander/ }).click();
+  // Conversations start from a profile's Message button (the inbox has no "New" button).
+  const page = await sessions.open('mira_k', '/u/dev_ostrander');
+  await page.getByRole('main').getByRole('button', { name: 'Message', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/messages/${conv.id}$`));
 
   let reloaded = false;

@@ -10,7 +10,7 @@ const v = (vars: Record<string, string | number>) => vars as CSSProperties;
 
 /* ---------------------------------------------------------------------------------------------------------- */
 
-const FALLBACK = ['Threads', 'Context Mode', 'Digest', 'Community AI', 'Messages', 'Pulse', 'Podcasts', 'Private files'];
+const FALLBACK = ['Threads', 'Context Mode', 'Digest', 'Messages', 'Voice notes', 'Pulse', 'Chat themes', 'Leaderboard'];
 
 /**
  * A slow marquee of real community names from this instance's API. If the list can't load, it shows the feature

@@ -1,0 +1,105 @@
+/* Chat themes (themes.ts sets the -l / -d variables inline; this picks the palette for the app theme). */
+.chat-theme {
+  --ct-bg: var(--ct-bg-l);
+  --ct-pattern: var(--ct-pattern-l);
+  --ct-out-1: var(--ct-out-1-l);
+  --ct-out-2: var(--ct-out-2-l);
+  --ct-out-fg: var(--ct-out-fg-l);
+  --ct-in: var(--ct-in-l);
+  --ct-in-fg: var(--ct-in-fg-l);
+  --ct-accent: var(--ct-accent-l);
+  --ct-accent-fg: var(--ct-accent-fg-l);
+}
+.dark .chat-theme {
+  --ct-bg: var(--ct-bg-d);
+  --ct-pattern: var(--ct-pattern-d);
+  --ct-out-1: var(--ct-out-1-d);
+  --ct-out-2: var(--ct-out-2-d);
+  --ct-out-fg: var(--ct-out-fg-d);
+  --ct-in: var(--ct-in-d);
+  --ct-in-fg: var(--ct-in-fg-d);
+  --ct-accent: var(--ct-accent-d);
+  --ct-accent-fg: var(--ct-accent-fg-d);
+}
+
+.chat-wallpaper {
+  background-color: rgb(var(--surface));
+  background-image: var(--ct-pattern-image), var(--ct-bg);
+  background-size: var(--ct-pattern-size), cover;
+  transition: background 240ms ease;
+}
+
+.chat-bubble-out {
+  background-image: linear-gradient(180deg, var(--ct-out-1), var(--ct-out-2));
+  background-color: var(--ct-out-1);
+  color: var(--ct-out-fg);
+}
+.chat-bubble-in {
+  background-color: var(--ct-in);
+  color: var(--ct-in-fg);
+  box-shadow: 0 1px 1px rgb(0 0 0 / 0.08);
+}
+
+/* Bubble tails on the first bubble of a run. */
+.chat-tail-out,
+.chat-tail-in {
+  position: relative;
+}
+.chat-tail-out::after,
+.chat-tail-in::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 10px;
+  height: 14px;
+}
+.chat-tail-out::after {
+  right: -6px;
+  background: var(--ct-out-1);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+.chat-tail-in::after {
+  left: -6px;
+  background: var(--ct-in);
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
+}
+
+.chat-accent {
+  background-color: var(--ct-accent);
+  color: var(--ct-accent-fg);
+}
+.chat-accent-text {
+  color: var(--ct-accent);
+}
+
+/* Highlight the original when jumping to it from a quoted reply. */
+@keyframes chat-flash {
+  0%, 30% { background-color: rgb(var(--brand) / 0.22); }
+  100% { background-color: transparent; }
+}
+.chat-flash {
+  animation: chat-flash 1.6s ease-out;
+  border-radius: 12px;
+}
+
+@keyframes chat-rec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.chat-rec-dot {
+  animation: chat-rec-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes chat-pop {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.chat-pop {
+  animation: chat-pop 160ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-wallpaper { transition: none; }
+  .chat-flash { animation: none; outline: 2px solid rgb(var(--brand)); outline-offset: 2px; }
+  .chat-rec-dot, .chat-pop { animation: none; }
+}

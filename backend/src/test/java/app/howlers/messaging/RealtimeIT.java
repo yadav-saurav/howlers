@@ -252,4 +252,23 @@ class RealtimeIT extends IntegrationTest {
             assertThat(error).as(dest).isNotNull().contains("Not allowed");
         }
     }
+
+    @Test
+    void themeChangesReachEveryParticipantWithTheirOwnSummary() throws Exception {
+        Registered ana = user("ana"), ben = user("ben");
+        var convo = dms.start(ana.user(), ben.user().username());
+        dms.setFavorite(convo.id(), ben.user(), true);
+        StompSession benSession = connect(ben.token(), new Errors());
+        BlockingQueue<JsonNode> benEvents = subscribe(benSession, "/user/queue/events");
+        Thread.sleep(300); // let the SUBSCRIBE register before publishing
+
+        dms.setTheme(convo.id(), ana.user(), "ocean");
+
+        JsonNode updated = next(benEvents, "CONVERSATION_UPDATED");
+        assertThat(updated).isNotNull();
+        assertThat(updated.get("payload").get("id").asLong()).isEqualTo(convo.id());
+        assertThat(updated.get("payload").get("theme").asText()).isEqualTo("ocean");
+        assertThat(updated.get("payload").get("favorite").asBoolean()).isTrue(); // Ben's own flag, not Ana's
+        assertThat(updated.get("payload").get("other").get("id").asLong()).isEqualTo(ana.user().id());
+    }
 }

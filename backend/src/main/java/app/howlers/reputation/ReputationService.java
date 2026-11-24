@@ -40,6 +40,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -234,10 +235,10 @@ public class ReputationService {
     // ------------------------------------------------------------------ reads
 
     private Instant lastRun() {
-        return jdbc.sql("SELECT max(finished_at) FROM reputation_runs").query((rs, i) -> {
-            OffsetDateTime t = rs.getObject(1, OffsetDateTime.class);
-            return t == null ? null : t.toInstant();
-        }).single();
+        // max() over no rows is NULL, and single() rejects a null result, so map to an Optional first.
+        return jdbc.sql("SELECT max(finished_at) FROM reputation_runs")
+                .query((rs, i) -> Optional.ofNullable(rs.getObject(1, OffsetDateTime.class)).map(OffsetDateTime::toInstant))
+                .single().orElse(null);
     }
 
     private static double round1(double v) {

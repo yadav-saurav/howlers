@@ -34,14 +34,16 @@ test('keyboard focus is visible', async ({ sessions }) => {
 });
 
 test('dialogs trap focus, close on Escape and return focus', async ({ sessions }) => {
-  const page = await sessions.open('paperback_jo', '/messages');
-  const opener = page.getByRole('main').getByRole('button', { name: 'Start a new message', exact: true });
+  const api = await sessions.api('paperback_jo');
+  const conv = await api.post<{ id: number }>('/me/conversations', { username: 'mira_k' });
+  const page = await sessions.open('paperback_jo', `/messages/${conv.id}`);
+  const opener = page.getByRole('main').getByRole('button', { name: 'Chat theme', exact: true });
   await opener.focus();
   await page.keyboard.press('Enter');
-  const dialog = page.getByRole('dialog', { name: 'New message' });
+  const dialog = page.getByRole('dialog', { name: 'Chat theme' });
   await expect(dialog).toBeVisible();
-  await expect(dialog.getByRole('textbox', { name: 'Username' })).toBeFocused();
-  for (let i = 0; i < 8; i++) {
+  expect(await dialog.evaluate((d) => d.contains(document.activeElement))).toBe(true);
+  for (let i = 0; i < 16; i++) {
     await page.keyboard.press('Tab');
     expect(await dialog.evaluate((d) => d.contains(document.activeElement))).toBe(true);
   }
@@ -106,7 +108,7 @@ test('mobile navigation drawer closes on Escape and returns focus to its button'
 });
 
 test('newer pages keep the skip link and a single main landmark', async ({ sessions }) => {
-  for (const path of ['/files', '/leaderboard', '/podcasts', '/c/programming/mod?tab=held']) {
+  for (const path of ['/leaderboard', '/c/programming/mod?tab=held']) {
     const page = await sessions.open('mira_k', path);
     await expect(page.getByRole('main')).toHaveCount(1);
     await page.keyboard.press('Tab');

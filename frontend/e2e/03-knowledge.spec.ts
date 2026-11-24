@@ -36,22 +36,3 @@ test('14 · generate a thread digest', async ({ sessions }) => {
   await expect(page.getByText('Digest refreshed')).toBeVisible();
 });
 
-test('15 · ask Community AI', async ({ sessions }) => {
-  test.setTimeout(120_000); // a live AI answer takes ~10 s; the offline provider is instant
-  const page = await sessions.open('nadia_sec', '/ai');
-  await expect(page.getByRole('heading', { level: 1, name: 'Ask the community' })).toBeVisible();
-  await page.getByRole('textbox', { name: 'Ask a question' }).fill('What do developers think about Rust compared with Go?');
-  await page.getByRole('button', { name: 'Send' }).click();
-
-  const answer = page.getByRole('article', { name: 'Community AI answer' }).last();
-  await expect(answer).toBeVisible({ timeout: 90_000 });
-  await expect(answer.getByRole('button', { name: 'Helpful', exact: true })).toBeVisible();
-  // Either a cited answer (the live AI model or the offline extractive engine) or an honest notice when nothing matched.
-  const citation = answer.getByRole('button', { name: /^Source \d+$/ }).first();
-  const notice = answer.getByRole('note');
-  await expect(citation.or(notice).first()).toBeVisible();
-  if (await citation.isVisible()) {
-    await expect(answer.getByText(/^Sources/)).toBeVisible();
-    await expect(answer.getByRole('link').first()).toBeVisible();
-  }
-});

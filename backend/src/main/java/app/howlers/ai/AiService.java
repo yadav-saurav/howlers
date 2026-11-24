@@ -55,6 +55,7 @@ public class AiService {
     private final HostedLlmProvider llm;
     private final OfflineProvider offline;
     private final CommunityRepository communities;
+    private final CommunityFacts communityFacts;
     private final CommunityAccess access;
     private final PostService posts;
     private final RateLimiter limiter;
@@ -62,13 +63,14 @@ public class AiService {
     private final String mode;
 
     public AiService(JdbcClient jdbc, Retriever retriever, HostedLlmProvider llm, OfflineProvider offline,
-                     CommunityRepository communities, CommunityAccess access, PostService posts, RateLimiter limiter,
-                     ObjectMapper json, AppProperties props) {
+                     CommunityRepository communities, CommunityFacts communityFacts, CommunityAccess access,
+                     PostService posts, RateLimiter limiter, ObjectMapper json, AppProperties props) {
         this.jdbc = jdbc;
         this.retriever = retriever;
         this.llm = llm;
         this.offline = offline;
         this.communities = communities;
+        this.communityFacts = communityFacts;
         this.access = access;
         this.posts = posts;
         this.limiter = limiter;
@@ -117,16 +119,25 @@ public class AiService {
         List<Turn> history = history(conversationId);
         Intent intent = QueryAnalyzer.intent(question);
         List<Source> sources = retriever.retrieve(question, intent, scope, user.id());
+        // Questions about a community itself ("how many posts?", "what's new here?") rarely share words with its
+        // posts. Within a community scope, fall back to its most recent posts and always include its facts.
+        boolean recentFallback = false;
+        if (sources.isEmpty() && scope.communityId() != null && scope.postId() == null) {
+            sources = retriever.recent(intent, scope, user.id());
+            recentFallback = !sources.isEmpty();
+        }
+        String facts = scope.postId() == null ? communityFacts.describe(scope.communityId()) : null;
+        String note = scopeNote(scope, recentFallback);
         long questionId = insertMessage(conversationId, "USER", question, null, null, List.of(), List.of(), null, null, null);
 
         AiProvider provider = provider();
         Answer answer;
         String engine = provider.label();
         try {
-            answer = provider.answer(new AiProvider.Request(question, intent, sources, history, scopeNote(scope)));
+            answer = provider.answer(new AiProvider.Request(question, intent, sources, history, note, facts));
         } catch (RuntimeException e) {
             log.warn("AI provider {} failed ({}); falling back to offline retrieval", provider.id(), e.getClass().getSimpleName());
-            answer = offline.answer(new AiProvider.Request(question, intent, sources, history, scopeNote(scope)));
+            answer = offline.answer(new AiProvider.Request(question, intent, sources, history, note, facts));
             answer = new Answer(answer.text(), answer.followUps(),
                     "The AI model couldn't be reached, so this is a cited summary of the retrieved discussions instead.", null, null);
             engine = offline.label();
@@ -134,8 +145,17 @@ public class AiService {
 
         Validated v = validateCitations(answer.text(), sources);
         String notice = answer.notice();
-        if (sources.isEmpty() && notice == null) notice = "No matching community discussions were found for this question.";
-        else if (!sources.isEmpty() && sources.size() < 3 && notice == null) notice = "Only a few relevant discussions were found; treat this answer as limited.";
+        // How the sources were found matters more than the provider's own note, so it comes first when both apply.
+        if (recentFallback) {
+            notice = join("No discussions matched your question's words, so this answer uses the community's details "
+                    + "and its most recent posts.", notice);
+        } else if (sources.isEmpty() && facts != null) {
+            notice = join("No discussions matched your question, so this answer uses the community's details only.", notice);
+        } else if (sources.isEmpty() && notice == null) {
+            notice = "No matching community discussions were found for this question.";
+        } else if (!sources.isEmpty() && sources.size() < 3 && notice == null) {
+            notice = "Only a few relevant discussions were found; treat this answer as limited.";
+        }
 
         long answerId = insertMessage(conversationId, "ASSISTANT", v.text(), engine, intent.name(), v.sources(), answer.followUps(),
                 notice, answer.inputTokens(), answer.outputTokens());
@@ -185,11 +205,17 @@ public class AiService {
         return new Scope(communityId, slug, postId, postTitle, sinceDays);
     }
 
-    private static String scopeNote(Scope s) {
+    private static String join(String first, String second) {
+        return second == null ? first : first + " " + second;
+    }
+
+    private static String scopeNote(Scope s, boolean recentFallback) {
         List<String> parts = new ArrayList<>();
         if (s.postTitle() != null) parts.add("questions about the thread \"" + s.postTitle() + "\" (its post and comments are included)");
         if (s.communitySlug() != null) parts.add("limited to c/" + s.communitySlug());
         if (s.sinceDays() != null) parts.add("discussions from the last " + s.sinceDays() + " days");
+        if (recentFallback) parts.add("no discussions matched the question's keywords, so the sources are the community's "
+                + "most recent posts rather than search results");
         return parts.isEmpty() ? null : String.join("; ", parts);
     }
 

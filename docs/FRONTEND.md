@@ -251,8 +251,7 @@ the demo seed and a frontend server that proxies `/api` and `/ws`. Playwright do
 | `02-posts` | 5 join (leaves first if already a member), 6 create a text post, 7 vote, 8 comment, 9 reply, 10 save, 11 new collection from the post menu, 12 search |
 | `03-knowledge` | 13 Context Mode, 14 Digest (+ refresh), 15 Community AI with one question: passes with a cited answer (the live AI model or the offline engine) or the honest notice |
 | `04-pulse` | 16 create a Pulse (UI, 1 hour), 17 vote (results hidden until you vote) |
-| `05-files` | 18 upload, share link, download signed out (content compared); 18b E2EE: encrypt in the browser, check the upload never contained the name or plaintext, open the `#k=` link in a fresh context, decrypt, read the decrypted Blob inside the page |
-| `06-podcast-funding-leaderboard` | 19 play an episode (the player starts and the position advances; on a fresh database a clearly labelled 20 s WAV test tone is published through the studio API and deleted afterwards), 20 demo contribution (DEMO label asserted), 21 leaderboard (rows and breakdown, or the honest empty state) |
+| `06-leaderboard` | 21 leaderboard (rows and breakdown, or the honest empty state). Flows 18–20 (files, podcasts, funding) were retired with those features |
 | `07-moderation-messages` | 22 report → remove from the queue → the author's notification, appeal page and "removed" notice (the moderator isn't named); 23 DM between two contexts, arriving live with no reload |
 | `08-accessibility` | axe-core on 10 pages × dark/light × 1280 px/375 px; serious and critical violations fail (see `docs/ACCESSIBILITY.md`) |
 | `09-keyboard` | skip link, visible focus ring, dialog focus trap, Escape and focus return |
@@ -438,3 +437,13 @@ action button.
 search suggestions (arrow keys + `aria-activedescendant`, Escape), the mobile navigation drawer (focus inside, Escape
 returns focus to "Open navigation") and the skip link on newer pages. See docs/ACCESSIBILITY.md for what is and
 isn't covered.
+
+
+## Retired from the interface (November 2026)
+
+Library (collections), Community AI, Podcasts, Moderator funding and Files are switched off in the web app: their
+navigation items, community tabs, "Ask AI" and "Save to collection" actions and the podcast mini player are gone, and
+their old URLs redirect to `/home` (shared file links `/s/:token` redirect to the landing page). The backend modules
+and their API endpoints are unchanged, so any of them can be switched back on by restoring the routes. Signed-out
+visitors who open `/home` see the landing page (`MembersHome` in `app/guards.tsx`); shared posts and communities stay
+public.

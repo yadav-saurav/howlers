@@ -423,6 +423,22 @@ ConversationSummary { id, other: UserSummary|null /* null if their account was d
 
 `Me.settings` gains `dmPolicy`; `PATCH /users/me/settings` accepts `{dmPolicy}`. `PublicProfile` gains `canMessage: boolean`.
 
+### Replies, voice notes, favourites and themes
+Work the same in one-to-one conversations and pack rooms. New fields are appended to the existing shapes:
+```ts
+DmMedia { ...,  kind: "IMAGE" | "AUDIO", contentType: string, durationMs: number|null /* voice notes */ }
+DmMessage { ..., replyTo: ReplyPreview|null /* null when not a reply, and on deleted or collapsed messages */ }
+ReplyPreview { id, senderId: number|null, excerpt: string /* first ~120 chars; "" when no text, deleted,
+               or from someone you blocked in a pack room */, deleted: boolean, mediaKind: null | "IMAGE" | "AUDIO" }
+ConversationSummary { ..., favorite: boolean /* your own flag */, theme: string|null /* shared; null = default */ }
+```
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/me/dm-media/voice` | multipart `file` (`audio/webm`, `audio/ogg`, `audio/mp4` or `audio/mpeg`, checked against the leading bytes; ≤5 MB; 60/h; antivirus-checked like images) + optional `durationMs` (1..300000) → 201 `DmMedia` with `kind: "AUDIO"`. Stored under `private/` and served through `/dm-media/{grant}` with its audio type; Range requests get 206 |
+| POST | `/me/conversations/{id}/messages` | also accepts `replyToId` (a message in this conversation, deleted ones included; otherwise 400 on `replyToId`). A voice note is a message whose `mediaIds` holds exactly one of your AUDIO uploads, body optional; audio can't be mixed with images (400 on `mediaIds`) |
+| PUT | `/me/conversations/{id}/favorite` | `{favorite: boolean}` → 204. Per person, no realtime event |
+| PUT | `/me/conversations/{id}/theme` | `{theme}` → `ConversationSummary`. One of `classic, midnight, ocean, sunset, forest, candy, neon, lavender, mono, aurora, ember, sakura`; `null` or `""` resets (anything else: 400 on `theme`). A change adds a SYSTEM message ("ana changed the chat theme to Sunset", or "ana reset the chat theme") and sends every participant `CONVERSATION_UPDATED`; setting the current theme again does nothing. In a one-to-one conversation the usual block and `dmPolicy` checks apply (403). 30/h |
+
 ## Real-time (WebSocket + STOMP)
 Endpoint: `ws(s)://<host>/ws` (plain WebSocket, STOMP 1.2). Send the access token in the CONNECT frame:
 `Authorization: Bearer <accessToken>`. Invalid or expired tokens are rejected, so reconnect with a fresh token after refresh.
@@ -438,6 +454,7 @@ REST stays the source of truth. Events tell the client what changed, and the cli
 | `PRESENCE` | `{userId, online}` (only for people you have a conversation with) |
 | `NOTIFICATION` | `{unreadCount}` (refetch the inbox) |
 | `UNREAD_MESSAGES` | `{count}` |
+| `CONVERSATION_UPDATED` | `ConversationSummary` as the receiving participant sees it (sent after a theme change) |
 
 **Send typing**: `SEND /app/typing` with body `{conversationId}` (rate-limited and ignored unless you're a participant).
 

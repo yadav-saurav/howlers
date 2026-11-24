@@ -2,15 +2,10 @@ import {
   Bookmark,
   Compass,
   Flame,
-  FolderLock,
   Globe,
-  Headphones,
   Home,
-  LibraryBig,
   MessagesSquare,
-  Sparkles,
   Trophy,
-  HandCoins,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -28,11 +23,6 @@ export const primaryNav: NavItem[] = [
   { to: '/home?tab=latest', label: 'All', icon: Globe },
   { to: '/saved', label: 'Saved', icon: Bookmark, auth: true },
   { to: '/messages', label: 'Messages', icon: MessagesSquare, auth: true },
-  { to: '/library', label: 'Library', icon: LibraryBig, auth: true },
-  { to: '/ai', label: 'Community AI', icon: Sparkles, auth: true },
-  { to: '/podcasts', label: 'Podcasts', icon: Headphones },
-  { to: '/funding', label: 'Moderator funding', icon: HandCoins, auth: true },
-  { to: '/files', label: 'Files', icon: FolderLock, auth: true },
   { to: '/leaderboard', label: 'Leaderboard', icon: Trophy },
 ];
 

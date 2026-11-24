@@ -1,4 +1,4 @@
-import { Ban, Clock, Flame, Lock, Plus, Settings, ShieldAlert, ShieldCheck, Sparkles, TrendingUp, Trophy, UsersRound } from 'lucide-react';
+import { Ban, Clock, Flame, Lock, Plus, Settings, ShieldAlert, ShieldCheck, TrendingUp, Trophy, UsersRound } from 'lucide-react';
 import { MuteCommunityButton } from '@/features/mutes/components/MuteControls';
 import { useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
@@ -17,8 +17,6 @@ import { CommunityPulseRail, PulseSection } from '@/features/pulse/components/Pu
 import { useCommunity } from '@/features/communities/hooks';
 import { FeedControls, SortMenu } from '@/features/posts/components/FeedControls';
 import { PostList } from '@/features/posts/components/PostList';
-import { CommunityPodcasts } from '@/features/podcasts/components/CommunityPodcasts';
-import { FundingSection } from '@/features/funding/components/FundingSection';
 import { useUiPrefs } from '@/store/uiPrefs';
 import { NewPostsPill } from '@/features/live/NewPostsPill';
 import { useNewPosts } from '@/features/live/useNewPosts';
@@ -29,7 +27,7 @@ import { PageColumns } from '@/layouts/PageColumns';
 import { ApiError } from '@/services/apiError';
 import type { CommunityDetail, CommunitySort, TimeRange } from '@/types/api';
 
-type View = 'posts' | 'about' | 'members' | 'pulse' | 'podcasts' | 'funding';
+type View = 'posts' | 'about' | 'members' | 'pulse';
 
 function Header({ c }: { c: CommunityDetail }) {
   const { isAuthed } = useAuth();
@@ -65,11 +63,6 @@ function Header({ c }: { c: CommunityDetail }) {
           {c.viewer.canPost && (
             <Link to={`/c/${c.slug}/submit`} className={buttonClasses('outline', 'md')}>
               <Plus size={18} /> Create Post
-            </Link>
-          )}
-          {isAuthed && c.viewer.canView && (
-            <Link to={`/ai?community=${c.slug}`} className={buttonClasses('secondary', 'md')} title={`Ask questions answered from c/${c.slug} discussions`}>
-              <Sparkles size={16} /> Ask
             </Link>
           )}
           {!c.viewer.banned && (isAuthed || !c.viewer.isMember) && <JoinButton slug={c.slug} isMember={c.viewer.isMember} isOwner={c.viewer.role === 'OWNER'} size="md" />}
@@ -184,7 +177,8 @@ function Posts({ c }: { c: CommunityDetail }) {
 export default function CommunityPage() {
   const { slug = '' } = useParams();
   const [params, setParams] = useSearchParams();
-  const view = (params.get('view') as View) || 'posts';
+  const requested = params.get('view');
+  const view: View = requested === 'about' || requested === 'members' || requested === 'pulse' ? requested : 'posts';
   const q = useCommunity(slug);
   useDocumentTitle(q.data ? `${q.data.name} (c/${q.data.slug})` : `c/${slug}`);
 
@@ -243,8 +237,6 @@ export default function CommunityPage() {
               options={[
                 { value: 'posts', label: 'Posts' },
                 { value: 'pulse', label: 'Pulse' },
-                { value: 'podcasts', label: 'Podcasts' },
-                { value: 'funding', label: 'Funding' },
                 { value: 'about', label: 'About' },
                 { value: 'members', label: 'Members' },
               ]}
@@ -262,16 +254,12 @@ export default function CommunityPage() {
               options={[
                 { value: 'posts', label: 'Posts' },
                 { value: 'pulse', label: 'Pulse' },
-                { value: 'podcasts', label: 'Podcasts' },
-                { value: 'funding', label: 'Funding' },
                 { value: 'members', label: 'Members' },
               ]}
             />
           </div>
-          {view === 'podcasts' && <CommunityPodcasts c={c} />}
           {view === 'posts' && <Posts c={c} />}
           {view === 'pulse' && <PulseSection c={c} />}
-          {view === 'funding' && <FundingSection c={c} />}
           {view === 'about' && <div className="space-y-4 px-4 sm:px-0 lg:hidden">{rail}</div>}
           {view === 'about' && <div className="hidden lg:block"><Posts c={c} /></div>}
           {view === 'members' && (

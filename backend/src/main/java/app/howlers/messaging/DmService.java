@@ -8,6 +8,7 @@ import app.howlers.messaging.DmDtos.DmMedia;
 import app.howlers.messaging.DmDtos.DmMessage;
 import app.howlers.messaging.DmDtos.LastMessage;
 import app.howlers.messaging.DmDtos.MessagePage;
+import app.howlers.messaging.DmDtos.ReplyPreview;
 import app.howlers.messaging.DmDtos.RoomInfo;
 import app.howlers.messaging.DmDtos.SendRequest;
 import app.howlers.realtime.PresenceTracker;
@@ -121,21 +122,26 @@ public class DmService {
 
     private List<ConversationSummary> directSummaries(AuthUser user, long onlyId, String q, boolean includeEmpty) {
         record Row(long id, long otherId, Long otherRead, Long lmId, Long lmSender, String lmBody, Instant lmAt,
-                   boolean lmDeleted, int lmMedia, long unread, Instant updatedAt) {}
+                   boolean lmDeleted, int lmMedia, long unread, Instant updatedAt, boolean favorite, String theme) {}
         List<Row> rows = jdbc.sql("""
-                        SELECT c.id, other.user_id AS other_id, other.last_read_message_id AS other_read,
-                               lm.id AS lm_id, lm.sender_id AS lm_sender, lm.body AS lm_body, lm.created_at AS lm_at,
+                        SELECT c.id, other.user_id AS other_id, other.last_read_message_id AS other_read, me.favorite, c.theme,
+                               lm.id AS lm_id,
+                               -- A SYSTEM line (a theme change) has no sender in the preview, so it isn't shown as "You: ...".
+                               CASE WHEN lm.kind = 'SYSTEM' THEN NULL ELSE lm.sender_id END AS lm_sender,
+                               lm.body AS lm_body, lm.created_at AS lm_at,
                                lm.deleted_at IS NOT NULL AS lm_deleted,
-                               (SELECT count(*) FROM dm_message_media x WHERE x.message_id = lm.id) AS lm_media,
+                               (SELECT CASE WHEN bool_or(a.content_type LIKE 'audio/%') THEN -1 ELSE count(*) END
+                                  FROM dm_message_media x JOIN media_assets a ON a.id = x.media_id
+                                  WHERE x.message_id = lm.id) AS lm_media,
                                (SELECT count(*) FROM dm_messages m
                                  WHERE m.conversation_id = c.id AND m.id > COALESCE(me.last_read_message_id, 0)
-                                   AND m.sender_id IS DISTINCT FROM me.user_id AND m.deleted_at IS NULL) AS unread,
+                                   AND m.sender_id IS DISTINCT FROM me.user_id AND m.deleted_at IS NULL AND m.kind = 'USER') AS unread,
                                COALESCE(c.last_message_at, c.created_at) AS updated_at
                         FROM dm_participants me
                         JOIN dm_conversations c ON c.id = me.conversation_id AND c.kind = 'DIRECT'
                         JOIN dm_participants other ON other.conversation_id = c.id AND other.user_id <> me.user_id
                         JOIN users ou ON ou.id = other.user_id
-                        LEFT JOIN LATERAL (SELECT id, sender_id, body, created_at, deleted_at FROM dm_messages
+                        LEFT JOIN LATERAL (SELECT id, sender_id, body, created_at, deleted_at, kind FROM dm_messages
                                            WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) lm ON TRUE
                         WHERE me.user_id = :me
                           AND (:onlyId = 0 OR c.id = :onlyId)
@@ -151,7 +157,7 @@ public class DmService {
                         (Long) rs.getObject("lm_id"), (Long) rs.getObject("lm_sender"), rs.getString("lm_body"),
                         instant(rs.getObject("lm_at", OffsetDateTime.class)), rs.getBoolean("lm_deleted"),
                         rs.getInt("lm_media"), rs.getLong("unread"),
-                        instant(rs.getObject("updated_at", OffsetDateTime.class))))
+                        instant(rs.getObject("updated_at", OffsetDateTime.class)), rs.getBoolean("favorite"), rs.getString("theme")))
                 .list();
         Map<Long, UserSummary> others = users.summaries(rows.stream().map(Row::otherId).toList());
         List<ConversationSummary> out = new ArrayList<>(rows.size());
@@ -160,7 +166,7 @@ public class DmService {
                     excerpt(r.lmBody(), r.lmDeleted(), r.lmMedia()), r.lmAt(), r.lmDeleted());
             String reason = access.cannotMessageReason(user.id(), r.otherId());
             out.add(new ConversationSummary(r.id(), others.get(r.otherId()), last, r.unread(), r.otherRead(),
-                    presence.isOnline(r.otherId()), reason == null, reason, r.updatedAt(), DIRECT, null));
+                    presence.isOnline(r.otherId()), reason == null, reason, r.updatedAt(), DIRECT, null, r.favorite(), r.theme()));
         }
         return out;
     }
@@ -168,15 +174,17 @@ public class DmService {
     private List<ConversationSummary> roomSummaries(AuthUser user, long onlyId, String q) {
         record Row(long id, String name, String icon, String role, int members, Long lmId, Long lmSender, String lmKind,
                    String lmBody, Instant lmAt, boolean lmDeleted, boolean lmBlocked, int lmMedia, long unread,
-                   Instant updatedAt) {}
+                   Instant updatedAt, boolean favorite, String theme) {}
         List<Row> rows = jdbc.sql("""
-                        SELECT c.id, c.name, c.icon_emoji, me.role,
+                        SELECT c.id, c.name, c.icon_emoji, me.role, me.favorite, c.theme,
                                (SELECT count(*) FROM dm_participants x WHERE x.conversation_id = c.id) AS members,
                                lm.id AS lm_id, lm.sender_id AS lm_sender, lm.kind AS lm_kind, lm.body AS lm_body,
                                lm.created_at AS lm_at, lm.deleted_at IS NOT NULL AS lm_deleted,
                                (lm.kind = 'USER' AND EXISTS (SELECT 1 FROM user_blocks b
                                     WHERE b.blocker_id = me.user_id AND b.blocked_id = lm.sender_id)) AS lm_blocked,
-                               (SELECT count(*) FROM dm_message_media x WHERE x.message_id = lm.id) AS lm_media,
+                               (SELECT CASE WHEN bool_or(a.content_type LIKE 'audio/%') THEN -1 ELSE count(*) END
+                                  FROM dm_message_media x JOIN media_assets a ON a.id = x.media_id
+                                  WHERE x.message_id = lm.id) AS lm_media,
                                (SELECT count(*) FROM dm_messages m
                                  WHERE m.conversation_id = c.id AND m.id > COALESCE(me.last_read_message_id, 0)
                                    AND m.sender_id IS DISTINCT FROM me.user_id AND m.deleted_at IS NULL AND m.kind = 'USER'
@@ -202,7 +210,7 @@ public class DmService {
                         (Long) rs.getObject("lm_sender"), rs.getString("lm_kind"), rs.getString("lm_body"),
                         instant(rs.getObject("lm_at", OffsetDateTime.class)), rs.getBoolean("lm_deleted"),
                         rs.getBoolean("lm_blocked"), rs.getInt("lm_media"), rs.getLong("unread"),
-                        instant(rs.getObject("updated_at", OffsetDateTime.class))))
+                        instant(rs.getObject("updated_at", OffsetDateTime.class)), rs.getBoolean("favorite"), rs.getString("theme")))
                 .list();
         if (rows.isEmpty()) return List.of();
         Map<Long, List<Long>> members = new HashMap<>();
@@ -229,14 +237,22 @@ public class DmService {
             boolean anyoneOnline = members.getOrDefault(r.id(), List.of()).stream()
                     .anyMatch(m -> m != user.id() && presence.isOnline(m));
             out.add(new ConversationSummary(r.id(), null, last, r.unread(), null, anyoneOnline, true, null, r.updatedAt(),
-                    ROOM, new RoomInfo(r.name(), r.icon(), r.members(), r.role())));
+                    ROOM, new RoomInfo(r.name(), r.icon(), r.members(), r.role()), r.favorite(), r.theme()));
         }
         return out;
     }
 
     private static String excerpt(String body, boolean deleted, int media) {
         if (deleted) return "Message deleted";
+        // media < 0: the message carries a voice note.
+        if (media < 0) return body == null || body.isBlank() ? "Sent a voice note" : flat(body);
         if (body == null || body.isBlank()) return media == 1 ? "Sent an image" : "Sent " + media + " images";
+        return flat(body);
+    }
+
+    /** The first ~120 characters on one line. */
+    private static String flat(String body) {
+        if (body == null) return "";
         String flat = body.replaceAll("\\s+", " ").strip();
         return flat.length() <= 120 ? flat : flat.substring(0, 119) + "…";
     }
@@ -264,21 +280,37 @@ public class DmService {
 
     /**
      * {@code from_blocked} applies only to people's messages in pack rooms: one-to-one conversations with someone you
-     * blocked are closed for writing instead (D-017), and their history stays readable as before.
+     * blocked are closed for writing instead (D-017), and their history stays readable as before. The same rule hides
+     * the text of a replied-to message ({@code r_blocked}).
      */
     private static final String SELECT_MESSAGE = """
             SELECT m.id, m.conversation_id, m.sender_id, m.body, m.created_at, m.deleted_at IS NOT NULL AS deleted, m.kind,
                    (c.kind = 'ROOM' AND m.kind = 'USER' AND EXISTS (SELECT 1 FROM user_blocks b
-                        WHERE b.blocker_id = :viewer AND b.blocked_id = m.sender_id)) AS from_blocked
+                        WHERE b.blocker_id = :viewer AND b.blocked_id = m.sender_id)) AS from_blocked,
+                   r.id AS r_id, r.sender_id AS r_sender, r.body AS r_body, r.deleted_at IS NOT NULL AS r_deleted,
+                   (c.kind = 'ROOM' AND r.kind = 'USER' AND EXISTS (SELECT 1 FROM user_blocks b
+                        WHERE b.blocker_id = :viewer AND b.blocked_id = r.sender_id)) AS r_blocked,
+                   (SELECT CASE WHEN bool_or(a.content_type LIKE 'audio/%') THEN 'AUDIO' WHEN count(*) > 0 THEN 'IMAGE' END
+                    FROM dm_message_media x JOIN media_assets a ON a.id = x.media_id WHERE x.message_id = r.id) AS r_media_kind
             FROM dm_messages m JOIN dm_conversations c ON c.id = m.conversation_id
+            LEFT JOIN dm_messages r ON r.id = m.reply_to_id
             """;
 
     private static DmMessage messageRow(java.sql.ResultSet rs) throws java.sql.SQLException {
         boolean deleted = rs.getBoolean("deleted");
         boolean blocked = rs.getBoolean("from_blocked");
+        ReplyPreview reply = null;
+        Long replyId = (Long) rs.getObject("r_id");
+        // A deleted or collapsed message shows nothing, its reply link included.
+        if (replyId != null && !deleted && !blocked) {
+            boolean rDeleted = rs.getBoolean("r_deleted");
+            boolean hidden = rDeleted || rs.getBoolean("r_blocked");
+            reply = new ReplyPreview(replyId, (Long) rs.getObject("r_sender"), hidden ? "" : flat(rs.getString("r_body")),
+                    rDeleted, hidden ? null : rs.getString("r_media_kind"));
+        }
         return new DmMessage(rs.getLong("id"), rs.getLong("conversation_id"), (Long) rs.getObject("sender_id"),
                 deleted || blocked ? "" : rs.getString("body"), List.of(),
-                instant(rs.getObject("created_at", OffsetDateTime.class)), deleted, rs.getString("kind"), blocked);
+                instant(rs.getObject("created_at", OffsetDateTime.class)), deleted, rs.getString("kind"), blocked, reply);
     }
 
     @Transactional
@@ -295,14 +327,28 @@ public class DmService {
         if (body.isEmpty() && mediaIds.isEmpty()) throw ApiException.field("body", "Write a message or attach an image");
         if (body.length() > MAX_BODY) throw ApiException.field("body", "Messages can be up to " + MAX_BODY + " characters");
         if (mediaIds.size() > 4) throw ApiException.field("mediaIds", "Attach up to 4 images");
+        Long replyToId = req.replyToId();
+        if (replyToId != null) {
+            // Replying to a deleted message is fine (the preview says so); one from another conversation is not.
+            boolean here = jdbc.sql("SELECT EXISTS (SELECT 1 FROM dm_messages WHERE id = ? AND conversation_id = ?)")
+                    .params(replyToId, conversationId).query(Boolean.class).single();
+            if (!here) throw ApiException.field("replyToId", "Reply to a message in this conversation");
+        }
         limiter.check("dm:" + user.id(), 60, Duration.ofMinutes(1));
         if (!mediaIds.isEmpty()) {
-            long owned = jdbc.sql("SELECT count(*) FROM media_assets WHERE id IN (:ids) AND owner_id = :me AND content_type LIKE 'image/%'")
-                    .param("ids", mediaIds).param("me", user.id()).query(Long.class).single();
-            if (owned != mediaIds.size()) throw ApiException.field("mediaIds", "Attach images you uploaded");
+            record Owned(long images, long audio) {}
+            Owned owned = jdbc.sql("""
+                            SELECT count(*) FILTER (WHERE content_type LIKE 'image/%'),
+                                   count(*) FILTER (WHERE content_type LIKE 'audio/%')
+                            FROM media_assets WHERE id IN (:ids) AND owner_id = :me""")
+                    .param("ids", mediaIds).param("me", user.id())
+                    .query((rs, i) -> new Owned(rs.getLong(1), rs.getLong(2))).single();
+            if (owned.images() + owned.audio() != mediaIds.size()) throw ApiException.field("mediaIds", "Attach images you uploaded");
+            // A voice note travels alone: exactly one audio attachment, no images next to it.
+            if (owned.audio() > 0 && mediaIds.size() != 1) throw ApiException.field("mediaIds", "Send a voice note on its own, without images");
         }
-        long id = jdbc.sql("INSERT INTO dm_messages (conversation_id, sender_id, body) VALUES (?, ?, ?) RETURNING id")
-                .params(conversationId, user.id(), body).query(Long.class).single();
+        long id = jdbc.sql("INSERT INTO dm_messages (conversation_id, sender_id, body, reply_to_id) VALUES (?, ?, ?, ?) RETURNING id")
+                .params(conversationId, user.id(), body, replyToId).query(Long.class).single();
         for (int i = 0; i < mediaIds.size(); i++) {
             jdbc.sql("INSERT INTO dm_message_media (message_id, media_id, position) VALUES (?, ?, ?)")
                     .params(id, mediaIds.get(i), i).update();
@@ -404,6 +450,61 @@ public class DmService {
         realtime.toUsers(to, "TYPING", payload);
     }
 
+    // ---------------------------------------------------------------- favourites and themes
+
+    /** Theme ids a conversation may use; null (no theme) is the default look. */
+    public static final List<String> THEMES = List.of("classic", "midnight", "ocean", "sunset", "forest", "candy", "neon",
+            "lavender", "mono", "aurora", "ember", "sakura");
+
+    /** Favourites are per person: only the caller's own flag changes, and nobody else is told. */
+    @Transactional
+    public void setFavorite(long conversationId, AuthUser user, boolean favorite) {
+        requireParticipant(conversationId, user.id());
+        jdbc.sql("UPDATE dm_participants SET favorite = ? WHERE conversation_id = ? AND user_id = ?")
+                .params(favorite, conversationId, user.id()).update();
+    }
+
+    /**
+     * Sets the theme everyone in the conversation sees ({@code null} or blank resets it). A change is written to the
+     * timeline as a SYSTEM message and each participant gets {@code CONVERSATION_UPDATED} with their own summary after
+     * commit. In a one-to-one conversation it counts as writing to the other person, so blocks and dmPolicy apply.
+     */
+    @Transactional
+    public ConversationSummary setTheme(long conversationId, AuthUser user, String rawTheme) {
+        String kind = requireParticipant(conversationId, user.id());
+        String theme = rawTheme == null || rawTheme.isBlank() ? null : rawTheme.strip();
+        if (theme != null && !THEMES.contains(theme)) throw ApiException.field("theme", "Choose one of the available themes");
+        if (DIRECT.equals(kind)) {
+            String reason = access.cannotMessageReason(user.id(), otherParticipant(conversationId, user.id()));
+            if (reason != null) throw ApiException.forbidden(reason);
+        }
+        String current = jdbc.sql("SELECT theme FROM dm_conversations WHERE id = ? FOR UPDATE").param(conversationId)
+                .query(String.class).optional().orElse(null);
+        if (java.util.Objects.equals(current, theme)) return get(conversationId, user);
+        limiter.check("dm-theme:" + user.id(), 30, Duration.ofHours(1));
+        jdbc.sql("UPDATE dm_conversations SET theme = ? WHERE id = ?").params(theme, conversationId).update();
+        String text = theme == null ? user.username() + " reset the chat theme"
+                : user.username() + " changed the chat theme to " + themeName(theme);
+        long sys = jdbc.sql("""
+                        INSERT INTO dm_messages (conversation_id, sender_id, body, kind, system_event)
+                        VALUES (?, ?, ?, 'SYSTEM', 'THEME') RETURNING id""")
+                .params(conversationId, user.id(), text).query(Long.class).single();
+        jdbc.sql("UPDATE dm_conversations SET last_message_at = now() WHERE id = ?").param(conversationId).update();
+        jdbc.sql("UPDATE dm_participants SET last_read_message_id = ? WHERE conversation_id = ? AND user_id = ?")
+                .params(sys, conversationId, user.id()).update();
+        ConversationSummary mine = get(conversationId, user);
+        for (long m : memberIds(conversationId)) {
+            realtime.toUser(m, "MESSAGE", load(sys, m));
+            ConversationSummary theirs = m == user.id() ? mine : get(conversationId, new AuthUser(m, null, null));
+            realtime.toUser(m, "CONVERSATION_UPDATED", theirs);
+        }
+        return mine;
+    }
+
+    static String themeName(String theme) {
+        return Character.toUpperCase(theme.charAt(0)) + theme.substring(1);
+    }
+
     // ---------------------------------------------------------------- shared with rooms and reactions
 
     /** The conversation's kind when {@code userId} is a participant; otherwise 404 (never confirms the id exists). */
@@ -442,14 +543,15 @@ public class DmService {
         Map<Long, List<DmMedia>> out = new LinkedHashMap<>();
         if (messageIds.isEmpty()) return out;
         jdbc.sql("""
-                        SELECT mm.message_id, a.id, a.storage_key, a.width, a.height, a.variant_widths
+                        SELECT mm.message_id, a.id, a.storage_key, a.width, a.height, a.variant_widths, a.content_type, a.duration_ms
                         FROM dm_message_media mm JOIN media_assets a ON a.id = mm.media_id
                         WHERE mm.message_id IN (:ids) ORDER BY mm.message_id, mm.position""")
                 .param("ids", messageIds)
                 .query((rs, i) -> {
                     out.computeIfAbsent(rs.getLong("message_id"), k -> new ArrayList<>()).add(mediaUrls.dto(rs.getLong("id"),
                             rs.getString("storage_key"), (Integer) rs.getObject("width"), (Integer) rs.getObject("height"),
-                            rs.getString("variant_widths"), viewerId));
+                            rs.getString("variant_widths"), rs.getString("content_type"), (Integer) rs.getObject("duration_ms"),
+                            viewerId));
                     return null;
                 })
                 .list();
@@ -458,7 +560,7 @@ public class DmService {
 
     private static DmMessage withMedia(DmMessage m, List<DmMedia> media) {
         return new DmMessage(m.id(), m.conversationId(), m.senderId(), m.body(), media, m.createdAt(), m.deleted(),
-                m.kind(), m.fromBlocked());
+                m.kind(), m.fromBlocked(), m.replyTo());
     }
 
     /** Plain text: normalise line endings, drop control characters (keeping newlines and tabs), trim. */

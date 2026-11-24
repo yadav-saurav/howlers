@@ -61,6 +61,29 @@ public class Retriever {
         return select(hits, intent, scope);
     }
 
+    static final int RECENT_FALLBACK = 8;
+
+    /**
+     * Fallback for community-scoped questions that match no keywords: the community's most recent visible posts
+     * (same permission predicate and date window as keyword retrieval), so the answer can still cite real content.
+     */
+    public List<Source> recent(Intent intent, Scope scope, long viewerId) {
+        if (scope.communityId() == null) return List.of();
+        List<Hit> hits = jdbc.sql("""
+                        SELECT p.id, p.title, cm.slug, u.username, p.score, p.created_at, p.body_text
+                        FROM posts p JOIN communities cm ON cm.id = p.community_id LEFT JOIN users u ON u.id = p.author_id
+                        WHERE """ + " " + VISIBLE + scopeSql("p") + """
+
+                        ORDER BY p.created_at DESC LIMIT """ + " " + RECENT_FALLBACK)
+                .param("viewer", viewerId).params(scopeParams(scope))
+                .query((rs, i) -> new Hit("POST", rs.getLong(1), null, rs.getString(2), rs.getString(3), rs.getString(4),
+                        rs.getInt(5), ts(rs.getObject(6, OffsetDateTime.class)),
+                        rs.getString(2) + ". " + (rs.getString(7) == null ? "" : rs.getString(7)), 1.0, 0))
+                .list();
+        // Equal base relevance, so select() ranks them by community score (and recency for trend questions).
+        return select(hits, intent, scope);
+    }
+
     /**
      * Replies often answer the question without repeating its keywords ("the GC pauses were the problem" under a
      * "Rust vs Go" post). For the strongest matching threads, bring along their best-received replies, ranked

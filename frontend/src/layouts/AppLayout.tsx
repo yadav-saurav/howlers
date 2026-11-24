@@ -7,7 +7,6 @@ import { DemoNotice } from '@/features/demo/DemoNotice';
 import { SearchBox } from '@/features/search/components/SearchBox';
 import { LeftNav } from './LeftNav';
 import { MobileTabBar } from './MobileTabBar';
-import { MiniPlayer } from '@/features/podcasts/components/MiniPlayer';
 import { usePlayer } from '@/store/player';
 import { cn } from '@/utils/format';
 import { TopBar } from './TopBar';
@@ -97,7 +96,6 @@ export function AppLayout() {
           <Outlet />
         </main>
       </div>
-      <MiniPlayer />
       <MobileTabBar />
       <Drawer open={drawer} onOpenChange={setDrawer} />
       <MobileSearch open={search} onOpenChange={setSearch} />

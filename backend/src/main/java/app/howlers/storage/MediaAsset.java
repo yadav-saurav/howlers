@@ -26,6 +26,9 @@ public class MediaAsset {
     /** "320,960": which resized variants exist beside the original (D-024); null when none. */
     @Column(name = "variant_widths")
     private String variantWidths;
+    /** Voice notes: length reported by the recording client; null for images. */
+    @Column(name = "duration_ms")
+    private Integer durationMs;
     @Column(nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
@@ -53,5 +56,7 @@ public class MediaAsset {
     public Integer getWidth() { return width; }
     public Integer getHeight() { return height; }
     public String getVariantWidths() { return variantWidths; }
+    public Integer getDurationMs() { return durationMs; }
+    public void setDurationMs(Integer durationMs) { this.durationMs = durationMs; }
     public boolean isPrivate() { return storageKey.startsWith("private/"); }
 }

@@ -7,7 +7,38 @@ import type { ID, MediaRef, UserSummary } from './api';
 export interface DmMedia extends MediaRef {
   signed: boolean;
   expiresAt: string | null;
+  /** IMAGE for photos, AUDIO for voice notes. */
+  kind: DmMediaKind;
+  contentType: string | null;
+  /** Voice notes: length in milliseconds when the uploader reported it. */
+  durationMs: number | null;
 }
+
+export type DmMediaKind = 'IMAGE' | 'AUDIO';
+
+/** The quoted original shown inside a reply. `excerpt` is "" when it had no text or was deleted. */
+export interface ReplyPreview {
+  id: ID;
+  senderId: ID | null;
+  excerpt: string;
+  deleted: boolean;
+  mediaKind: DmMediaKind | null;
+}
+
+/** Chat theme ids accepted by PUT /me/conversations/{id}/theme. */
+export type ChatThemeId =
+  | 'classic'
+  | 'midnight'
+  | 'ocean'
+  | 'sunset'
+  | 'forest'
+  | 'candy'
+  | 'neon'
+  | 'lavender'
+  | 'mono'
+  | 'aurora'
+  | 'ember'
+  | 'sakura';
 
 export type DmPolicy = 'EVERYONE' | 'FOLLOWING' | 'NOBODY';
 
@@ -24,6 +55,8 @@ export interface DmMessage {
   kind: 'USER' | 'SYSTEM';
   /** Pack rooms: from someone you blocked. Sent without body or media; shown collapsed. */
   fromBlocked: boolean;
+  /** null when the message is not a reply. */
+  replyTo: ReplyPreview | null;
 }
 
 export type ConversationKind = 'DIRECT' | 'ROOM';
@@ -50,6 +83,10 @@ export interface ConversationSummary {
   /** ROOM: `other` and `otherLastReadMessageId` are null, `online` means another member is online. */
   kind: ConversationKind;
   room: RoomInfo | null;
+  /** The viewer's own favourite flag. */
+  favorite: boolean;
+  /** Shared by everyone in the conversation; null means the default (classic). */
+  theme: string | null;
 }
 
 export interface RoomMember {
@@ -91,4 +128,6 @@ export type RealtimeEvent =
   /** You left, were removed, or the room was deleted. */
   | { type: 'ROOM_REMOVED'; payload: { conversationId: ID } }
   /** Reactions on a message changed (ids only; refetch the summary). */
-  | { type: 'REACTIONS'; payload: { targetType: 'MESSAGE'; targetId: ID; conversationId: ID } };
+  | { type: 'REACTIONS'; payload: { targetType: 'MESSAGE'; targetId: ID; conversationId: ID } }
+  /** A conversation's shared settings (its chat theme) changed; carries the viewer's fresh summary. */
+  | { type: 'CONVERSATION_UPDATED'; payload: ConversationSummary };

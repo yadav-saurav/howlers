@@ -4,10 +4,12 @@ import app.howlers.common.security.AuthUser;
 import app.howlers.common.web.Cursors;
 import app.howlers.messaging.DmDtos.ConversationSummary;
 import app.howlers.messaging.DmDtos.DmMessage;
+import app.howlers.messaging.DmDtos.FavoriteRequest;
 import app.howlers.messaging.DmDtos.MessagePage;
 import app.howlers.messaging.DmDtos.ReadRequest;
 import app.howlers.messaging.DmDtos.SendRequest;
 import app.howlers.messaging.DmDtos.StartRequest;
+import app.howlers.messaging.DmDtos.ThemeRequest;
 import app.howlers.messaging.DmDtos.TypingRequest;
 import app.howlers.realtime.StompPrincipal;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -68,6 +71,19 @@ public class DmController {
     @ResponseStatus(HttpStatus.CREATED)
     public DmMessage send(@AuthenticationPrincipal AuthUser user, @PathVariable long id, @Valid @RequestBody SendRequest req) {
         return service.send(id, user, req);
+    }
+
+    /** Your own favourite flag; nobody else sees it. */
+    @PutMapping("/conversations/{id}/favorite")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void favorite(@AuthenticationPrincipal AuthUser user, @PathVariable long id, @Valid @RequestBody FavoriteRequest req) {
+        service.setFavorite(id, user, req.favorite());
+    }
+
+    /** The theme everyone in the conversation sees; {@code null} or "" resets it. */
+    @PutMapping("/conversations/{id}/theme")
+    public ConversationSummary theme(@AuthenticationPrincipal AuthUser user, @PathVariable long id, @RequestBody ThemeRequest req) {
+        return service.setTheme(id, user, req.theme());
     }
 
     @PostMapping("/conversations/{id}/read")

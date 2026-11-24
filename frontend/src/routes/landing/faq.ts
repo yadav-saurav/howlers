@@ -9,22 +9,17 @@ export const FAQ: FaqItem[] = [
   {
     id: 'free',
     q: 'Does Howlers cost anything?',
-    a: 'No. Joining, posting, chatting and listening are free. Moderator funding runs in demo mode only, so no real money moves.',
+    a: 'No. Joining, posting and chatting are free.',
   },
   {
     id: 'browse',
     q: 'Can I look around without an account?',
-    a: 'Yes. Public communities, posts and podcasts are open to browse signed out. You need an account to post, vote, join or send messages.',
-  },
-  {
-    id: 'ai',
-    q: 'How does Community AI avoid making things up?',
-    a: "It only searches posts and comments you're allowed to see, numbers each claim with a citation the server checks, and says so when the sources are thin.",
+    a: 'Yes. Public communities and posts are open to browse signed out. You need an account to post, vote, join or send messages.',
   },
   {
     id: 'e2ee',
     q: 'Are my messages end-to-end encrypted?',
-    a: "No, and we won't pretend they are: direct messages are private to the people in the conversation, but not end-to-end encrypted. Files can be. Switch on encryption when you upload and the file is locked in your browser before it leaves.",
+    a: "No, and we won't pretend they are: direct messages, photos and voice notes are private to the people in the conversation, but not end-to-end encrypted.",
   },
   {
     id: 'context',
@@ -44,7 +39,7 @@ export const FAQ: FaqItem[] = [
   {
     id: 'private',
     q: 'Who can see a private community?',
-    a: "Only its members. That's enforced on the server, not just hidden in the interface, so private posts stay out of search and Community AI answers for everyone else.",
+    a: "Only its members. That's enforced on the server, not just hidden in the interface, so private posts stay out of search for everyone else.",
   },
   {
     id: 'safety',

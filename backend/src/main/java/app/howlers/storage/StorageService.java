@@ -15,7 +15,7 @@ public interface StorageService {
      * Keys are generated server-side ({@code folder/random.ext}, image variants add {@code _w320} etc.); this guards
      * against traversal or odd keys if one is ever user-influenced.
      */
-    Pattern SAFE_KEY = Pattern.compile("^[a-z]+/[A-Za-z0-9_-]{8,72}\\.(png|jpg|webp|gif|mp3|m4a|ogg|wav|mp4|webm|bin)$");
+    Pattern SAFE_KEY = Pattern.compile("^[a-z]+/[A-Za-z0-9_-]{8,72}\\.(png|jpg|webp|gif|mp3|m4a|ogg|wav|mp4|webm|weba|bin)$");
 
     static boolean isSafeKey(String key) {
         return key != null && SAFE_KEY.matcher(key).matches();
@@ -63,6 +63,8 @@ public interface StorageService {
             case "wav" -> "audio/wav";
             case "mp4" -> "video/mp4";
             case "webm" -> "video/webm";
+            // Audio-only WebM (DM voice notes): its own extension so it is served as audio, not video.
+            case "weba" -> "audio/webm";
             default -> "application/octet-stream";
         };
     }

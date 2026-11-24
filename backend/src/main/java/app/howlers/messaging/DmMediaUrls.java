@@ -35,14 +35,23 @@ public class DmMediaUrls {
     }
 
     public DmMedia dto(long assetId, String storageKey, Integer width, Integer height, String variantWidths, long viewerId) {
+        return dto(assetId, storageKey, width, height, variantWidths, null, null, viewerId);
+    }
+
+    /** {@code contentType} null: derived from the key. Audio (voice notes) gets kind AUDIO and no thumbnails. */
+    public DmMedia dto(long assetId, String storageKey, Integer width, Integer height, String variantWidths,
+                       String contentType, Integer durationMs, long viewerId) {
+        String type = contentType != null ? contentType : StorageService.contentTypeFor(storageKey);
+        String kind = type.startsWith("audio/") ? "AUDIO" : "IMAGE";
+        String widths = "AUDIO".equals(kind) ? null : variantWidths;
         if (!storageKey.startsWith(MediaService.PRIVATE_PREFIX + "/")) {
             String key = storageKey;
             return new DmMedia(assetId, storage.publicUrl(key), width, height,
-                    Thumbnails.of(variantWidths, w -> storage.publicUrl(ImageVariants.keyFor(key, w))), false, null);
+                    Thumbnails.of(widths, w -> storage.publicUrl(ImageVariants.keyFor(key, w))), false, null, kind, type, durationMs);
         }
         Instant exp = grants.bucketedExpiry(WINDOW);
         String url = "/api/v1/dm-media/" + grants.issue(DownloadGrants.Kind.D, assetId, viewerId, exp);
-        return new DmMedia(assetId, url, width, height, Thumbnails.of(variantWidths, w -> url + "?w=" + w), true, exp);
+        return new DmMedia(assetId, url, width, height, Thumbnails.of(widths, w -> url + "?w=" + w), true, exp, kind, type, durationMs);
     }
 
     public record Target(String storageKey, Instant expiresAt) {}

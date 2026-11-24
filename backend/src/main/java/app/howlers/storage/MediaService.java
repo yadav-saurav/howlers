@@ -94,6 +94,55 @@ public class MediaService {
                 img.info().width(), img.info().height(), img.variantWidths()));
     }
 
+    /** Voice notes in direct messages and pack rooms: at most 5 MB and 5 minutes. */
+    public static final long MAX_VOICE_BYTES = 5L * 1024 * 1024;
+    public static final int MAX_VOICE_MS = 300_000;
+    private static final java.util.Set<String> VOICE_TYPES = java.util.Set.of("audio/webm", "audio/ogg", "audio/mp4", "audio/mpeg");
+
+    private record Audio(String extension, String contentType) {}
+
+    /**
+     * A direct-message voice note: stored under {@code private/} with a random key, like DM images. The declared type
+     * must be one of WebM, Ogg, MP4 or MPEG audio, and the leading bytes must be one of those containers; the stored
+     * type comes from the bytes, never from the client.
+     */
+    @Transactional
+    public MediaAsset uploadPrivateAudio(long ownerId, MultipartFile file, Integer durationMs) {
+        if (file == null || file.isEmpty()) throw ApiException.field("file", "Record a voice note to send");
+        if (file.getSize() > MAX_VOICE_BYTES) throw ApiException.field("file", "Voice notes must be under 5 MB");
+        String declared = file.getContentType() == null ? "" : file.getContentType().split(";")[0].strip().toLowerCase(java.util.Locale.ROOT);
+        if (!VOICE_TYPES.contains(declared)) throw ApiException.field("file", "Voice notes must be WebM, Ogg, MP4 or MP3 audio");
+        if (durationMs != null && (durationMs < 1 || durationMs > MAX_VOICE_MS)) {
+            throw ApiException.field("durationMs", "Voice notes can be up to 5 minutes long");
+        }
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (IOException e) {
+            throw ApiException.badRequest("Upload failed");
+        }
+        Audio audio = sniffAudio(bytes);
+        antivirus.check(bytes, "voice note");
+        String key = PRIVATE_PREFIX + "/" + Tokens.random(18) + "." + audio.extension();
+        storage.put(key, bytes, audio.contentType());
+        MediaAsset a = new MediaAsset(ownerId, key, audio.contentType(), bytes.length, null, null);
+        a.setDurationMs(durationMs);
+        return assets.save(a);
+    }
+
+    private static Audio sniffAudio(byte[] h) {
+        if (h.length >= 4 && (h[0] & 0xFF) == 0x1A && (h[1] & 0xFF) == 0x45 && (h[2] & 0xFF) == 0xDF && (h[3] & 0xFF) == 0xA3) {
+            // EBML: accept the WebM doc type only (not arbitrary Matroska).
+            String head = new String(h, 0, Math.min(h.length, 64), java.nio.charset.StandardCharsets.ISO_8859_1);
+            if (head.contains("webm")) return new Audio("weba", "audio/webm");
+        }
+        if (h.length >= 4 && h[0] == 'O' && h[1] == 'g' && h[2] == 'g' && h[3] == 'S') return new Audio("ogg", "audio/ogg");
+        if (h.length >= 12 && h[4] == 'f' && h[5] == 't' && h[6] == 'y' && h[7] == 'p') return new Audio("m4a", "audio/mp4");
+        if (h.length >= 3 && h[0] == 'I' && h[1] == 'D' && h[2] == '3') return new Audio("mp3", "audio/mpeg");
+        if (h.length >= 2 && (h[0] & 0xFF) == 0xFF && (h[1] & 0xE0) == 0xE0) return new Audio("mp3", "audio/mpeg");
+        throw ApiException.field("file", "Voice notes must be WebM, Ogg, MP4 or MP3 audio");
+    }
+
     public MediaDto toDto(MediaAsset a) {
         String key = a.getStorageKey();
         return new MediaDto(a.getId(), storage.publicUrl(key), a.getWidth(), a.getHeight(), a.getContentType(),

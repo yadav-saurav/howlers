@@ -22,7 +22,7 @@ const member = (id: number, lastRead: number | null, role: RoomMember['role'] = 
 });
 const msg = (id: number, senderId: number, extra: Partial<DmMessage> = {}): DmMessage => ({
   id, conversationId: 7, senderId, body: `m${id}`, media: [], createdAt: new Date(2026, 10, 20, 10, id).toISOString(),
-  deleted: false, kind: 'USER', fromBlocked: false, ...extra,
+  deleted: false, kind: 'USER', fromBlocked: false, replyTo: null, ...extra,
 });
 
 describe('room receipts', () => {

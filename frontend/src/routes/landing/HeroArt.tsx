@@ -1,13 +1,13 @@
 import { forwardRef, type CSSProperties } from 'react';
-import { ArrowBigDown, ArrowBigUp, BarChart3, Bookmark, Headphones, Home, MessageSquare, Search, Sparkles } from 'lucide-react';
+import { ArrowBigDown, ArrowBigUp, BarChart3, Bookmark, Home, MessageSquare, Mic, Quote, Search, Trophy } from 'lucide-react';
 import { Moon } from './NightSky';
 import { Pup, Sparkle } from '@/design-system/Pups';
 
 const v = (vars: Record<string, string | number>) => vars as CSSProperties;
 
 /**
- * Hero art: an illustrated mock of the Howlers app (community feed card, Community AI answer, a Pulse poll),
- * a phone with a live DM, a podcast mini player, the moon and the pups. Purely decorative (aria-hidden); the
+ * Hero art: an illustrated mock of the Howlers app (community feed card, a thread Digest, a Pulse poll),
+ * a phone with a live DM, a voice note, the moon and the pups. Purely decorative (aria-hidden); the
  * people, communities and numbers in it are illustrative, which the window's title bar also says.
  * Sizes are in em so the whole scene scales with the font-size set on `.hero-art` in landing.css.
  */
@@ -51,7 +51,7 @@ export const HeroArt = forwardRef<HTMLDivElement>(function HeroArt(_, ref) {
                 <span className="rail-ico active"><Home /></span>
                 <span className="rail-ico"><Search /></span>
                 <span className="rail-ico"><MessageSquare /></span>
-                <span className="rail-ico"><Headphones /></span>
+                <span className="rail-ico"><Trophy /></span>
                 <span className="rail-ico"><Bookmark /></span>
                 <span className="rail-sep" />
                 <span className="rail-comm" style={{ background: '#7a7dff' }}>N</span>
@@ -85,15 +85,15 @@ export const HeroArt = forwardRef<HTMLDivElement>(function HeroArt(_, ref) {
                       </div>
                     </div>
                     <div className="ai-card">
-                      <div className="ai-head"><Sparkles /> Community AI</div>
+                      <div className="ai-head"><Quote /> Thread Digest</div>
                       <div className="ai-q">Where do people go to see the aurora?</div>
                       <div className="ai-a">
-                        Most threads point to the north ridge lot <span className="cite c1">1</span>. Bring a red light and
-                        arrive before 11 <span className="cite c2">2</span>.
+                        Most of the pack points to the north ridge lot <span className="cite c1">1</span>. Bring a red
+                        light and arrive before 11 <span className="cite c2">2</span>.
                       </div>
                       <div className="ai-src">
-                        <span>c/night_sky · post</span>
-                        <span>c/hiking · comment</span>
+                        <span>u/luna_howls</span>
+                        <span>u/river.wolf</span>
                       </div>
                     </div>
                   </div>
@@ -141,13 +141,13 @@ export const HeroArt = forwardRef<HTMLDivElement>(function HeroArt(_, ref) {
           </div>
         </div>
 
-        {/* podcast mini player */}
+        {/* voice note */}
         <div className="px art-pod" style={v({ '--depth': 1.2 })}>
           <div className="pod-chip">
-            <span className="pod-cover"><Headphones /></span>
+            <span className="pod-cover"><Mic /></span>
             <div className="pod-meta">
-              <div className="pod-title">Night sounds, explained</div>
-              <div className="pod-sub">c/night_sky podcast · Ep. 12</div>
+              <div className="pod-title">Voice note from kai_moon</div>
+              <div className="pod-sub">Pack room · 0:12</div>
               <div className="pod-track"><span className="pod-progress" /></div>
             </div>
             <span className="eq"><i /><i /><i /><i /></span>

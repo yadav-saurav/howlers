@@ -1,8 +1,9 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { http } from '@/services/apiClient';
+import { api, http } from '@/services/apiClient';
 import { useRealtimeStore } from '@/services/realtime';
 import { useAuthStore } from '@/store/authStore';
-import type { ConversationSummary, DmMedia, DmMessage, MessagePage, RoomDetail } from '@/types/messages';
+import type { ChatThemeId, ConversationSummary, DmMedia, DmMessage, MessagePage, RoomDetail } from '@/types/messages';
+import { clampDuration, voiceFileInfo, withFavorite } from './chat';
 import { applyRead, pagesAppend, pagesDelete, type MessagePages } from './helpers';
 import { applyRoomRead } from './rooms';
 
@@ -14,13 +15,27 @@ export const dmApi = {
   conversation: (id: number) => http.get<ConversationSummary>(`/me/conversations/${id}`),
   messages: (id: number, before?: number) =>
     http.get<MessagePage>(`/me/conversations/${id}/messages`, { before, limit: PAGE_SIZE }),
-  send: (id: number, body: string, mediaIds: number[]) =>
-    http.post<DmMessage>(`/me/conversations/${id}/messages`, { body: body || undefined, mediaIds: mediaIds.length ? mediaIds : undefined }),
+  send: (id: number, body: string, mediaIds: number[], replyToId?: number | null) =>
+    http.post<DmMessage>(`/me/conversations/${id}/messages`, {
+      body: body || undefined,
+      mediaIds: mediaIds.length ? mediaIds : undefined,
+      replyToId: replyToId ?? undefined,
+    }),
   read: (id: number, messageId: number) => http.post<void>(`/me/conversations/${id}/read`, { messageId }),
   remove: (messageId: number) => http.del<void>(`/me/messages/${messageId}`),
   unreadCount: () => http.get<{ count: number }>('/me/messages/unread-count'),
   /** DM images go to private storage and come back with a participant-only signed URL (D-024). */
   uploadMedia: (file: File) => http.upload<DmMedia>('/me/dm-media', file),
+  /** A voice note (AUDIO media, max 5 MB / 5 minutes); send it as a message with `mediaIds: [id]`. */
+  uploadVoice: (blob: Blob, durationMs: number, mime: string) => {
+    const info = voiceFileInfo(mime || blob.type);
+    const fd = new FormData();
+    fd.append('file', new File([blob], info.name, { type: info.type }));
+    fd.append('durationMs', String(clampDuration(durationMs)));
+    return api<DmMedia>('/me/dm-media/voice', { method: 'POST', body: fd });
+  },
+  setFavorite: (id: number, favorite: boolean) => http.put<void>(`/me/conversations/${id}/favorite`, { favorite }),
+  setTheme: (id: number, theme: ChatThemeId | null) => http.put<ConversationSummary>(`/me/conversations/${id}/theme`, { theme }),
 };
 
 /** Pack rooms (D-043). Messages, receipts and typing use the conversation endpoints above. */
@@ -71,17 +86,6 @@ export function forgetRoom(qc: QC, id: number) {
   qc.removeQueries({ queryKey: dmKeys.conversation(id) });
   void qc.invalidateQueries({ queryKey: dmKeys.lists });
   void qc.invalidateQueries({ queryKey: dmKeys.unread });
-}
-
-export function useCreateRoom() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: roomApi.create,
-    onSuccess: (s) => {
-      qc.setQueryData(dmKeys.conversation(s.id), s);
-      void qc.invalidateQueries({ queryKey: dmKeys.lists });
-    },
-  });
 }
 
 const useLive = () => useRealtimeStore((s) => s.status === 'connected');
@@ -147,6 +151,19 @@ export function cacheRead(qc: QC, conversationId: number, userId: number, messag
   qc.setQueryData<RoomDetail>(dmKeys.room(conversationId), (d) => (d ? applyRoomRead(d, userId, messageId) : d));
 }
 
+/** Writes a fresh summary into the thread header cache and every inbox list that holds it. */
+export function cacheConversation(qc: QC, summary: ConversationSummary) {
+  qc.setQueryData<ConversationSummary>(dmKeys.conversation(summary.id), (old) => (old ? { ...old, ...summary } : summary));
+  qc.setQueriesData<ConversationSummary[]>({ queryKey: dmKeys.lists }, (list) =>
+    list?.map((s) => (s.id === summary.id ? { ...s, ...summary } : s)),
+  );
+}
+
+function patchConversation(qc: QC, id: number, fn: (s: ConversationSummary) => ConversationSummary) {
+  qc.setQueryData<ConversationSummary>(dmKeys.conversation(id), (s) => (s ? fn(s) : s));
+  qc.setQueriesData<ConversationSummary[]>({ queryKey: dmKeys.lists }, (list) => list?.map((s) => (s.id === id ? fn(s) : s)));
+}
+
 export function cachePresence(qc: QC, userId: number, online: boolean) {
   const fn = (s: ConversationSummary) => (s.other?.id === userId && s.online !== online ? { ...s, online } : s);
   qc.setQueriesData<ConversationSummary[]>({ queryKey: dmKeys.lists }, (list) => list?.map(fn));
@@ -191,6 +208,38 @@ export function useDeleteMessage(conversationId: number) {
     mutationFn: dmApi.remove,
     onSuccess: (_, messageId) => {
       cacheDelete(qc, conversationId, messageId);
+      void qc.invalidateQueries({ queryKey: dmKeys.lists });
+    },
+  });
+}
+
+/** Stars or unstars a conversation for me, optimistically; rolls back if the server refuses. */
+export function useToggleFavorite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, favorite }: { id: number; favorite: boolean }) => dmApi.setFavorite(id, favorite),
+    onMutate: async ({ id, favorite }) => {
+      await qc.cancelQueries({ queryKey: dmKeys.lists });
+      patchConversation(qc, id, (s) => withFavorite(s, id, favorite));
+    },
+    onError: (_e, { id, favorite }) => patchConversation(qc, id, (s) => withFavorite(s, id, !favorite)),
+  });
+}
+
+/** Changes the shared chat theme: applied at once, confirmed by the server's summary (and its SYSTEM message). */
+export function useSetTheme(id: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (theme: ChatThemeId) => dmApi.setTheme(id, theme),
+    onMutate: (theme) => {
+      const prev = qc.getQueryData<ConversationSummary>(dmKeys.conversation(id))?.theme ?? null;
+      patchConversation(qc, id, (s) => ({ ...s, theme }));
+      return { prev };
+    },
+    onError: (_e, _theme, ctx) => patchConversation(qc, id, (s) => ({ ...s, theme: ctx?.prev ?? null })),
+    onSuccess: (summary) => {
+      if (summary && typeof summary === 'object' && 'id' in summary) cacheConversation(qc, summary);
+      void qc.invalidateQueries({ queryKey: dmKeys.messages(id) });
       void qc.invalidateQueries({ queryKey: dmKeys.lists });
     },
   });

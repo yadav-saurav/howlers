@@ -1,11 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, type ReactNode } from 'react';
-import { cacheDelete, cacheMessage, cachePresence, cacheRead, dmKeys, forgetRoom } from '@/features/messages/api';
+import { cacheConversation, cacheDelete, cacheMessage, cachePresence, cacheRead, dmKeys, forgetRoom } from '@/features/messages/api';
 import { refreshReactions } from '@/features/reactions/api';
 import { qk } from '@/services/queryKeys';
 import { publish, startRealtime, stopRealtime, subscribeTopic, useRealtimeStore, type RealtimeStatus } from '@/services/realtime';
 import { useAuthStore } from '@/store/authStore';
-import type { RealtimeEvent } from '@/types/messages';
+import type { ConversationSummary, RealtimeEvent } from '@/types/messages';
 import { useTypingStore } from './typingStore';
 
 /**
@@ -71,6 +71,18 @@ function handleEvent(qc: ReturnType<typeof useQueryClient>, ev: RealtimeEvent | 
     case 'ROOM_REMOVED':
       forgetRoom(qc, ev.payload.conversationId);
       break;
+    case 'CONVERSATION_UPDATED': {
+      // Chat theme changed (by anyone in the conversation). The payload is my own summary of it; an id-only frame
+      // still refreshes from REST. The SYSTEM "changed the chat theme" line comes with the refetched messages.
+      const p = ev.payload as Partial<ConversationSummary> & { conversationId?: number };
+      const id = p.id ?? p.conversationId;
+      if (id == null) break;
+      if (p.id != null && p.kind) cacheConversation(qc, p as ConversationSummary);
+      else void qc.invalidateQueries({ queryKey: dmKeys.conversation(id) });
+      void qc.invalidateQueries({ queryKey: dmKeys.messages(id) });
+      void qc.invalidateQueries({ queryKey: dmKeys.lists });
+      break;
+    }
     case 'REACTIONS':
       refreshReactions(qc, 'MESSAGE', ev.payload.targetId);
       break;

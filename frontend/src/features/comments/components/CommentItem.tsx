@@ -1,8 +1,7 @@
-import { CheckCircle2, ChevronRight, Flag, FolderPlus, MessageSquare, MoreHorizontal, Pencil, Plus, Share2, ShieldX, Trash2 } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Flag, MessageSquare, MoreHorizontal, Pencil, Plus, Share2, ShieldX, Trash2 } from 'lucide-react';
 import { modApi, useModMutation } from '@/features/moderation/api';
 import { ReasonDialog } from '@/features/moderation/components/ReasonDialog';
 import { ReportDialog } from '@/features/moderation/components/ReportDialog';
-import { AddToCollectionDialog } from '@/features/collections/components/AddToCollectionDialog';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
@@ -31,7 +30,6 @@ export function CommentItem({ node, level }: { node: CommentNode; level: number 
   const [replying, setReplying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [collect, setCollect] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [removing, setRemoving] = useState(false);
   const mod = useModMutation(t.communitySlug, ({ verb, reason }: { verb: 'remove' | 'approve'; reason?: string }) => modApi.comment(node.id, verb, reason));
@@ -162,11 +160,6 @@ export function CommentItem({ node, level }: { node: CommentNode; level: number 
                         <Share2 size={14} /> Share
                       </button>
                     )}
-                    {isAuthed && !gone && (
-                      <button type="button" className={actionCls} onClick={() => setCollect(true)}>
-                        <FolderPlus size={14} /> Save
-                      </button>
-                    )}
                     {(isOwner || (isAuthed && !gone && !node.deleted) || (t.canModerate && !node.deleted)) && (
                       <Menu>
                         <MenuTrigger aria-label="Comment actions" className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-surface-2 hover:text-text">
@@ -270,13 +263,6 @@ export function CommentItem({ node, level }: { node: CommentNode; level: number 
               { onSuccess: () => { setRemoving(false); toast.success('Comment removed'); }, onError: (e) => toast.error(errorMessage(e)) },
             )
           }
-        />
-      )}
-      {collect && (
-        <AddToCollectionDialog
-          target={{ postId: t.postId, commentId: node.id, title: node.body.slice(0, 120) }}
-          open={collect}
-          onOpenChange={setCollect}
         />
       )}
       <Dialog

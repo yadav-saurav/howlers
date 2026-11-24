@@ -2,14 +2,8 @@ import type { CSSProperties, ReactNode } from 'react';
 import {
   ArrowBigUp,
   BarChart3,
-  FileText,
-  Headphones,
-  KeyRound,
   Link2,
-  Lock,
-  Pause,
   Quote,
-  Sparkles,
 } from 'lucide-react';
 import { Pup } from '@/design-system/Pups';
 
@@ -107,35 +101,6 @@ function ThreadsMock() {
   );
 }
 
-function AiMock() {
-  return (
-    <div className="tilt mock app">
-      <div className="ai-head"><Sparkles /> Community AI</div>
-      <div className="q-bubble">What do people here say about night hikes?</div>
-      <div className="ai-answer">
-        <span className="dl" style={v({ '--w': '94%' })} />
-        <span className="dl" style={v({ '--w': '80%' })} />
-        <span className="ai-cites">
-          <span className="cite pop-cite" style={v({ '--d': '0.4s' })}>1</span>
-          <span className="cite pop-cite" style={v({ '--d': '0.8s' })}>2</span>
-          <span className="cite pop-cite" style={v({ '--d': '1.2s' })}>3</span>
-        </span>
-        <span className="dl" style={v({ '--w': '66%' })} />
-      </div>
-      <div className="src-grid">
-        {['c/hiking · post', 'c/night_sky · comment', 'c/hiking · comment'].map((s, i) => (
-          <div key={s} className="src-card">
-            <span className="src-n">{i + 1}</span>
-            <span className="src-t">{s}</span>
-          </div>
-        ))}
-      </div>
-      <div className="ai-note">Sources are posts you&apos;re allowed to see.</div>
-      <Pup pose="sit" fur="dusk" className="mock-pup peek bob" />
-    </div>
-  );
-}
-
 function MessagesMock() {
   return (
     <div className="tilt mock app chat-mock">
@@ -193,69 +158,6 @@ function PulseMock() {
   );
 }
 
-function PodcastMock() {
-  return (
-    <div className="tilt mock app">
-      <div className="pod-top">
-        <div className="pod-art">
-          <span className="pod-moon" />
-          <Pup pose="headphones" fur="mint" className="pod-pup" />
-        </div>
-        <div>
-          <div className="pod-kicker"><Headphones /> Community podcast</div>
-          <div className="pod-big">Night sounds, explained</div>
-          <div className="pod-sub">From 3 threads in c/night_sky</div>
-        </div>
-      </div>
-      <div className="wave">
-        {Array.from({ length: 28 }).map((_, i) => (
-          <i key={i} style={v({ '--h': `${30 + ((i * 47) % 70)}%`, '--d': `${(i % 7) * -0.17}s` })} />
-        ))}
-      </div>
-      <div className="pod-bar"><span className="pod-progress long" /></div>
-      <div className="pod-controls"><span className="pod-btn"><Pause /></span> <span>1.25×</span> <span>Chapters</span> <span>Transcript</span></div>
-      <div className="chapters">
-        {[
-          ['00:00', 'Why owls call at night'],
-          ['07:30', 'What wolves are really saying'],
-          ['14:05', 'Sources from the thread'],
-        ].map(([t, c], i) => (
-          <div key={c} className={`chapter ch${i + 1}`}><span>{t}</span>{c}</div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function FilesMock() {
-  return (
-    <div className="tilt mock app">
-      <div className="file-row">
-        <span className="file-ico"><FileText /></span>
-        <div className="file-meta">
-          <div className="file-name">trail-map.pdf</div>
-          <div className="file-sub">Encrypting in your browser…</div>
-          <div className="file-track"><span className="file-progress" /></div>
-        </div>
-        <span className="lock-badge"><Lock /></span>
-      </div>
-      <div className="share-link">
-        <Link2 />
-        <span className="share-path">/s/7Gq2xP</span>
-        <span className="share-frag">#k=••••••••</span>
-      </div>
-      <div className="share-hint">
-        <KeyRound /> The key lives after the <b>#</b>. Browsers never send it to the server.
-      </div>
-      <div className="share-chips">
-        <span className="chip">Expires in 7 days</span>
-        <span className="chip">Password</span>
-        <span className="chip">3 downloads left</span>
-      </div>
-    </div>
-  );
-}
-
 export function FeatureSections() {
   return (
     <div id="features" className="features">
@@ -273,27 +175,14 @@ export function FeatureSections() {
         <ThreadsMock />
       </Feature>
       <Feature
-        id="ai"
-        flip
-        eyebrow="Community AI"
-        lines={['Ask the pack.', 'It shows', 'its sources.']}
-        body={
-          <>
-            Ask a question and get an answer built from the posts and comments you can see, with numbered citations you can
-            click. When the sources are thin, it tells you.
-          </>
-        }
-      >
-        <AiMock />
-      </Feature>
-      <Feature
         id="messages"
+        flip
         eyebrow="Messages"
         lines={['Say hi.', 'See it land.', 'Howl back.']}
         body={
           <>
-            Live direct messages with typing dots, read receipts and photos. You choose who can message you, and blocking
-            works both ways.
+            Live direct messages with typing dots, read receipts, photos, voice notes and replies, wrapped in a chat theme
+            that fits your vibe. You choose who can message you, and blocking works both ways.
           </>
         }
       >
@@ -301,7 +190,6 @@ export function FeatureSections() {
       </Feature>
       <Feature
         id="pulse"
-        flip
         eyebrow="Pulse"
         lines={['See where', 'the pack', 'leans.']}
         body={
@@ -312,33 +200,6 @@ export function FeatureSections() {
         }
       >
         <PulseMock />
-      </Feature>
-      <Feature
-        id="podcasts"
-        eyebrow="Podcasts"
-        lines={['Stories', 'from around', 'the fire.']}
-        body={
-          <>
-            Community podcasts made from the best threads, with chapters, a searchable transcript and every source linked.
-            The player keeps going while you browse.
-          </>
-        }
-      >
-        <PodcastMock />
-      </Feature>
-      <Feature
-        id="files"
-        flip
-        eyebrow="Private files"
-        lines={['Your files.', 'Your key.', 'Just yours.']}
-        body={
-          <>
-            Share files with links that expire, need a password or run out. Switch on end-to-end encryption and the file is
-            locked in your browser before it leaves, so our server only ever holds ciphertext.
-          </>
-        }
-      >
-        <FilesMock />
       </Feature>
     </div>
   );

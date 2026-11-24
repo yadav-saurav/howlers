@@ -292,9 +292,10 @@ public class RecognitionService {
                 .param("p", period.toString()).param("min", ModeratorScoreMath.MIN_ACTIVITY).param("cid", cid)
                 .param("lim", Math.max(1, Math.min(limit, 100)))
                 .query((rs, i) -> rows.add(row(rs, ++rank[0]))).list();
+        // max() over no rows is NULL, and single() rejects a null result: a new site with no scores yet must still load.
         Instant computed = jdbc.sql("SELECT max(computed_at) FROM moderator_scores WHERE period = ?").param(period.toString())
-                .query((rs, i) -> Optional.ofNullable(rs.getObject(1, OffsetDateTime.class)).map(OffsetDateTime::toInstant).orElse(null))
-                .single();
+                .query((rs, i) -> Optional.ofNullable(rs.getObject(1, OffsetDateTime.class)).map(OffsetDateTime::toInstant))
+                .single().orElse(null);
         return new Leaderboard(period.toString(), periods(), community == null ? null : CommunityMapper.ref(community),
                 toDtos(rows), Formula.current(), computed);
     }

@@ -15,6 +15,17 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * The home feed is for members. Anyone signed out who opens it (a shared /home link, an old bookmark) sees the
+ * landing page instead, which explains Howlers and offers sign-up. Shared posts and communities stay public.
+ */
+export function MembersHome({ children }: { children: ReactNode }) {
+  const status = useAuthStore((s) => s.status);
+  if (status === 'booting') return <PageSpinner />;
+  if (status !== 'authenticated') return <Navigate to="/" replace />;
+  return <>{children}</>;
+}
+
 /** Keeps signed-in users away from login/register; honours ?next=. */
 export function RedirectIfAuthed({ children }: { children: ReactNode }) {
   const status = useAuthStore((s) => s.status);

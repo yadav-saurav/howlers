@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { expect, test, uid, type DemoUser, type Sessions } from './fixtures';
+import { expect, test, type DemoUser, type Sessions } from './fixtures';
 
 /**
  * axe-core audit of the key pages in both themes, at desktop width and at 375 px.
@@ -15,24 +15,6 @@ type Target = {
   ready: (page: Page) => Promise<void>;
 };
 
-/** A small private file owned by mira_k with a fresh share link; the share page is then audited signed out. */
-async function shareLinkPath(sessions: Sessions): Promise<string> {
-  const api = await sessions.api('mira_k');
-  const name = `axe-share-${uid()}.txt`;
-  const file = await api.upload<{ id: number }>('/me/files', { name, mimeType: 'text/plain', buffer: Buffer.from('Accessibility check of the share page.\n') });
-  const { token } = await api.post<{ token: string }>(`/me/files/${file.id}/links`, {});
-  return `/s/${token}`;
-}
-
-/** The demo pool in c/programming (seeded), falling back to whichever pool the community has. */
-async function poolReportPath(sessions: Sessions): Promise<string> {
-  const api = await sessions.api('mira_k');
-  const f = await api.get<{ pools: { id: number; title: string }[] }>('/communities/programming/funding');
-  const pool = f.pools.find((p) => p.title.includes('(demo)')) ?? f.pools[0];
-  expect(pool, 'c/programming has a funding pool').toBeTruthy();
-  return `/funding/pools/${pool.id}`;
-}
-
 const h1 = (name: string | RegExp) => (p: Page) => expect(p.getByRole('heading', { level: 1, name })).toBeVisible();
 const selectedTab = (name: string) => (p: Page) => expect(p.getByRole('tab', { name, selected: true })).toBeVisible();
 
@@ -44,18 +26,10 @@ const targets: Target[] = [
   { name: 'post page', path: '/c/programming/p/1', user: 'mira_k', ready: (p) => expect(p.getByRole('heading', { level: 1, name: SEEDED_POST })).toBeVisible() },
   { name: 'community page', path: '/c/programming', user: 'mira_k', ready: (p) => expect(p.getByRole('article').first()).toBeVisible() },
   { name: 'messages', path: '/messages', user: 'mira_k', ready: (p) => expect(p.getByRole('heading', { level: 1, name: 'Messages' })).toBeVisible() },
-  { name: 'files', path: '/files', user: 'mira_k', ready: (p) => expect(p.getByRole('region', { name: 'My files' })).toBeVisible() },
   { name: 'leaderboard', path: '/leaderboard', user: 'mira_k', ready: (p) => expect(p.getByRole('heading', { level: 1, name: 'Leaderboard' })).toBeVisible() },
   { name: 'settings', path: '/settings', user: 'mira_k', ready: (p) => expect(p.getByRole('heading', { level: 1 })).toBeVisible() },
-  { name: 'funding', path: '/funding', user: 'mira_k', ready: (p) => expect(p.getByRole('heading', { level: 1, name: 'Moderator funding' })).toBeVisible() },
   { name: 'admin', path: '/admin', user: 'admin_demo', ready: (p) => expect(p.getByRole('heading', { level: 1 })).toBeVisible() },
   // Pages added after the first audit (round 3).
-  { name: 'share page (signed out)', path: shareLinkPath, user: null, ready: (p) => expect(p.getByRole('heading', { level: 1, name: /^axe-share-/ })).toBeVisible() },
-  { name: 'share page missing link', path: '/s/not-a-real-token-000000', user: null, ready: (p) => expect(p.getByText('This link doesn’t exist')).toBeVisible() },
-  { name: 'community funding', path: '/c/programming?view=funding', user: 'mira_k', ready: (p) => expect(p.getByText('Moderator tooling, this quarter (demo)').first()).toBeVisible() },
-  { name: 'pool report', path: poolReportPath, user: 'mira_k', ready: h1('Transparency report') },
-  { name: 'podcast studio', path: '/c/programming/podcasts/studio', user: 'mira_k', ready: h1(/Podcast studio/) },
-  { name: 'podcasts', path: '/podcasts', user: 'mira_k', ready: h1(/Podcasts/) },
   { name: 'leaderboard topics', path: '/leaderboard?tab=topics', user: 'mira_k', ready: selectedTab('Topics') },
   { name: 'admin users', path: '/admin?tab=users', user: 'admin_demo', ready: selectedTab('Users') },
   { name: 'admin communities', path: '/admin?tab=communities', user: 'admin_demo', ready: selectedTab('Communities') },

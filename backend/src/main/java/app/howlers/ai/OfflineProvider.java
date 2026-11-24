@@ -41,7 +41,12 @@ public class OfflineProvider implements AiProvider {
         List<Source> src = r.sources();
         String notice = "No AI model is configured, so this is a cited summary of the most relevant discussions rather than "
                 + "a generated answer. Set ANTHROPIC_API_KEY on the server to enable full answers.";
+        String facts = factsBlock(r.communityFacts());
         if (src.isEmpty()) {
+            if (!facts.isEmpty()) {
+                return new Answer(facts + "No discussions matched your question, so this is what Howlers knows about the "
+                        + "community itself.", List.of(), notice, null, null);
+            }
             return new Answer("I couldn't find community discussions about that yet. Try different keywords, widen the date "
                     + "range, or ask in a relevant community.", List.of(), notice, null, null);
         }
@@ -60,7 +65,7 @@ public class OfflineProvider implements AiProvider {
         }
         long communities = src.stream().map(Source::communitySlug).distinct().count();
         long threads = src.stream().map(Source::postId).distinct().count();
-        StringBuilder b = new StringBuilder();
+        StringBuilder b = new StringBuilder(facts);
         b.append("Found ").append(src.size()).append(" relevant ").append(src.size() == 1 ? "contribution" : "contributions")
                 .append(" across ").append(threads).append(threads == 1 ? " thread" : " threads").append(" in ")
                 .append(communities).append(communities == 1 ? " community" : " communities").append(". Here is what members said:\n\n");
@@ -77,6 +82,18 @@ public class OfflineProvider implements AiProvider {
         follow.add("Summarise the thread “" + (top.title().length() > 60 ? top.title().substring(0, 59) + "…" : top.title()) + "”");
         if (!topic.isEmpty()) follow.add("Where do members disagree about " + String.join(" and ", topic) + "?");
         return new Answer(b.toString().strip(), follow, notice, null, null);
+    }
+
+    /** Community facts as a Markdown list (nested lines for rules and latest posts), or "" without facts. */
+    static String factsBlock(String facts) {
+        if (facts == null || facts.isBlank()) return "";
+        StringBuilder b = new StringBuilder("**About this community**\n");
+        for (String line : facts.split("\\R")) {
+            if (line.isBlank()) continue;
+            boolean nested = line.startsWith("- ") || line.matches("^\\d+\\. .*");
+            b.append(nested ? "  " + (line.startsWith("- ") ? line : "- " + line) : "- " + line).append('\n');
+        }
+        return b.append('\n').toString();
     }
 
     private static void appendGroup(StringBuilder b, String title, List<String> lines) {

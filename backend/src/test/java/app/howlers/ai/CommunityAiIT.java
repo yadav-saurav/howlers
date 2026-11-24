@@ -103,6 +103,57 @@ class CommunityAiIT extends IntegrationTest {
     }
 
     @Test
+    void questionsAboutACommunityUseItsFactsAndRecentPosts() {
+        String s = sfx();
+        AuthUser owner = user("afo" + s);
+        AuthUser reader = user("afr" + s);
+        String slug = "afc" + s;
+        communities.create(owner, new CreateCommunityRequest(slug, "Facts club", "Where facts live", null, "PUBLIC", List.of(), List.of()));
+        long first = posts.create(owner, new CreatePostRequest(slug, "TEXT", "Welcome to the facts club",
+                "<p>Say hello here.</p>", null, null, null, null, null));
+        long second = posts.create(reader, new CreatePostRequest(slug, "TEXT", "Reading list for winter",
+                "<p>Three novels I loved.</p>", null, null, null, null, null));
+        long gone = posts.create(owner, new CreatePostRequest(slug, "TEXT", "Draft that was deleted",
+                "<p>Oops.</p>", null, null, null, null, null));
+        posts.delete(gone, owner);
+        comments.create(first, reader, new CreateCommentRequest("Hello everyone, glad to be in the facts club.", null));
+
+        // No post shares a keyword with this question: before, the answer had nothing to work with.
+        var res = ai.ask(reader, new AskRequest(null, "how many posts does this community have?", slug, null, null));
+        String answer = res.answer().content();
+        assertThat(answer).contains("Posts: 2").contains("Comments: 1").contains("Members: 1")
+                .contains("u/afo" + s + " (owner)").doesNotContain("Draft that was deleted");
+        assertThat(res.answer().sources()).extracting(Source::postId).containsExactlyInAnyOrder(first, second);
+        assertThat(res.answer().notice()).contains("most recent posts");
+
+        // An empty community still answers from its facts, and says so.
+        String empty = "afe" + s;
+        communities.create(owner, new CreateCommunityRequest(empty, "Empty club", "", null, "PUBLIC", List.of(), List.of()));
+        var none = ai.ask(owner, new AskRequest(null, "how many posts does this community have?", empty, null, null));
+        assertThat(none.answer().content()).contains("Posts: 0");
+        assertThat(none.answer().sources()).isEmpty();
+        assertThat(none.answer().notice()).contains("community's details only");
+
+        // Without a community scope nothing changes: no facts, no fallback.
+        var global = ai.ask(reader, new AskRequest(null, "how many posts does qwxzv have?", null, null, null));
+        assertThat(global.answer().content()).doesNotContain("About this community");
+        assertThat(global.answer().sources()).isEmpty();
+        assertThat(global.answer().notice()).doesNotContain("community's details").doesNotContain("most recent posts");
+    }
+
+    @Test
+    void promptCarriesCommunityFactsSeparatelyFromSources() {
+        var req = new AiProvider.Request("how many posts?", AiDtos.Intent.QUESTION, List.of(), List.of(), null,
+                "Community: c/x (\"X\"), public\nPosts: 3 (1 in the last 7 days)");
+        String turn = AnswerPrompt.userTurn(req);
+        assertThat(turn).contains("<community_facts>\nCommunity: c/x").contains("Posts: 3").contains("</community_facts>");
+        assertThat(turn.indexOf("<community_facts>")).isLessThan(turn.indexOf("<sources>"));
+        assertThat(AnswerPrompt.SYSTEM).contains("<community_facts>");
+        assertThat(OfflineProvider.factsBlock("Rules:\n1. Be kind\nLatest posts:\n- \"Hi\" by u/a"))
+                .contains("- Rules:\n  - 1. Be kind\n- Latest posts:\n  - \"Hi\" by u/a");
+    }
+
+    @Test
     void stripsCitationsThatDoNotMapToSources() {
         Source one = new Source(1, "POST", 1, null, "t", "c", "u", 1, Instant.now(), "x", "/c/c/p/1", false);
         Source two = new Source(2, "POST", 2, null, "t", "c", "u", 1, Instant.now(), "x", "/c/c/p/2", false);

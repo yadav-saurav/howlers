@@ -26,8 +26,8 @@ public class DemoStatusController {
         boolean present = jdbc.sql("SELECT EXISTS (SELECT 1 FROM users WHERE email LIKE '%@demo.howlers.local' AND deleted_at IS NULL)")
                 .query(Boolean.class).single();
         return new DemoStatus(present, present
-                ? "This instance contains demo data: the demo accounts, posts, votes, moderation history, collections and funding are "
-                  + "fictional sample content, not real activity. Demo funding never involves real money."
+                ? "This instance contains demo data: the demo accounts, posts, votes, messages and moderation history are "
+                  + "fictional sample content, not real activity."
                 : null);
     }
 }

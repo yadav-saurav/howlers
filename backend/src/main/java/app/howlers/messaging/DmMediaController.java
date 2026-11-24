@@ -44,12 +44,27 @@ public class DmMediaController {
     public DmMedia upload(@AuthenticationPrincipal AuthUser user, @RequestParam("file") MultipartFile file) {
         limiter.check("dm-media:" + user.id(), 60, Duration.ofHours(1));
         MediaAsset a = media.uploadPrivateImage(user.id(), file);
-        return urls.dto(a.getId(), a.getStorageKey(), a.getWidth(), a.getHeight(), a.getVariantWidths(), user.id());
+        return urls.dto(a.getId(), a.getStorageKey(), a.getWidth(), a.getHeight(), a.getVariantWidths(), a.getContentType(),
+                null, user.id());
+    }
+
+    /**
+     * A voice note (WebM, Ogg, MP4 or MP3 audio, at most 5 MB), stored privately like DM images and sent as a message
+     * whose {@code mediaIds} holds just this id. {@code durationMs} (1 to 300000) is shown by players before loading.
+     */
+    @PostMapping(value = "/api/v1/me/dm-media/voice", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public DmMedia uploadVoice(@AuthenticationPrincipal AuthUser user, @RequestParam("file") MultipartFile file,
+                               @RequestParam(name = "durationMs", required = false) Integer durationMs) {
+        limiter.check("dm-voice:" + user.id(), 60, Duration.ofHours(1));
+        MediaAsset a = media.uploadPrivateAudio(user.id(), file, durationMs);
+        return urls.dto(a.getId(), a.getStorageKey(), null, null, null, a.getContentType(), a.getDurationMs(), user.id());
     }
 
     /**
      * Public route (an {@code <img>} can't send the Bearer token); the signed grant names the viewer and is re-checked
-     * against the conversation on every request. {@code ?w=320|960} serves a resized variant when one exists.
+     * against the conversation on every request. {@code ?w=320|960} serves a resized variant when one exists. Voice
+     * notes are served with their audio type, and Range requests get 206 Partial Content so players can seek.
      */
     @GetMapping("/api/v1/dm-media/{grant}")
     public ResponseEntity<Resource> read(@PathVariable String grant, @RequestParam(name = "w", required = false) Integer w) {
@@ -62,6 +77,7 @@ public class DmMediaController {
                             .header("X-Content-Type-Options", "nosniff")
                             .header("Content-Security-Policy", "default-src 'none'")
                             .header("Referrer-Policy", "no-referrer")
+                            .header("Accept-Ranges", "bytes")
                             .body(r);
                 }))
                 .orElseGet(() -> ResponseEntity.notFound().build());

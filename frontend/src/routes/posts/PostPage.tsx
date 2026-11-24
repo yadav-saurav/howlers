@@ -1,4 +1,4 @@
-import { ArrowLeft, Bookmark, BookmarkCheck, ExternalLink, FileX, Lock, MessageSquare, Pin, Share2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Bookmark, BookmarkCheck, ExternalLink, FileX, Lock, MessageSquare, Pin, Share2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { buttonClasses } from '@/components/ui/Button';
@@ -181,11 +181,6 @@ export default function PostPage() {
               <ActionPill onClick={() => copyPostLink(p)}>
                 <Share2 size={15} /> Share
               </ActionPill>
-              {isAuthed && !p.removed && (
-                <ActionPill to={`/ai?post=${p.id}`} label="Ask AI about this thread">
-                  <Sparkles size={15} /> Ask AI
-                </ActionPill>
-              )}
             </div>
           </div>
         </article>

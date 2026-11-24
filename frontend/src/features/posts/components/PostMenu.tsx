@@ -1,4 +1,4 @@
-import { Bookmark, BookmarkCheck, EyeOff, Flag, FolderPlus, Link2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Bookmark, BookmarkCheck, EyeOff, Flag, Link2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
@@ -6,7 +6,6 @@ import { Dialog } from '@/components/ui/Dialog';
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from '@/components/ui/Menu';
 import { toast } from '@/components/ui/Toast';
 import { useAuth } from '@/features/auth/hooks';
-import { AddToCollectionDialog } from '@/features/collections/components/AddToCollectionDialog';
 import { modApi, useModMutation } from '@/features/moderation/api';
 import { BanDialog } from '@/features/moderation/components/BanDialog';
 import { PostModMenuItems } from '@/features/moderation/components/PostModMenuItems';
@@ -45,7 +44,6 @@ export function PostMenu({
   const hide = useHidePost(post.id);
   const del = useDeletePost(post.id);
   const [confirm, setConfirm] = useState(false);
-  const [collect, setCollect] = useState(false);
   const [reporting, setReporting] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [banning, setBanning] = useState(false);
@@ -77,7 +75,6 @@ export function PostMenu({
               >
                 {post.saved ? 'Unsave' : 'Save'}
               </MenuItem>
-              <MenuItem icon={<FolderPlus />} onSelect={() => setCollect(true)}>Save to collection</MenuItem>
               {!isOwner && <MenuItem icon={<Flag />} onSelect={() => setReporting(true)}>Report</MenuItem>}
               <MenuItem
                 icon={<EyeOff />}
@@ -134,7 +131,6 @@ export function PostMenu({
       {canModerate && banning && post.author && (
         <BanDialog slug={post.community.slug} username={post.author.username} open={banning} onOpenChange={setBanning} />
       )}
-      {collect && <AddToCollectionDialog target={{ postId: post.id, title: post.title }} open={collect} onOpenChange={setCollect} />}
       <Dialog
         open={confirm}
         onOpenChange={setConfirm}

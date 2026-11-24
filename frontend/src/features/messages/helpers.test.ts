@@ -26,6 +26,7 @@ const msg = (id: number, senderId: number, minutes: number, extra: Partial<DmMes
   deleted: false,
   kind: 'USER',
   fromBlocked: false,
+  replyTo: null,
   ...extra,
 });
 const summary = (extra: Partial<ConversationSummary> = {}): ConversationSummary => ({
@@ -40,6 +41,8 @@ const summary = (extra: Partial<ConversationSummary> = {}): ConversationSummary 
   updatedAt: at(0),
   kind: 'DIRECT',
   room: null,
+  favorite: false,
+  theme: null,
   ...extra,
 });
 
@@ -88,7 +91,7 @@ describe('message reducers', () => {
   });
 
   it('applyDelete clears the body and media and is a no-op for unknown ids', () => {
-    const a = [msg(1, 1, 0, { media: [{ id: 9, url: '/x.png', width: 1, height: 1, signed: false, expiresAt: null }] }), msg(2, 2, 1)];
+    const a = [msg(1, 1, 0, { media: [{ id: 9, url: '/x.png', width: 1, height: 1, signed: false, expiresAt: null, kind: 'IMAGE', contentType: 'image/png', durationMs: null }] }), msg(2, 2, 1)];
     const d = applyDelete(a, 1);
     expect(d[0]).toMatchObject({ deleted: true, body: '', media: [] });
     expect(d[1]).toBe(a[1]);

@@ -1,6 +1,6 @@
 import { expect, test, uid } from './fixtures';
 
-/** Flows 5–12: join, create a post, vote, comment, reply, save, collect into a collection, search. */
+/** Flows 5–12 (11 retired with the Library): join, create a post, vote, comment, reply, save, search. */
 
 test('5 · join a community', async ({ sessions }) => {
   const page = await sessions.open('paperback_jo', '/c/science');
@@ -97,22 +97,6 @@ test.describe('on an existing post', () => {
 
     await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Saved' }).click();
     await expect(page).toHaveURL(/\/saved$/);
-    await expect(page.getByRole('link', { name: post.title })).toBeVisible();
-  });
-
-  test('11 · create a collection and file the post', async ({ sessions }) => {
-    const name = `E2E ${uid()}`;
-    const page = await sessions.open('dev_ostrander', post.path);
-    await page.getByRole('article', { name: post.title }).getByRole('button', { name: 'More actions' }).click();
-    await page.getByRole('menuitem', { name: 'Save to collection' }).click();
-    const dialog = page.getByRole('dialog');
-    await dialog.getByRole('textbox', { name: 'New collection name' }).fill(name);
-    await dialog.getByRole('button', { name: 'Create' }).click();
-    await expect(page.getByText(`Created ${name} and saved`)).toBeVisible();
-    await page.keyboard.press('Escape');
-
-    await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Library' }).click();
-    await page.getByRole('button', { name: new RegExp(`^${name}`) }).click();
     await expect(page.getByRole('link', { name: post.title })).toBeVisible();
   });
 

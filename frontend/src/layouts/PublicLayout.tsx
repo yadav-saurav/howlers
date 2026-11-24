@@ -83,7 +83,6 @@ export function PublicFooter({ landing = false }: { landing?: boolean }) {
             <span className={head}>Product</span>
             <Link to="/explore" className={a}>Explore</Link>
             <Link to="/communities" className={a}>Communities</Link>
-            <Link to="/podcasts" className={a}>Podcasts</Link>
             <Link to="/leaderboard" className={a}>Leaderboard</Link>
           </nav>
           <nav aria-label="Howlers" className={col}>
