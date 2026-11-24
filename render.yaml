@@ -1,0 +1,72 @@
+# Render Blueprint: Howlers as one free web service (docs/FREE_HOSTING.md).
+# Render asks for every "sync: false" value when the Blueprint is created; paste them from Neon, Upstash and Supabase.
+services:
+  - type: web
+    name: howlers
+    runtime: docker
+    plan: free
+    # Use the region your database, Redis and storage are in (oregon, ohio, virginia, frankfurt or singapore).
+    region: singapore
+    dockerfilePath: ./deploy/render/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      # One random secret; start.sh derives the JWT, 2FA, share-link and webhook secrets from it. Never change it.
+      - key: HOWLERS_SECRET_SEED
+        generateValue: true
+
+      # Neon PostgreSQL (use the direct connection, not the "-pooler" host)
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USER
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: DATABASE_POOL_SIZE
+        value: "5"
+
+      # Upstash Redis (TLS)
+      - key: REDIS_HOST
+        sync: false
+      - key: REDIS_PASSWORD
+        sync: false
+      - key: REDIS_PORT
+        value: "6379"
+      - key: REDIS_SSL
+        value: "true"
+      - key: REDIS_TIMEOUT
+        value: 2s
+
+      # Supabase Storage (S3-compatible); the bucket stays private and every read goes through the API
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+      - key: S3_BUCKET
+        value: howlers
+      - key: S3_PATH_STYLE
+        value: "true"
+      - key: S3_CREATE_BUCKET
+        value: "false"
+      # Supabase's free plan caps each file at 50 MB and the project at 1 GB.
+      - key: MAX_MEDIA_MB
+        value: "50"
+      - key: MAX_FILE_MB
+        value: "50"
+      - key: FILE_QUOTA_MB
+        value: "200"
+
+      # Safe defaults; add API keys later in the Environment tab (see docs/FREE_HOSTING.md, "Optional features").
+      - key: MAIL_MODE
+        value: log
+      - key: FUNDING_PROVIDER
+        value: demo
+      - key: SEED_DEMO_DATA
+        value: "false"

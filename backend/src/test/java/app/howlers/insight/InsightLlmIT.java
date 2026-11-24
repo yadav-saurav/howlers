@@ -29,6 +29,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import app.howlers.support.TestIds;
 
 /**
  * LLM-backed digests and stance suggestions end to end, with a fake standing in for the real model (the suite never
@@ -94,7 +95,7 @@ class InsightLlmIT extends IntegrationTest {
     private record Thread(AuthUser owner, AuthUser reader, long postId, List<Long> ids) {}
 
     private Thread thread(String visibility) {
-        String s = Long.toString(System.nanoTime() % 1_000_000);
+        String s = TestIds.suffix();
         AuthUser a = user("la" + s);
         AuthUser b = user("lb" + s);
         String slug = "ll" + s;
@@ -202,7 +203,7 @@ class InsightLlmIT extends IntegrationTest {
     @Test
     void privateThreadsAreNeverSentForOutsiders() {
         Thread t = thread("PRIVATE");
-        AuthUser outsider = user("lo" + (System.nanoTime() % 1_000_000));
+        AuthUser outsider = user("lo" + TestIds.suffix());
         assertThatThrownBy(() -> digests.get(t.postId(), "standard", "balanced", outsider)).isInstanceOf(ApiException.class);
         assertThatThrownBy(() -> context.build(t.postId(), outsider)).isInstanceOf(ApiException.class);
         assertThat(FAKE.userTurns).isEmpty();

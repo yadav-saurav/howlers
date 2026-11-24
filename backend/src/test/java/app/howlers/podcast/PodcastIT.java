@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import app.howlers.support.TestIds;
 
 @AutoConfigureMockMvc
 class PodcastIT extends IntegrationTest {
@@ -52,7 +53,7 @@ class PodcastIT extends IntegrationTest {
 
     @Test
     void studioWorkflowVisibilityAndListening() throws Exception {
-        String s = Long.toString(System.nanoTime() % 1_000_000);
+        String s = TestIds.suffix();
         AuthUser owner = user("po" + s), listener = user("pl" + s), member = user("pm" + s);
         String slug = "pod" + s;
         communities.create(owner, new CreateCommunityRequest(slug, "Pods", "", null, "PUBLIC", List.of(), List.of()));
@@ -118,7 +119,7 @@ class PodcastIT extends IntegrationTest {
 
     @Test
     void privateCommunityEpisodesStayPrivate() {
-        String s = Long.toString(System.nanoTime() % 1_000_000);
+        String s = TestIds.suffix();
         AuthUser owner = user("qo" + s), outsider = user("qx" + s);
         String slug = "qpriv" + s;
         communities.create(owner, new CreateCommunityRequest(slug, "Private pods", "", null, "PRIVATE", List.of(), List.of()));

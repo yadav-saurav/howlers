@@ -19,6 +19,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import app.howlers.support.TestIds;
 
 /** Pack rooms (D-043): membership, roles, privacy of removed members, blocks and dmPolicy, ownership. */
 class PackRoomsIT extends IntegrationTest {
@@ -31,7 +32,7 @@ class PackRoomsIT extends IntegrationTest {
     @Autowired JdbcClient jdbc;
 
     private AuthUser user(String prefix) {
-        String name = prefix + (System.nanoTime() % 1_000_000);
+        String name = prefix + TestIds.suffix();
         var me = auth.register(new RegisterRequest(name, name + "@rooms.local", "password1", null), "t", "127.0.0.1").response().user();
         return new AuthUser(me.id(), me.username(), me.role());
     }

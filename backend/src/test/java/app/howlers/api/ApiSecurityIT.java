@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import app.howlers.support.TestIds;
 
 /** End-to-end HTTP behaviour of authentication and server-side authorisation. */
 @AutoConfigureMockMvc
@@ -35,7 +36,7 @@ class ApiSecurityIT extends IntegrationTest {
     }
 
     private static String sfx() {
-        return Long.toString(System.nanoTime() % 10_000_000);
+        return TestIds.suffix();
     }
 
     @Test

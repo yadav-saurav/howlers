@@ -21,6 +21,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import app.howlers.support.TestIds;
 
 /** Per-community automod (D-045): every rule type and action, exemptions, the ReDoS guard, preview and the audit trail. */
 class AutomodIT extends IntegrationTest {
@@ -34,14 +35,14 @@ class AutomodIT extends IntegrationTest {
     private record World(String slug, AuthUser mod, AuthUser author, long postId) {}
 
     private AuthUser user(String prefix) {
-        String name = prefix + (System.nanoTime() % 1_000_000);
+        String name = prefix + TestIds.suffix();
         var me = auth.register(new RegisterRequest(name, name + "@automod.local", "password1", null), "t", "127.0.0.1").response().user();
         return new AuthUser(me.id(), me.username(), me.role());
     }
 
     private World world() {
         AuthUser mod = user("mod"), author = user("wolf");
-        String slug = "am" + (System.nanoTime() % 1_000_000);
+        String slug = "am" + TestIds.suffix();
         communities.create(mod, new CreateCommunityRequest(slug, "Automod test", "", null, "PUBLIC", List.of(), List.of()));
         long postId = posts.create(mod, new CreatePostRequest(slug, "TEXT", "Welcome thread", "<p>hi</p>", null, null, null, null, null));
         return new World(slug, mod, author, postId);

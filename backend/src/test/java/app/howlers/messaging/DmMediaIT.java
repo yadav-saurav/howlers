@@ -25,6 +25,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import app.howlers.support.TestIds;
 
 /** DM images are private to the conversation (D-024): private storage, participant-signed URLs, no public path. */
 @AutoConfigureMockMvc
@@ -37,7 +38,7 @@ class DmMediaIT extends IntegrationTest {
     private record Session(String auth, long id, String username) {}
 
     private static String sfx() {
-        return Long.toString(System.nanoTime() % 10_000_000);
+        return TestIds.suffix();
     }
 
     private Session register(String name) throws Exception {

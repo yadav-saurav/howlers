@@ -32,6 +32,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import app.howlers.support.TestIds;
 
 /** Private files, share links and E2EE storage, exercised over HTTP so the security rules are part of the test. */
 @AutoConfigureMockMvc
@@ -41,7 +42,7 @@ class FilesIT extends IntegrationTest {
     @Autowired JdbcClient jdbc;
 
     private static String sfx() {
-        return Long.toString(System.nanoTime() % 10_000_000);
+        return TestIds.suffix();
     }
 
     private String register(String name) throws Exception {

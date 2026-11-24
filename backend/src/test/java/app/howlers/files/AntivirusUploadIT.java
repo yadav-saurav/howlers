@@ -25,6 +25,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import app.howlers.support.TestIds;
 
 /** D-029 end to end: uploads go through the structural checks and then a (fake) clamd over the real INSTREAM client. */
 @AutoConfigureMockMvc
@@ -74,7 +75,7 @@ class AntivirusUploadIT extends IntegrationTest {
 
     @Test
     void cleanFilesAreLabelledScannedAndInfectedOnesRefused() throws Exception {
-        String auth = register("avu" + System.nanoTime() % 1_000_000);
+        String auth = register("avu" + TestIds.suffix());
         byte[] notes = "meeting notes, nothing to see".getBytes(StandardCharsets.UTF_8);
         int before = CLAMD.payloads().size();
         JsonNode clean = body(upload(auth, "notes.txt", notes).andExpect(status().isCreated()));
@@ -107,7 +108,7 @@ class AntivirusUploadIT extends IntegrationTest {
 
     @Test
     void unreachableClamdFallsBackToStructuralChecksWhenNotRequired() throws Exception {
-        String auth = register("avd" + System.nanoTime() % 1_000_000);
+        String auth = register("avd" + TestIds.suffix());
         CLAMD.mode(FakeClamd.Mode.CLOSE_IMMEDIATELY);
         JsonNode f = body(upload(auth, "notes.txt", "plain".getBytes(StandardCharsets.UTF_8)).andExpect(status().isCreated()));
         assertThat(f.get("scanEngine").asText()).isEqualTo("STRUCTURAL");
@@ -116,7 +117,7 @@ class AntivirusUploadIT extends IntegrationTest {
 
     @Test
     void imagesAreScannedAfterTheirMetadataIsStripped() throws Exception {
-        String auth = register("avi" + System.nanoTime() % 1_000_000);
+        String auth = register("avi" + TestIds.suffix());
         int before = CLAMD.payloads().size();
         mvc.perform(multipart("/api/v1/media").file(new MockMultipartFile("file", "p.png", "image/png", ImageFixtures.pngWithGps(40, 30, 1)))
                 .header("Authorization", auth)).andExpect(status().isCreated());

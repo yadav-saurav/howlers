@@ -41,6 +41,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import app.howlers.support.TestIds;
 
 /**
  * Funding with FUNDING_PROVIDER=stripe (test mode) against a fake {@link StripeGateway}: hosted checkout, confirmation
@@ -82,7 +83,7 @@ class StripeFundingIT extends IntegrationTest {
     private record World(AuthUser owner, AuthUser mod, AuthUser member, AuthUser other, String slug, PoolSummary pool) {}
 
     private World world() {
-        String s = Long.toString(System.nanoTime() % 1_000_000);
+        String s = TestIds.suffix();
         AuthUser owner = user("so" + s), mod = user("sm" + s), member = user("sc" + s), other = user("sx" + s);
         String slug = "stripe" + s;
         communities.create(owner, new CreateCommunityRequest(slug, "Stripe funding test", "", null, "PUBLIC", List.of(), List.of()));

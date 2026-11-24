@@ -39,6 +39,7 @@ import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
+import app.howlers.support.TestIds;
 
 /** Talks to the real /ws endpoint with a STOMP client: auth on CONNECT, user-queue delivery, subscription checks. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -66,7 +67,7 @@ class RealtimeIT extends IntegrationTest {
     private record Registered(AuthUser user, String token) {}
 
     private Registered user(String prefix) {
-        String name = prefix + (System.nanoTime() % 1_000_000);
+        String name = prefix + TestIds.suffix();
         var res = auth.register(new RegisterRequest(name, name + "@rt.local", "password1", null), "t", "127.0.0.1").response();
         return new Registered(new AuthUser(res.user().id(), res.user().username(), res.user().role()), res.accessToken());
     }
@@ -177,7 +178,7 @@ class RealtimeIT extends IntegrationTest {
     }
 
     private String community(Registered owner, String visibility) {
-        String slug = "live" + (System.nanoTime() % 1_000_000);
+        String slug = "live" + TestIds.suffix();
         communities.create(owner.user(), new CreateCommunityRequest(slug, "Live test", "", null, visibility, List.of(), List.of()));
         return slug;
     }

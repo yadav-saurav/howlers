@@ -18,6 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import app.howlers.support.TestIds;
 
 /** Uploads get 320/960 px variants beside the original, exposed in DTOs and through {@code ?w=} (D-024). */
 @AutoConfigureMockMvc
@@ -45,7 +46,7 @@ class ImageVariantsIT extends IntegrationTest {
 
     @Test
     void postImagesGetVariantsInTheDtoAndOnTheFilesRoute() throws Exception {
-        String s = Long.toString(System.nanoTime() % 10_000_000);
+        String s = TestIds.suffix();
         String auth = register("iv" + s);
 
         JsonNode big = upload(auth, "/api/v1/media", ImageVariantsTest.png(1600, 800, false));

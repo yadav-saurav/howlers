@@ -17,6 +17,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import app.howlers.support.TestIds;
 
 class DirectMessagesIT extends IntegrationTest {
     @Autowired AuthService auth;
@@ -26,7 +27,7 @@ class DirectMessagesIT extends IntegrationTest {
     @Autowired JdbcClient jdbc;
 
     private AuthUser user(String prefix) {
-        String name = prefix + (System.nanoTime() % 1_000_000);
+        String name = prefix + TestIds.suffix();
         var me = auth.register(new RegisterRequest(name, name + "@dm.local", "password1", null), "t", "127.0.0.1").response().user();
         return new AuthUser(me.id(), me.username(), me.role());
     }

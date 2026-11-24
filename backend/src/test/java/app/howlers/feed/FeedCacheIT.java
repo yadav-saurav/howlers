@@ -23,6 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import app.howlers.support.TestIds;
 
 /** The first-page feed cache stores only rank order; every per-viewer field must still be computed per viewer (D-025). */
 @AutoConfigureMockMvc
@@ -37,7 +38,7 @@ class FeedCacheIT extends IntegrationTest {
     }
 
     private static String sfx() {
-        return Long.toString(System.nanoTime() % 10_000_000);
+        return TestIds.suffix();
     }
 
     private String register(String name) throws Exception {

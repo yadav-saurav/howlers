@@ -19,6 +19,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import app.howlers.support.TestIds;
 
 /** Admin dashboard over HTTP: role enforcement, suspension (login, refresh, live tokens), roles, quarantine, audit log. */
 @AutoConfigureMockMvc
@@ -45,7 +46,7 @@ class AdminIT extends IntegrationTest {
     }
 
     private static String sfx() {
-        return Long.toString(System.nanoTime() % 10_000_000);
+        return TestIds.suffix();
     }
 
     private static MockHttpServletRequestBuilder as(MockHttpServletRequestBuilder b, Session s) {

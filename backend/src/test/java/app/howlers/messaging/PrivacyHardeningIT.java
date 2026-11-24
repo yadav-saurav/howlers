@@ -25,6 +25,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import app.howlers.support.TestIds;
 
 /**
  * D-028 (metadata stripped from image originals, private files byte-identical) and D-030 (legacy public DM images
@@ -41,7 +42,7 @@ class PrivacyHardeningIT extends IntegrationTest {
     private record Session(String auth, long id, String username) {}
 
     private static String sfx() {
-        return Long.toString(System.nanoTime() % 10_000_000);
+        return TestIds.suffix();
     }
 
     private Session register(String name) throws Exception {

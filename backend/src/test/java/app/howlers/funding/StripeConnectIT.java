@@ -42,6 +42,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import app.howlers.support.TestIds;
 
 /**
  * Stripe Connect payouts (D-046, D-047) against a fake gateway: onboarding status, transfers when a pool closes, held
@@ -91,7 +92,7 @@ class StripeConnectIT extends IntegrationTest {
     private record World(U owner, U mod, U member, String slug, PoolSummary pool) {}
 
     private World world() {
-        String s = Long.toString(System.nanoTime() % 1_000_000);
+        String s = TestIds.suffix();
         U owner = user("co" + s), mod = user("cm" + s), member = user("cc" + s);
         String slug = "connect" + s;
         communities.create(owner.user(), new CreateCommunityRequest(slug, "Connect payouts test", "", null, "PUBLIC", List.of(), List.of()));
@@ -249,7 +250,7 @@ class StripeConnectIT extends IntegrationTest {
         mvc.perform(as(get("/api/v1/admin/funding/stripe"), w.owner())).andExpect(status().isForbidden());
         mvc.perform(as(get("/api/v1/admin/funding/reviews"), w.mod())).andExpect(status().isForbidden());
         mvc.perform(as(post("/api/v1/admin/funding/payouts/run"), w.mod())).andExpect(status().isForbidden());
-        U admin = user("ca" + System.nanoTime() % 1_000_000);
+        U admin = user("ca" + TestIds.suffix());
         jdbc.sql("UPDATE users SET role = 'ADMIN' WHERE id = ?").param(admin.user().id()).update();
         String body = mvc.perform(as(get("/api/v1/admin/funding/stripe"), admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.mode").value("test"))

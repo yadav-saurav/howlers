@@ -26,6 +26,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import app.howlers.support.TestIds;
 
 /** Emoji reactions (D-044): toggling, counts and names, visibility, blocks and notifications. */
 class ReactionsIT extends IntegrationTest {
@@ -40,13 +41,13 @@ class ReactionsIT extends IntegrationTest {
     @Autowired JdbcClient jdbc;
 
     private AuthUser user(String prefix) {
-        String name = prefix + (System.nanoTime() % 1_000_000);
+        String name = prefix + TestIds.suffix();
         var me = auth.register(new RegisterRequest(name, name + "@react.local", "password1", null), "t", "127.0.0.1").response().user();
         return new AuthUser(me.id(), me.username(), me.role());
     }
 
     private String community(AuthUser owner, String visibility) {
-        String slug = "rx" + (System.nanoTime() % 1_000_000);
+        String slug = "rx" + TestIds.suffix();
         communities.create(owner, new CreateCommunityRequest(slug, "Reactions test", "", null, visibility, List.of(), List.of()));
         return slug;
     }

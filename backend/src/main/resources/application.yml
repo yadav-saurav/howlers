@@ -26,7 +26,10 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
-      timeout: 500ms
+      timeout: ${REDIS_TIMEOUT:500ms}
+      # Hosted Redis such as Upstash only accepts TLS connections (docs/FREE_HOSTING.md).
+      ssl:
+        enabled: ${REDIS_SSL:false}
   servlet:
     multipart:
       # Per-endpoint limits are enforced in code (images 10 MB, podcast media howlers.storage.max-media-mb).

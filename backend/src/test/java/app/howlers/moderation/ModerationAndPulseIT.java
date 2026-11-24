@@ -28,6 +28,7 @@ import app.howlers.vote.VoteService;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import app.howlers.support.TestIds;
 
 class ModerationAndPulseIT extends IntegrationTest {
     @Autowired AuthService auth;
@@ -48,7 +49,7 @@ class ModerationAndPulseIT extends IntegrationTest {
     private record World(AuthUser owner, AuthUser moderator, AuthUser member, AuthUser reporter, String slug, long postId) {}
 
     private World world() {
-        String s = Long.toString(System.nanoTime() % 1_000_000);
+        String s = TestIds.suffix();
         AuthUser owner = user("mo" + s), moderator = user("mm" + s), member = user("me" + s), reporter = user("mr" + s);
         String slug = "mod" + s;
         communities.create(owner, new CreateCommunityRequest(slug, "Mod test", "", null, "PUBLIC", List.of(), List.of()));

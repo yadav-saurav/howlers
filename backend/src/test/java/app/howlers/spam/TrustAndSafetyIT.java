@@ -29,6 +29,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import app.howlers.support.TestIds;
 
 /** Mutes, spam heuristics (each one switched on here), the hold/approve flow, onboarding skip and feed mod rights. */
 class TrustAndSafetyIT extends IntegrationTest {
@@ -51,7 +52,7 @@ class TrustAndSafetyIT extends IntegrationTest {
     }
 
     private static String sfx() {
-        return Long.toString(System.nanoTime() % 1_000_000);
+        return TestIds.suffix();
     }
 
     private record World(AuthUser owner, AuthUser moderator, AuthUser alice, AuthUser bob, String slug) {}

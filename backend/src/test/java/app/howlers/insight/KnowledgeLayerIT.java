@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import app.howlers.support.TestIds;
 
 class KnowledgeLayerIT extends IntegrationTest {
     @Autowired AuthService auth;
@@ -42,7 +43,7 @@ class KnowledgeLayerIT extends IntegrationTest {
     private record Thread(AuthUser author, AuthUser other, long postId, List<Long> commentIds, String slug) {}
 
     private Thread thread(String visibility) {
-        String s = Long.toString(System.nanoTime() % 1_000_000);
+        String s = TestIds.suffix();
         AuthUser a = user("ka" + s);
         AuthUser b = user("kb" + s);
         String slug = "kl" + s;

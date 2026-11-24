@@ -19,6 +19,7 @@ import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import app.howlers.support.TestIds;
 
 /** Votes from many users at once, and many clicks from one user at once, must never corrupt counters. */
 class VoteConcurrencyIT extends IntegrationTest {
@@ -36,7 +37,7 @@ class VoteConcurrencyIT extends IntegrationTest {
 
     @Test
     void concurrentVotesKeepCountersConsistent() throws Exception {
-        String sfx = Long.toString(System.nanoTime() % 1_000_000);
+        String sfx = TestIds.suffix();
         AuthUser author = user("author" + sfx);
         communities.create(author, new CreateCommunityRequest("vc" + sfx, "Votes", "", null, "PUBLIC", List.of(), List.of()));
         long postId = posts.create(author, new CreatePostRequest("vc" + sfx, "TEXT", "Race me", "<p>x</p>", null, null, null, null, null));

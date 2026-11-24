@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import app.howlers.support.TestIds;
 
 /** Runs with the offline provider (application-test.yml), so no network or API key is needed. */
 class CommunityAiIT extends IntegrationTest {
@@ -35,7 +36,7 @@ class CommunityAiIT extends IntegrationTest {
     }
 
     private String sfx() {
-        return Long.toString(System.nanoTime() % 1_000_000);
+        return TestIds.suffix();
     }
 
     @Test

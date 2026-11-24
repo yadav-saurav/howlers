@@ -71,6 +71,10 @@ cd frontend && npm install && npm run dev   # http://localhost:5173 (proxies /ap
 Override the DB with `DATABASE_URL`, `DATABASE_USER` and `DATABASE_PASSWORD`. Every setting is listed in
 `backend/src/main/resources/application.yml` and `.env.example`.
 
+### Option C: Free hosting, nothing installed
+Run it online on free plans (Render + Neon + Upstash + Supabase, no credit card): follow
+[docs/FREE_HOSTING.md](docs/FREE_HOSTING.md).
+
 ### Demo accounts
 With `SEED_DEMO_DATA=true` (the default outside the `prod` profile), fictional demo users are created, such as
 `mira_k`, `nadia_sec` and `first_job_fern`, all with the password **`howlers-demo-1`**. The content is
@@ -98,7 +102,7 @@ Load test: see [docs/PERFORMANCE.md](docs/PERFORMANCE.md).
 ## Docs
 [Product spec](docs/PRODUCT_SPEC.md) · [Architecture](docs/ARCHITECTURE.md) · [Database](docs/DATABASE.md) ·
 [API](docs/API.md) · [Ranking](docs/RANKING.md) · [Design system](docs/DESIGN_SYSTEM.md) ·
-[Frontend](docs/FRONTEND.md) · [Decisions](docs/DECISIONS.md) · [Roadmap](docs/ROADMAP.md) · [Deployment](docs/DEPLOYMENT.md) ·
+[Frontend](docs/FRONTEND.md) · [Decisions](docs/DECISIONS.md) · [Roadmap](docs/ROADMAP.md) · [Deployment](docs/DEPLOYMENT.md) · [Free hosting](docs/FREE_HOSTING.md) ·
 [Accessibility](docs/ACCESSIBILITY.md) · [Performance](docs/PERFORMANCE.md) · [Brand assets](docs/brand/README.md)
 
 ## Production notes

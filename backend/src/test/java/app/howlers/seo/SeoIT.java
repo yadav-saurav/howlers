@@ -10,6 +10,7 @@ import app.howlers.support.IntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import app.howlers.support.TestIds;
 
 /** Link previews, robots.txt and sitemaps only ever describe content a signed-out visitor could read (D-039). */
 class SeoIT extends IntegrationTest {
@@ -18,7 +19,7 @@ class SeoIT extends IntegrationTest {
     @Autowired JdbcClient jdbc;
 
     private long user(String prefix) {
-        String name = prefix + (System.nanoTime() % 1_000_000);
+        String name = prefix + TestIds.suffix();
         return auth.register(new RegisterRequest(name, name + "@seo.local", "password1", null), "t", "127.0.0.1").response().user().id();
     }
 
@@ -27,7 +28,7 @@ class SeoIT extends IntegrationTest {
     }
 
     private String community(String visibility, String status) {
-        String slug = "s" + (System.nanoTime() % 1_000_000_000_000L);
+        String slug = "s" + TestIds.suffix();
         jdbc.sql("INSERT INTO communities (slug, name, description, visibility, status) VALUES (?, ?, ?, ?, ?)")
                 .params(slug, "Night <Owls> & \"Friends\"", "Talk about the moon after dark.", visibility, status).update();
         return slug;

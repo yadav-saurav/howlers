@@ -33,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import app.howlers.support.TestIds;
 
 /**
  * The whole web push path against a local fake push service: subscribe, a reply notification and a DM are encrypted
@@ -102,7 +103,7 @@ class WebPushIT extends IntegrationTest {
     }
 
     private AuthUser user(String prefix) {
-        String name = prefix + (System.nanoTime() % 1_000_000);
+        String name = prefix + TestIds.suffix();
         var me = auth.register(new RegisterRequest(name, name + "@push.local", "password1", null), "t", "127.0.0.1").response().user();
         return new AuthUser(me.id(), me.username(), me.role());
     }

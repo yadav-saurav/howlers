@@ -25,6 +25,7 @@ import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
 import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
+import app.howlers.support.TestIds;
 
 /** D-030: suspending, deactivating or deleting an account closes its live sockets at once and refuses reconnects. */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -50,7 +51,7 @@ class SessionRevocationIT extends IntegrationTest {
     private record Registered(AuthUser user, String token) {}
 
     private Registered user(String prefix) {
-        String name = prefix + (System.nanoTime() % 1_000_000);
+        String name = prefix + TestIds.suffix();
         var res = auth.register(new RegisterRequest(name, name + "@rev.local", "password1", null), "t", "127.0.0.1").response();
         return new Registered(new AuthUser(res.user().id(), res.user().username(), res.user().role()), res.accessToken());
     }

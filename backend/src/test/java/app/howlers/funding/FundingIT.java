@@ -44,6 +44,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.test.web.servlet.MockMvc;
+import app.howlers.support.TestIds;
 
 @AutoConfigureMockMvc
 class FundingIT extends IntegrationTest {
@@ -66,7 +67,7 @@ class FundingIT extends IntegrationTest {
     private record World(AuthUser owner, AuthUser mod1, AuthUser mod2, AuthUser member, AuthUser reporter, AuthUser outsider, String slug) {}
 
     private World world() {
-        String s = Long.toString(System.nanoTime() % 1_000_000);
+        String s = TestIds.suffix();
         AuthUser owner = user("fo" + s), mod1 = user("fa" + s), mod2 = user("fb" + s), member = user("fm" + s), reporter = user("fr" + s),
                 outsider = user("fx" + s);
         String slug = "fund" + s;

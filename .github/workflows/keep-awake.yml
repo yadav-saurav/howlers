@@ -1,0 +1,57 @@
+# Keeps the free hosting from going idle:
+#
+# 1. Render (every 10 minutes): the free instance stops after 15 minutes without visitors, and waking takes about
+#    2 minutes. Opening /healthz keeps it running. nginx answers /healthz inside the container, so these pings don't
+#    touch the database (Neon's free compute hours stay for real visitors).
+# 2. Supabase (once a day): free projects are paused after 7 days without activity, which would break uploads.
+#    Fetching a stored image makes Howlers read it from Supabase Storage with its S3 keys, which counts as activity.
+#    The image is a 64x64 test upload that isn't attached to any post; if it's ever removed, set STORAGE_PING_PATH to
+#    the /api/v1/files/... URL path of any other uploaded image.
+#
+# Notes:
+# - GitHub may run scheduled jobs a few minutes late; an occasional late run can still let Render sleep.
+# - GitHub pauses scheduled workflows after 60 days without commits; re-enable it in the Actions tab if that happens.
+# - One always-on free Render instance uses about 730 of the 750 free hours a month.
+# - To stop it, disable this workflow in the Actions tab or delete this file.
+name: Keep awake
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"   # Render
+    - cron: "17 3 * * *"     # Supabase, daily at 03:17 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+env:
+  SITE_URL: https://howlers-s2ce.onrender.com
+  STORAGE_PING_PATH: /api/v1/files/media/XgL2FxVnIe7UvBQr3bUt3uPz.png
+
+jobs:
+  render:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '*/10 * * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    concurrency:
+      group: keep-awake-render
+      cancel-in-progress: true
+    steps:
+      - name: Open the site
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 180 --retry 2 --retry-delay 10 "$SITE_URL/healthz" || true)
+          echo "GET $SITE_URL/healthz -> $code"
+          # Never fail the run (and email the owner) just because the site was waking up.
+          if [ "$code" != "200" ]; then echo "::warning::The site answered $code; it may have been starting up."; fi
+
+  supabase:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '17 3 * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read a stored file through Howlers
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 180 --retry 2 --retry-delay 10 "$SITE_URL$STORAGE_PING_PATH" || true)
+          echo "GET $SITE_URL$STORAGE_PING_PATH -> $code"
+          if [ "$code" != "200" ]; then
+            echo "::warning::Expected 200 but got $code. If uploads are failing, open the Supabase dashboard and restore the project; if the file was deleted, update STORAGE_PING_PATH."
+          fi

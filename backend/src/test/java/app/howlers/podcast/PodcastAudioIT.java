@@ -36,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import app.howlers.support.TestIds;
 
 /** Audio generation end to end with a fake TTS provider (no network): job states, budget, cancel, transcript, labels. */
 @AutoConfigureMockMvc
@@ -100,7 +101,7 @@ class PodcastAudioIT extends IntegrationTest {
     record Setup(AuthUser owner, AuthUser member, String slug, long id) {}
 
     private Setup setup(String prefix, String script) {
-        String s = prefix + System.nanoTime() % 1_000_000;
+        String s = prefix + TestIds.suffix();
         AuthUser owner = user(s + "o"), member = user(s + "m");
         communities.create(owner, new CreateCommunityRequest(s, "Audio", "", null, "PUBLIC", List.of(), List.of()));
         communities.join(s, member);
