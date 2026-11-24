@@ -1,0 +1,51 @@
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/source-serif-4';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/unbounded/latin-800.css';
+@import './design-system/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-bg text-text font-sans text-base antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  :focus-visible { outline: 2px solid rgb(var(--accent)); outline-offset: 2px; border-radius: 4px; }
+  ::selection { background: rgb(var(--accent) / 0.3); }
+  a { @apply text-inherit no-underline; }
+}
+
+@layer components {
+  .prose-howlers { @apply text-base leading-relaxed text-text; overflow-wrap: anywhere; }
+  .prose-howlers p { @apply my-3; }
+  .prose-howlers h1, .prose-howlers h2, .prose-howlers h3 { @apply font-serif font-semibold mt-5 mb-2; }
+  .prose-howlers h1 { @apply text-2xl; }
+  .prose-howlers h2 { @apply text-xl; }
+  .prose-howlers h3 { @apply text-lg; }
+  .prose-howlers a { @apply text-accent underline underline-offset-2; }
+  .prose-howlers ul { @apply list-disc pl-6 my-3; }
+  .prose-howlers ol { @apply list-decimal pl-6 my-3; }
+  .prose-howlers li { @apply my-1; }
+  .prose-howlers blockquote { @apply border-l-2 border-border pl-4 text-muted my-3; }
+  .prose-howlers code { @apply font-mono text-[13px] bg-surface-2 rounded-sm px-1 py-0.5; }
+  .prose-howlers pre { @apply bg-surface-2 rounded-md p-3 overflow-x-auto my-3; }
+  .prose-howlers pre code { @apply bg-transparent p-0; }
+  .prose-howlers img { @apply rounded-md max-w-full; }
+  .prose-howlers hr { @apply border-border my-5; }
+  .prose-howlers table { @apply w-full text-sm my-3 border-collapse; }
+  .prose-howlers th, .prose-howlers td { @apply border border-border px-2 py-1 text-left; }
+  .prose-compact p { @apply my-1.5; }
+
+  .tiptap-editor .ProseMirror { @apply min-h-[180px] outline-none px-3 py-2; }
+  .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder); @apply text-faint pointer-events-none float-left h-0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

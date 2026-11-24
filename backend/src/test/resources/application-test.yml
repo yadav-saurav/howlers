@@ -1,0 +1,45 @@
+howlers:
+  ai:
+    provider: offline
+  mail:
+    mode: log        # never send real mail from tests, even if backend/.env.local sets MAIL_MODE=brevo
+  rate-limit:
+    enabled: false
+  seed:
+    enabled: false
+  feed-cache:
+    enabled: false   # FeedCacheIT switches it on with an in-memory store
+  spam:
+    enabled: false   # tests that exercise a heuristic switch it on through SpamProperties and restore it
+  storage:
+    local-dir: ./target/test-uploads
+  funding:
+    # Tests drive the recurring-charge and close jobs directly, with explicit timestamps.
+    jobs-enabled: false
+    # Never use a developer's real Stripe setup from backend/.env.local (FUNDING_PROVIDER, STRIPE_*): the demo provider
+    # is the baseline, and the Stripe ITs start their own context with a fake gateway.
+    provider: demo
+    stripe:
+      secret-key: ""
+      webhook-secret: ""
+  files:
+    max-file-mb: 2
+    quota-mb: 4
+  podcasts:
+    tts:
+      # Never call ElevenLabs from tests, even if a developer has ELEVENLABS_API_KEY in backend/.env.local.
+      # PodcastAudioIT swaps in a fake provider.
+      provider: none
+      elevenlabs:
+        api-key: ""
+  push:
+    # Never use a developer's real VAPID keys in tests; WebPushIT sets a throwaway pair and a local fake push service.
+    vapid-public-key: ""
+    vapid-private-key: ""
+management:
+  health:
+    redis:
+      enabled: false
+logging:
+  level:
+    root: WARN

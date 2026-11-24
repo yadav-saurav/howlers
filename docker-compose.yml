@@ -1,0 +1,156 @@
+# Howlers — local/full-stack environment.  `cp .env.example .env && docker compose up --build`
+# Then open http://localhost:${WEB_PORT:-8088}. API docs: http://localhost:${WEB_PORT:-8088}/swagger-ui.html
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-howlers}
+      POSTGRES_USER: ${DATABASE_USER:-howlers}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?set DATABASE_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER:-howlers} -d ${DATABASE_NAME:-howlers}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # S3-compatible object storage for uploads (D-023): SeaweedFS, because MinIO no longer publishes public images.
+  # Access is limited to the one identity below (anonymous reads get 403); the backend creates the private bucket on
+  # start (S3_CREATE_BUCKET) and proxies every read, so the bucket is never exposed.
+  s3:
+    image: chrislusf/seaweedfs:4.55
+    restart: unless-stopped
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-howlers}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        cat > /tmp/s3.json <<EOF
+        {"identities":[{"name":"howlers","credentials":[{"accessKey":"$$S3_ACCESS_KEY","secretKey":"$$S3_SECRET_KEY"}],"actions":["Admin","Read","Write","List","Tagging"]}]}
+        EOF
+        exec weed server -dir=/data -ip.bind=0.0.0.0 -master.volumeSizeLimitMB=1024 -volume.max=0 -s3 -s3.port=8333 -s3.config=/tmp/s3.json
+    volumes:
+      - s3data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8333/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  # Optional antivirus (D-029): ClamAV's clamd, scanned over TCP with INSTREAM. It needs about 1-1.5 GB of RAM once the
+  # signatures are loaded and downloads ~300 MB of signatures on first start (a few minutes), so it sits behind a
+  # profile here:  ANTIVIRUS=clamav docker compose --profile antivirus up --build
+  # Without it the backend runs structural checks only and the UI says "Checked, not an antivirus scan".
+  clamav:
+    image: clamav/clamav:1.4.3
+    profiles: ["antivirus"]
+    restart: unless-stopped
+    volumes:
+      - clamav-db:/var/lib/clamav
+      - ./deploy/clamav/clamd.conf:/etc/clamav/clamd.conf:ro
+    healthcheck:
+      test: ["CMD", "clamdscan", "--ping", "1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+
+  backend:
+    build: ./backend
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      s3: { condition: service_healthy }
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+      # One-off escape hatch when a database missed a migration that merged later (normally false).
+      SPRING_FLYWAY_OUT_OF_ORDER: ${FLYWAY_OUT_OF_ORDER:-false}
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${DATABASE_NAME:-howlers}
+      DATABASE_USER: ${DATABASE_USER:-howlers}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOST: redis
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CORS_ALLOWED_ORIGINS: ${APP_PUBLIC_URL:-http://localhost:8088}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL:-http://localhost:8088}
+      MAIL_MODE: ${MAIL_MODE:-log}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-no-reply@howlers.local}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-Howlers}
+      MAIL_REPLY_TO: ${MAIL_REPLY_TO:-}
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+      # Storage: the S3 bucket by default; STORAGE_DRIVER=local keeps files in the uploads volume instead.
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-s3}
+      S3_ENDPOINT: http://s3:8333
+      S3_CREATE_BUCKET: "true"
+      S3_PATH_STYLE: "true"
+      S3_REGION: us-east-1
+      S3_BUCKET: ${S3_BUCKET:-howlers}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-howlers}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+      FILE_VISITOR_SALT: ${FILE_VISITOR_SALT:-}
+      ACCOUNT_SECRETS_KEY: ${ACCOUNT_SECRETS_KEY:-}
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-}
+      WEBAUTHN_ORIGINS: ${WEBAUTHN_ORIGINS:-}
+      # none | clamav (start the clamav profile too). Not required locally: uploads fall back to structural checks.
+      ANTIVIRUS: ${ANTIVIRUS:-none}
+      ANTIVIRUS_REQUIRED: ${ANTIVIRUS_REQUIRED:-false}
+      CLAMAV_HOST: clamav
+      CLAMAV_PORT: "3310"
+      FUNDING_DEMO_WEBHOOK_SECRET: ${FUNDING_DEMO_WEBHOOK_SECRET:-dev-only-demo-webhook-secret-change-me}
+      # Moderator funding provider (D-034): demo by default; stripe uses hosted Checkout with the keys from .env.
+      FUNDING_PROVIDER: ${FUNDING_PROVIDER:-demo}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      FUNDING_LIVE_MODE: ${FUNDING_LIVE_MODE:-false}
+      FUNDING_COMPLIANCE_ACK: ${FUNDING_COMPLIANCE_ACK:-}
+      # Stripe Connect payouts to moderators (D-046, D-047); off unless set in .env.
+      STRIPE_CONNECT_ENABLED: ${STRIPE_CONNECT_ENABLED:-false}
+      STRIPE_CONNECT_LIVE: ${STRIPE_CONNECT_LIVE:-false}
+      STRIPE_CONNECT_COUNTRY: ${STRIPE_CONNECT_COUNTRY:-US}
+      STRIPE_CONNECT_WEBHOOK_SECRET: ${STRIPE_CONNECT_WEBHOOK_SECRET:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-}
+      AI_EFFORT: ${AI_EFFORT:-medium}
+      ELEVENLABS_API_KEY: ${ELEVENLABS_API_KEY:-}
+      ELEVENLABS_MODEL: ${ELEVENLABS_MODEL:-eleven_multilingual_v2}
+      ELEVENLABS_VOICE_A: ${ELEVENLABS_VOICE_A:-XrExE9yKIg1WjnnlVkGX}
+      ELEVENLABS_VOICE_B: ${ELEVENLABS_VOICE_B:-JBFqnCBsd6RMkjVDRZzb}
+      TTS_DAILY_CHARACTER_BUDGET: ${TTS_DAILY_CHARACTER_BUDGET:-100000}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
+    volumes:
+      - uploads:/app/data/uploads
+    restart: unless-stopped
+
+  web:
+    build: ./frontend
+    depends_on:
+      backend: { condition: service_healthy }
+    ports:
+      - "${WEB_PORT:-8088}:80"
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:
+  s3data:
+  clamav-db:

@@ -1,0 +1,149 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      # Integration tests use embedded PostgreSQL binaries; no service container required.
+      - run: ./mvnw -B verify
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npx vitest run
+      - run: npm run build
+
+  # End-to-end: the real backend jar (demo seed on) against PostgreSQL and Redis service containers, the built frontend
+  # served by `vite preview` (which proxies /api and /ws), and the Playwright suite in Chromium.
+  # No repository secrets are referenced anywhere in this job: every credential below is a throwaway CI-only value,
+  # ANTHROPIC_API_KEY is forced empty so Community AI uses the offline provider, and `permissions: contents: read`
+  # (top of file) means the token can't write. Uploaded artifacts hold only CI-generated demo data.
+  e2e:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: howlers
+          POSTGRES_USER: howlers
+          POSTGRES_PASSWORD: ci-only-db-password
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U howlers -d howlers" --health-interval 5s --health-timeout 3s --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      E2E_BASE_URL: http://localhost:5174
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build backend jar
+        working-directory: backend
+        run: ./mvnw -B -q -DskipTests package
+      - name: Start backend (demo seed, offline AI)
+        working-directory: backend
+        env:
+          DATABASE_URL: jdbc:postgresql://localhost:5432/howlers
+          DATABASE_USER: howlers
+          DATABASE_PASSWORD: ci-only-db-password
+          REDIS_HOST: localhost
+          JWT_SECRET: Y2ktb25seS1lMmUtc2VjcmV0LW5vdC1mb3ItcHJvZHVjdGlvbi11c2UtMTIzNDU=
+          CORS_ALLOWED_ORIGINS: http://localhost:5174
+          APP_PUBLIC_URL: http://localhost:5174
+          SEED_DEMO_DATA: 'true'
+          MAIL_MODE: log
+          AI_PROVIDER: offline
+          ANTHROPIC_API_KEY: ''
+          FUNDING_DEMO_WEBHOOK_SECRET: ci-only-demo-webhook-secret
+          STORAGE_LOCAL_DIR: ${{ runner.temp }}/uploads
+        run: |
+          nohup java -jar target/howlers-backend.jar > "$RUNNER_TEMP/backend.log" 2>&1 &
+          for i in $(seq 1 90); do
+            if curl -fsS http://localhost:8080/actuator/health/readiness > /dev/null; then echo "backend ready"; exit 0; fi
+            sleep 2
+          done
+          echo "backend did not become ready"; tail -n 200 "$RUNNER_TEMP/backend.log"; exit 1
+
+      - name: Install frontend dependencies and Chromium
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Build and serve frontend
+        working-directory: frontend
+        run: |
+          npm run build
+          nohup npx vite preview --port 5174 --strictPort > "$RUNNER_TEMP/web.log" 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:5174/ > /dev/null && curl -fsS http://localhost:5174/api/v1/ai/status > /dev/null; then echo "web ready"; exit 0; fi
+            sleep 2
+          done
+          echo "frontend did not start"; cat "$RUNNER_TEMP/web.log"; exit 1
+      - name: Run Playwright suite
+        working-directory: frontend
+        run: npx playwright test
+      - name: Upload Playwright report and traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
+
+  images:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build
+        env:
+          DATABASE_PASSWORD: ci-only
+          JWT_SECRET: Y2ktb25seS1zZWNyZXQtbm90LWZvci1wcm9kdWN0aW9uLXVzZS0xMjM0NQ==
+          S3_SECRET_KEY: ci-only-s3-secret

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 124" width="400" height="496">
+  <!-- Howlers wolf mark (dark-background gradient). Source of truth: frontend/src/design-system/HowlersMark.tsx -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="10" x2="0" y2="122" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8e2fd0"/>
+      <stop offset=".45" stop-color="#5a6be6"/>
+      <stop offset="1" stop-color="#36dcf4"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#g)">
+    <path d="M31 8 L36.5 22 L43 34.5 L38.6 33.6 L34.4 24.8 L30.4 19 L27.4 36 L32.4 41.8 L21.8 44.6 Z"/>
+    <path d="M21.8 46.8 L13.4 54.6 L19.6 55.2 L9.8 64.6 L18 65.4 L11.2 76.4 L20.6 72.4 L17.4 84.2 L26.2 77.6 L31.8 94 L28.6 76.2 L23.6 66.4 L26.6 57.2 L31.6 51.4 Z"/>
+    <path d="M27.6 46.6 L44.6 52.6 L46.4 58.4 L41.8 56.4 L33 54.6 Z"/>
+    <path d="M35.2 59 L44.4 60.6 L40.2 63.4 Z"/>
+    <path d="M30.6 60.2 L38.6 66.8 L41.2 78.6 L36.2 72.6 L29.8 68.4 Z"/>
+    <path d="M44.4 64.4 L47.6 66.6 L47.8 83.4 L43.6 78.4 Z"/>
+    <path d="M33.6 80.8 L42.8 90.8 L48.6 99.2 L42.4 97.6 L35.4 90.2 Z"/>
+    <g transform="translate(100 0) scale(-1 1)">
+      <path d="M31 8 L36.5 22 L43 34.5 L38.6 33.6 L34.4 24.8 L30.4 19 L27.4 36 L32.4 41.8 L21.8 44.6 Z"/>
+      <path d="M21.8 46.8 L13.4 54.6 L19.6 55.2 L9.8 64.6 L18 65.4 L11.2 76.4 L20.6 72.4 L17.4 84.2 L26.2 77.6 L31.8 94 L28.6 76.2 L23.6 66.4 L26.6 57.2 L31.6 51.4 Z"/>
+      <path d="M27.6 46.6 L44.6 52.6 L46.4 58.4 L41.8 56.4 L33 54.6 Z"/>
+      <path d="M35.2 59 L44.4 60.6 L40.2 63.4 Z"/>
+      <path d="M30.6 60.2 L38.6 66.8 L41.2 78.6 L36.2 72.6 L29.8 68.4 Z"/>
+      <path d="M44.4 64.4 L47.6 66.6 L47.8 83.4 L43.6 78.4 Z"/>
+      <path d="M33.6 80.8 L42.8 90.8 L48.6 99.2 L42.4 97.6 L35.4 90.2 Z"/>
+    </g>
+    <path d="M46.6 28 L53.4 28 L51.6 56 L50 60.4 L48.4 56 Z"/>
+    <path d="M43.8 86 L56.2 86 L54.6 91.8 L50 94.6 L45.4 91.8 Z"/>
+    <path d="M38.6 104.6 L50 115 L61.4 104.6 L58.6 110.2 L50 119.4 L41.4 110.2 Z"/>
+  </g>
+</svg>

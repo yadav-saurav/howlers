@@ -1,0 +1,9 @@
+node_modules
+dist
+*.local
+.env
+# Playwright output
+test-results
+playwright-report
+blob-report
+e2e/.auth

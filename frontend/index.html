@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Howlers: find your pack &amp; howl together. Communities, threads, AI with citations, live chat, polls and podcasts." />
+    <meta name="theme-color" content="#0E0F11" />
+    <title>Howlers · Find your pack &amp; howl together</title>
+    <!-- Installable app (D-039): manifest, home-screen icons. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Howlers" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- Default link-preview tags. Crawlers get page-specific ones from the backend (nginx routes them, D-039). -->
+    <meta property="og:site_name" content="Howlers" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Howlers · Find your pack &amp; howl together" />
+    <meta property="og:description" content="Communities, threads that make sense, an AI that cites its sources, live messages, polls and community podcasts." />
+    <meta property="og:image" content="/og/howlers.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Howlers: Find your pack &amp; howl together" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Howlers · Find your pack &amp; howl together" />
+    <meta name="twitter:description" content="Communities, threads that make sense, an AI that cites its sources, live messages, polls and community podcasts." />
+    <meta name="twitter:image" content="/og/howlers.png" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('howlers-theme');
+          var light = t === 'light' || (t === 'system' && window.matchMedia('(prefers-color-scheme: light)').matches);
+          if (light) document.documentElement.classList.remove('dark');
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+# secrets & local state
+.env
+.env.local
+*.env.local
+.dev/
+data/
+
+# backend
+backend/target/
+backend/data/
+*.log
+
+# frontend
+frontend/node_modules/
+frontend/dist/
+
+# editors / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+
+# production deploy
+deploy/backups/

@@ -1,0 +1,217 @@
+{
+  "users": [
+    {"username": "mira_k", "displayName": "Mira Kovač", "bio": "Backend engineer. JVM, Postgres, and too many side projects.", "topics": ["programming", "career"]},
+    {"username": "dev_ostrander", "displayName": "Sam Ostrander", "bio": "SRE by day, amateur baker by night.", "topics": ["technology", "programming"]},
+    {"username": "nadia_sec", "displayName": "Nadia Rahman", "bio": "Blue team lead. Teaching people to read logs.", "topics": ["security"]},
+    {"username": "paperback_jo", "displayName": "Jo Whitfield", "bio": "Reads 60 books a year, finishes 45.", "topics": ["books"]},
+    {"username": "tunde_builds", "displayName": "Tunde Adeyemi", "bio": "Second-time founder. First one didn't make it.", "topics": ["startups", "career"]},
+    {"username": "lena_lab", "displayName": "Lena Park", "bio": "PhD candidate, computational biology.", "topics": ["science", "data"]},
+    {"username": "reel_ramon", "displayName": "Ramón Ortiz", "bio": "Film student. Will talk about cinematography for hours.", "topics": ["movies"]},
+    {"username": "coach_ines", "displayName": "Inês Duarte", "bio": "Strength coach. Progressive overload is a lifestyle.", "topics": ["fitness"]},
+    {"username": "grid_and_type", "displayName": "Theo Laurent", "bio": "Product designer. Type nerd.", "topics": ["design", "technology"]},
+    {"username": "quant_priya", "displayName": "Priya Nair", "bio": "Data scientist. Skeptical of dashboards.", "topics": ["data", "career"]},
+    {"username": "rustacean_ali", "displayName": "Ali Haidari", "bio": "Systems programmer, borrow checker apologist.", "topics": ["programming"]},
+    {"username": "first_job_fern", "displayName": "Fern Osei", "bio": "New grad, figuring it out in public.", "topics": ["career", "programming"]}
+  ],
+  "communities": [
+    {
+      "slug": "programming", "name": "Programming", "topic": "programming", "owner": "mira_k", "mods": ["rustacean_ali"],
+      "description": "Craft, tools and trade-offs of writing software. Show your work, explain your reasoning.",
+      "tags": ["code", "languages", "tooling"],
+      "rules": [["Explain, don't just link", "Link posts need a short summary of why it's worth reading."], ["No low-effort help requests", "Show what you tried. Homework questions go in the weekly thread."]],
+      "flairs": [["Discussion", "#3FB68B"], ["Show & Tell", "#58A6FF"], ["Question", "#D4A72C"]],
+      "posts": [
+        {"author": "rustacean_ali", "hoursAgo": 5, "flair": "Discussion", "tags": ["rust", "go"], "upvotes": 9, "downvotes": 1,
+         "title": "After a year maintaining services in both Rust and Go, here's where each one actually hurt",
+         "body": "<p>We run eleven services: six in Go, five in Rust. People keep asking which is better, so here's the honest ledger.</p><p><strong>Go hurt us</strong> in error handling verbosity and in the one service that genuinely needed predictable latency under GC pressure.</p><p><strong>Rust hurt us</strong> in onboarding time (about six weeks before people were productive) and compile times in CI.</p><p>Neither hurt us where the internet says they would. Curious what others have seen.</p>",
+         "comments": [
+           {"author": "mira_k", "body": "The onboarding number matches ours almost exactly. Weeks 3-5 are the wall; after that people stop fighting the borrow checker and start designing around ownership.", "upvotes": 6,
+            "replies": [
+              {"author": "first_job_fern", "body": "As someone in week 4 right now: this is reassuring and terrifying in equal measure.", "upvotes": 4,
+               "replies": [{"author": "rustacean_ali", "body": "@first_job_fern the trick that helped our juniors: write it with `.clone()` everywhere first, then remove clones one at a time. You learn where ownership actually matters.", "upvotes": 5}]}
+            ]},
+          {"author": "dev_ostrander", "body": "Did you measure the GC issue or just feel it? We saw something similar and it turned out to be an allocation-heavy JSON path, not the GC itself.", "upvotes": 3,
+           "replies": [{"author": "rustacean_ali", "body": "Measured — p99 spikes lined up with GC cycles in the traces. But you're right that reducing allocations got us 70% of the way before we rewrote anything.", "upvotes": 4}]},
+          {"author": "quant_priya", "body": "Would love the CI numbers. Compile time is the thing I never see quantified in these comparisons.", "upvotes": 2}
+        ]},
+        {"author": "mira_k", "hoursAgo": 20, "flair": "Show & Tell", "tags": ["postgres", "java"], "upvotes": 7, "downvotes": 0,
+         "title": "Keyset pagination cut our feed endpoint p95 from 480ms to 22ms",
+         "body": "<p>We were using <code>OFFSET</code> pagination on a table with ~40M rows. Page 200 meant Postgres scanning and discarding 4,000 rows every time.</p><p>Switching to a <code>(rank, id) &lt; (:rank, :id)</code> predicate with a matching composite index made every page cost the same. The tricky part was the cursor: encode both values, never just the id.</p>",
+         "comments": [
+           {"author": "dev_ostrander", "body": "The composite index ordering detail is the part everyone gets wrong. DESC on both columns or the planner won't use it for the row comparison.", "upvotes": 5},
+           {"author": "first_job_fern", "body": "What do you do when the rank changes between page loads? Doesn't the user see duplicates?", "upvotes": 3,
+            "replies": [{"author": "mira_k", "body": "Occasionally, yes. We dedupe on the client by id. For a feed that's an acceptable trade; for anything financial it wouldn't be.", "upvotes": 4}]}
+        ]},
+        {"author": "first_job_fern", "hoursAgo": 50, "flair": "Question", "tags": ["testing"], "upvotes": 4, "downvotes": 0,
+         "title": "How do you decide what deserves an integration test versus a unit test?",
+         "body": "<p>My team's codebase has 1,900 unit tests and they all pass, and we still ship bugs at every boundary between services. Is there a rule of thumb people use?</p>",
+         "comments": [
+           {"author": "mira_k", "body": "Mine: if the bug would come from two pieces of code disagreeing about something (a schema, a contract, a transaction boundary), it needs a test that runs both pieces for real.", "upvotes": 6},
+           {"author": "rustacean_ali", "body": "Mock less. Most of the bugs I've shipped lived precisely in the thing I mocked.", "upvotes": 4}
+        ]}
+      ]
+    },
+    {
+      "slug": "cybersecurity", "name": "Cybersecurity", "topic": "security", "owner": "nadia_sec", "mods": [],
+      "description": "Defenders, researchers and learners. Practical security, responsibly discussed.",
+      "tags": ["blue-team", "appsec", "careers"],
+      "rules": [["No illegal requests", "No help attacking systems you don't own or have permission to test."], ["Cite sources for incidents", "Link the advisory or write-up when discussing a breach."]],
+      "flairs": [["Learning", "#58A6FF"], ["Incident", "#E5534B"], ["Career", "#D4A72C"]],
+      "posts": [
+        {"author": "nadia_sec", "hoursAgo": 9, "flair": "Learning", "tags": ["roadmap", "beginners"], "upvotes": 10, "downvotes": 0,
+         "title": "The beginner roadmap I wish someone had given me: networking first, tools last",
+         "body": "<p>Every week someone asks which certification to start with. My answer is always the same: none yet.</p><ol><li>Learn how a packet gets from your laptop to a server. DNS, TCP, TLS, HTTP.</li><li>Run a Linux box. Break it. Read its logs.</li><li>Learn to read code in one language well enough to spot input handling.</li><li>Only then pick tools and a cert.</li></ol><p>People who skip step 1 can run tools but can't explain their output.</p>",
+         "comments": [
+           {"author": "first_job_fern", "body": "How long did step 1 take you, realistically?", "upvotes": 3,
+            "replies": [{"author": "nadia_sec", "body": "Two or three months of evenings to be comfortable. You keep learning it forever, but that's the point where log files start making sense.", "upvotes": 5}]},
+          {"author": "dev_ostrander", "body": "Strong agree on Linux. Half of incident response is knowing what normal looks like on a box.", "upvotes": 4},
+          {"author": "quant_priya", "body": "Counterpoint: some people need the motivation of a cert milestone to keep going. I'd say do both in parallel, just don't treat the cert as the knowledge.", "upvotes": 4,
+           "replies": [{"author": "nadia_sec", "body": "Fair. Motivation is a real constraint. My concern is only people who stop at the cert.", "upvotes": 3}]}
+        ]},
+        {"author": "nadia_sec", "hoursAgo": 30, "flair": "Career", "tags": ["internships"], "upvotes": 6, "downvotes": 1,
+         "title": "What we actually look for when hiring security interns",
+         "body": "<p>Not certifications. We look for evidence of curiosity: a home lab write-up, a CTF solution explained clearly, a bug report to an open-source project. Writing matters more than people expect, because half the job is explaining risk to people who don't share your context.</p>",
+         "comments": [
+           {"author": "first_job_fern", "body": "Does a blog with three posts count, or does it look worse than nothing?", "upvotes": 2,
+            "replies": [{"author": "nadia_sec", "body": "Three good posts beat thirty shallow ones. It counts.", "upvotes": 4}]}
+        ]}
+      ]
+    },
+    {
+      "slug": "books", "name": "Books", "topic": "books", "owner": "paperback_jo", "mods": [],
+      "description": "What you're reading, what you abandoned, and why. Spoilers tagged, opinions welcome.",
+      "tags": ["reading", "reviews"],
+      "rules": [["Tag spoilers", "Use the Spoilers flair and keep plot details out of titles."]],
+      "flairs": [["Review", "#3FB68B"], ["Recommendation", "#58A6FF"], ["Spoilers", "#E5534B"]],
+      "posts": [
+        {"author": "paperback_jo", "hoursAgo": 14, "flair": "Recommendation", "tags": ["nonfiction"], "upvotes": 6, "downvotes": 0,
+         "title": "Non-fiction that reads like a novel: drop your best recommendations",
+         "body": "<p>I'm in a fiction slump and want narrative non-fiction that actually pulls me forward. History, science, true events, anything. What kept you up past midnight?</p>",
+         "comments": [
+           {"author": "lena_lab", "body": "Anything about the history of a scientific discovery told through the people involved. The personalities are half the story.", "upvotes": 4},
+           {"author": "tunde_builds", "body": "Business histories of failed companies. The tension is built in because you know how it ends and still can't look away.", "upvotes": 3}
+        ]}
+      ]
+    },
+    {
+      "slug": "careers", "name": "Career Advice", "topic": "career", "owner": "quant_priya", "mods": ["tunde_builds"],
+      "description": "Honest advice about jobs, growth and work. Share what happened, not just what should happen.",
+      "tags": ["jobs", "interviews", "growth"],
+      "rules": [["Share context", "Say your field and level so advice can be specific."]],
+      "flairs": [["Advice", "#3FB68B"], ["Story", "#58A6FF"]],
+      "posts": [
+        {"author": "first_job_fern", "hoursAgo": 3, "flair": "Advice", "tags": ["new-grad"], "upvotes": 5, "downvotes": 0,
+         "title": "Six months into my first job and I still feel slow. When did it click for you?",
+         "body": "<p>Everyone on my team ships twice as fast as me. My manager says I'm on track but I don't feel it. Did anyone else feel like this, and when did it change?</p>",
+         "comments": [
+           {"author": "mira_k", "body": "Around month nine for me. The thing that changed wasn't speed; it was that I started knowing which parts of the codebase I could ignore.", "upvotes": 5},
+           {"author": "quant_priya", "body": "Your manager has information you don't: what 'on track' looks like across many new hires. Trust that signal more than your comparison with seniors.", "upvotes": 4},
+           {"author": "tunde_builds", "body": "Write down one thing a week you couldn't do last month. Progress is invisible from the inside.", "upvotes": 3}
+        ]},
+        {"author": "quant_priya", "hoursAgo": 70, "flair": "Story", "tags": ["interviews"], "upvotes": 4, "downvotes": 1,
+         "title": "I've run 150 data science interviews. The candidates who stand out all do one thing",
+         "body": "<p>They ask what decision the analysis is supposed to support before touching the data. It sounds trivial. Fewer than one in five candidates do it.</p>",
+         "comments": [
+           {"author": "lena_lab", "body": "Academia trains the opposite instinct, which is probably why so many of us struggle in industry interviews.", "upvotes": 3}
+        ]}
+      ]
+    },
+    {
+      "slug": "startups", "name": "Startups", "topic": "startups", "owner": "tunde_builds", "mods": [],
+      "description": "Founders and early employees, comparing notes. Real numbers appreciated.",
+      "tags": ["founders", "fundraising"],
+      "rules": [["No self-promotion without substance", "Launch posts must explain what you learned."]],
+      "flairs": [["Lessons", "#3FB68B"], ["Ask", "#D4A72C"]],
+      "posts": [
+        {"author": "tunde_builds", "hoursAgo": 26, "flair": "Lessons", "tags": ["failure"], "upvotes": 8, "downvotes": 1,
+         "title": "My first startup died with $200k still in the bank. Here's why stopping was the right call",
+         "body": "<p>We had 14 months of runway and a product nobody hated but nobody needed. Retention plateaued at 8% after week four for three straight quarters.</p><p>Returning money to investors was the hardest conversation I've had, and three of them backed my next company because of it.</p>",
+         "comments": [
+           {"author": "quant_priya", "body": "What made you trust the 8% plateau instead of hoping the next feature would move it?", "upvotes": 4,
+            "replies": [{"author": "tunde_builds", "body": "We'd shipped six 'this will fix retention' features. The curve didn't move for any of them. At some point the data is telling you something about the problem, not the solution.", "upvotes": 6}]},
+          {"author": "dev_ostrander", "body": "Respect for returning the money. Most people burn it to zero.", "upvotes": 3}
+        ]}
+      ]
+    },
+    {
+      "slug": "science", "name": "Science", "topic": "science", "owner": "lena_lab", "mods": [],
+      "description": "Research explained by people who read the paper. Link primary sources.",
+      "tags": ["research", "papers"],
+      "rules": [["Link the paper", "Posts about studies must link the primary source, not only press coverage."]],
+      "flairs": [["Paper", "#58A6FF"], ["Explainer", "#3FB68B"]],
+      "posts": [
+        {"author": "lena_lab", "hoursAgo": 40, "flair": "Explainer", "tags": ["statistics"], "upvotes": 6, "downvotes": 0,
+         "title": "Why 'statistically significant' doesn't mean 'important': a short explainer",
+         "body": "<p>A p-value tells you how surprising your data would be if there were no effect. It says nothing about how big the effect is. With enough samples, a difference too small to matter will be 'significant'.</p><p>Always ask for the effect size and its confidence interval.</p>",
+         "comments": [
+           {"author": "quant_priya", "body": "Saving this for the next time someone shows me a dashboard with 40 green p-values.", "upvotes": 4}
+        ]}
+      ]
+    },
+    {
+      "slug": "movies", "name": "Movies & TV", "topic": "movies", "owner": "reel_ramon", "mods": [],
+      "description": "Film and series discussion with an eye for craft.",
+      "tags": ["film", "tv"],
+      "rules": [["Spoilers in titles get removed", "Use the Spoilers flair."]],
+      "flairs": [["Discussion", "#3FB68B"], ["Spoilers", "#E5534B"]],
+      "posts": [
+        {"author": "reel_ramon", "hoursAgo": 18, "flair": "Discussion", "tags": ["cinematography"], "upvotes": 5, "downvotes": 1,
+         "title": "Long takes are having a moment again. Are they storytelling or showing off?",
+         "body": "<p>Three releases this year built set-pieces around unbroken takes. When does the technique serve the scene, and when is it a director flexing?</p>",
+         "comments": [
+           {"author": "grid_and_type", "body": "It works when the tension comes from not being allowed to look away. It fails when you start counting seconds instead of watching.", "upvotes": 4},
+           {"author": "paperback_jo", "body": "Same debate as very long sentences in novels, honestly.", "upvotes": 2}
+        ]}
+      ]
+    },
+    {
+      "slug": "fitness", "name": "Fitness", "topic": "fitness", "owner": "coach_ines", "mods": [],
+      "description": "Training, recovery and nutrition grounded in evidence, not hype.",
+      "tags": ["strength", "nutrition"],
+      "rules": [["No medical advice", "Talk to a professional about injuries."]],
+      "flairs": [["Training", "#3FB68B"], ["Question", "#D4A72C"]],
+      "posts": [
+        {"author": "coach_ines", "hoursAgo": 33, "flair": "Training", "tags": ["beginners"], "upvotes": 5, "downvotes": 0,
+         "title": "The boring program beats the perfect program you quit",
+         "body": "<p>Three full-body sessions a week, a handful of compound lifts, add a little weight when it feels easy. That's it for the first year. Consistency is the variable that matters.</p>",
+         "comments": [
+           {"author": "dev_ostrander", "body": "Ran exactly this for 14 months. The hardest part was not changing it every time I watched a new video.", "upvotes": 3}
+        ]}
+      ]
+    },
+    {
+      "slug": "design", "name": "Design", "topic": "design", "owner": "grid_and_type", "mods": [],
+      "description": "Product, interface and visual design. Critique is welcome when it's specific.",
+      "tags": ["ui", "typography"],
+      "rules": [["Specific critique only", "Explain why, not just 'looks bad'."]],
+      "flairs": [["Critique", "#58A6FF"], ["Resource", "#3FB68B"]],
+      "posts": [
+        {"author": "grid_and_type", "hoursAgo": 12, "flair": "Resource", "tags": ["typography"], "upvotes": 6, "downvotes": 0,
+         "title": "Pairing a serif for content with a sans for interface is still the best default",
+         "body": "<p>Serif headlines signal 'read me'. A neutral sans for buttons and metadata signals 'operate me'. The split helps people know where they are on a dense page.</p>",
+         "comments": [
+           {"author": "mira_k", "body": "Is this why documentation sites feel calmer than dashboards?", "upvotes": 2,
+            "replies": [{"author": "grid_and_type", "body": "Partly. Mostly it's that docs are allowed whitespace and dashboards are expected to justify every pixel.", "upvotes": 3}]}
+        ]}
+      ]
+    },
+    {
+      "slug": "technology", "name": "Technology", "topic": "technology", "owner": "dev_ostrander", "mods": [],
+      "description": "The industry, platforms and the second-order effects of the tools we build.",
+      "tags": ["industry", "ai", "hardware"],
+      "rules": [["Original sources", "Prefer the announcement or the paper over aggregator coverage."]],
+      "flairs": [["News", "#58A6FF"], ["Discussion", "#3FB68B"]],
+      "posts": [
+        {"author": "dev_ostrander", "hoursAgo": 7, "flair": "Discussion", "tags": ["ai", "coding"], "upvotes": 7, "downvotes": 2,
+         "title": "What has AI-assisted coding actually changed on your team?",
+         "body": "<p>Not predictions — observations. On ours: code review got longer, not shorter, and juniors ask fewer questions in public. I'm not sure the second one is good.</p>",
+         "comments": [
+           {"author": "mira_k", "body": "Same review effect. The diffs are bigger and more plausible-looking, which is exactly what makes them slower to review.", "upvotes": 5},
+           {"author": "first_job_fern", "body": "As a junior: I ask fewer questions because I'm afraid they're questions a tool could have answered. That's not great for learning.", "upvotes": 6,
+            "replies": [{"author": "dev_ostrander", "body": "That's the part that worries me. We started a 'no dumb questions' channel because of comments like this.", "upvotes": 4}]},
+          {"author": "rustacean_ali", "body": "Boilerplate is cheaper. Design is not. Teams that confuse the two are going to have a rough few years.", "upvotes": 4}
+        ]}
+      ]
+    }
+  ]
+}

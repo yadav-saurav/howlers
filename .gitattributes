@@ -1,0 +1,2 @@
+# Mounted into a Linux container as-is: keep LF even on Windows checkouts (clamd would read "600M\r").
+deploy/clamav/clamd.conf text eol=lf

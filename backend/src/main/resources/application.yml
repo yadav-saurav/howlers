@@ -1,0 +1,297 @@
+spring:
+  application:
+    name: howlers
+  config:
+    # Local-only secrets (e.g. ANTHROPIC_API_KEY=...) in backend/.env.local, git-ignored. Absent in Docker/CI.
+    import: optional:file:./.env.local[.properties]
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/howlers}
+    username: ${DATABASE_USER:howlers}
+    password: ${DATABASE_PASSWORD:howlers}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_SIZE:15}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc.time_zone: UTC
+        default_batch_fetch_size: 50
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 500ms
+  servlet:
+    multipart:
+      # Per-endpoint limits are enforced in code (images 10 MB, podcast media howlers.storage.max-media-mb).
+      max-file-size: 600MB
+      max-request-size: 610MB
+      file-size-threshold: 1MB
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      # STARTTLS when the server offers it (587, e.g. Brevo's relay smtp-relay.brevo.com); credentials are sent when SMTP_USER is set.
+      mail.smtp.starttls.enable: ${SMTP_STARTTLS:true}
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+  jackson:
+    default-property-inclusion: always
+    serialization:
+      write-dates-as-timestamps: false
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: native
+  error:
+    include-message: never
+    include-stacktrace: never
+
+management:
+  endpoints:
+    web:
+      exposure:
+        # Prometheus is exposed only in prod, on the separate management port (D-026).
+        include: ${MANAGEMENT_EXPOSURE:health,info}
+  endpoint:
+    health:
+      probes:
+        enabled: true
+        # /livez and /readyz on the main port too, so container health checks work when management moves to its own port.
+        add-additional-paths: true
+      show-details: when-authorized
+      group:
+        # /readyz: ready only when the database and storage answer (Redis is optional: rate limits and the feed cache degrade).
+        readiness:
+          include: readinessState,db,storage
+  metrics:
+    tags:
+      application: howlers
+    distribution:
+      # Histogram buckets so Grafana can compute p95 latency (deploy/grafana/dashboards/howlers-overview.json).
+      percentiles-histogram:
+        http.server.requests: true
+  health:
+    mail:
+      enabled: false
+    redis:
+      enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  pattern:
+    level: "%5p [trace=%X{traceId:-}]"
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+
+howlers:
+  jwt:
+    # Base64, >= 32 bytes. The default is for local development only; production must set JWT_SECRET.
+    secret: ${JWT_SECRET:ZGV2LW9ubHktc2VjcmV0LWNoYW5nZS1tZS1iZWZvcmUtZGVwbG95aW5nLXN0cmF0YQ==}
+    access-ttl: ${JWT_ACCESS_TTL:PT15M}
+    refresh-ttl: ${JWT_REFRESH_TTL:P30D}
+    issuer: howlers
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+  app:
+    public-url: ${APP_PUBLIC_URL:http://localhost:5173}
+    name: Howlers
+  mail:
+    # log | smtp | brevo (D-038). The from address must be a sender (or domain) verified in the provider account.
+    mode: ${MAIL_MODE:log}
+    from-address: ${MAIL_FROM_ADDRESS:${MAIL_FROM:no-reply@howlers.local}}
+    from-name: ${MAIL_FROM_NAME:Howlers}
+    reply-to: ${MAIL_REPLY_TO:}
+    brevo:
+      api-key: ${BREVO_API_KEY:}
+      base-url: ${BREVO_BASE_URL:https://api.brevo.com}
+      # removeTrackingPixel is an Enterprise-plan option in Brevo; other plans reject or ignore it, so it's opt-in.
+      remove-tracking-pixel: ${BREVO_REMOVE_TRACKING_PIXEL:false}
+      timeout: 10s
+  storage:
+    # local | s3 (D-023). s3 works with AWS S3 and S3-compatible servers (SeaweedFS in compose); the bucket stays private and every read goes through the API.
+    driver: ${STORAGE_DRIVER:local}
+    local-dir: ${STORAGE_LOCAL_DIR:./data/uploads}
+    s3:
+      bucket: ${S3_BUCKET:howlers}
+      endpoint: ${S3_ENDPOINT:}
+      region: ${S3_REGION:us-east-1}
+      access-key: ${S3_ACCESS_KEY:}
+      secret-key: ${S3_SECRET_KEY:}
+      path-style: ${S3_PATH_STYLE:false}
+      # Streams larger than this are sent as multipart uploads (8 MB parts).
+      multipart-threshold-mb: 8
+      # Create the bucket at startup if it doesn't exist (on for the bundled SeaweedFS; off for AWS in prod).
+      create-bucket: ${S3_CREATE_BUCKET:false}
+    max-image-bytes: 10485760
+    max-media-mb: ${MAX_MEDIA_MB:500}
+  files:
+    # Private files (Phase 7). Keep max-file-mb below spring.servlet.multipart.max-file-size.
+    max-file-mb: ${MAX_FILE_MB:500}
+    quota-mb: ${FILE_QUOTA_MB:1024}
+    # Salt for hashing visitor IPs in share access logs. Blank = random per start (hashes not linkable across restarts).
+    visitor-salt: ${FILE_VISITOR_SALT:}
+    # Malware scanning (D-029): none (structural checks only) | clamav (clamd INSTREAM over TCP).
+    antivirus: ${ANTIVIRUS:none}
+    # When clamd is unreachable: true = refuse uploads (fail closed; recommended in production), false = accept them
+    # as structurally checked only, labelled "Checked, not an antivirus scan" (fail open).
+    antivirus-required: ${ANTIVIRUS_REQUIRED:false}
+    clamav:
+      host: ${CLAMAV_HOST:localhost}
+      port: ${CLAMAV_PORT:3310}
+      connect-timeout: ${CLAMAV_CONNECT_TIMEOUT:PT2S}
+      read-timeout: ${CLAMAV_READ_TIMEOUT:PT120S}
+      chunk-kb: 64
+  # One-time privacy migrations (D-030). Moves DM images sent before D-024 to the private prefix at startup.
+  privacy:
+    migrate-legacy-dm-media: ${MIGRATE_LEGACY_DM_MEDIA:true}
+  # Podcast audio from scripts (D-036). auto = ElevenLabs when ELEVENLABS_API_KEY is set (server-side only), else unavailable.
+  podcasts:
+    tts:
+      provider: ${TTS_PROVIDER:auto}
+      max-chars-per-request: ${TTS_MAX_CHARS_PER_REQUEST:2500}
+      max-chars-per-episode: ${TTS_MAX_CHARS_PER_EPISODE:60000}
+      # Per community, per UTC day. Failed/cancelled jobs count only what was actually sent.
+      daily-character-budget: ${TTS_DAILY_CHARACTER_BUDGET:100000}
+      turn-pause-ms: 350
+      elevenlabs:
+        api-key: ${ELEVENLABS_API_KEY:}
+        base-url: ${ELEVENLABS_BASE_URL:https://api.elevenlabs.io}
+        model: ${ELEVENLABS_MODEL:eleven_multilingual_v2}
+        output-format: ${ELEVENLABS_OUTPUT_FORMAT:mp3_44100_128}
+        # Premade ElevenLabs voices (no cloning). Defaults: Matilda (HOST A) and George (HOST B).
+        voice-a: ${ELEVENLABS_VOICE_A:XrExE9yKIg1WjnnlVkGX}
+        voice-a-name: ${ELEVENLABS_VOICE_A_NAME:Matilda}
+        voice-b: ${ELEVENLABS_VOICE_B:JBFqnCBsd6RMkjVDRZzb}
+        voice-b-name: ${ELEVENLABS_VOICE_B_NAME:George}
+        request-timeout: PT2M
+  # Stronger accounts (D-041, D-042): passkeys, TOTP two-factor authentication, new-sign-in emails.
+  account-security:
+    # base64 of 32 random bytes (openssl rand -base64 32); encrypts TOTP secrets at rest. Required in prod; changing it
+    # makes existing authenticator enrolments unreadable. Blank in development: derived from JWT_SECRET, with a warning.
+    secrets-key: ${ACCOUNT_SECRETS_KEY:}
+    webauthn:
+      # Blank = the host of APP_PUBLIC_URL (localhost in dev). Passkeys are bound to it: changing it orphans them.
+      rp-id: ${WEBAUTHN_RP_ID:}
+      rp-name: Howlers
+      # Comma-separated exact origins (scheme://host[:port]) allowed to use passkeys. Blank = the origin of APP_PUBLIC_URL.
+      origins: ${WEBAUTHN_ORIGINS:}
+    mfa:
+      login-token-ttl: PT5M
+      max-attempts: 5
+      lockout: PT5M
+    new-signin-alerts: ${NEW_SIGNIN_ALERTS:true}
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+  seed:
+    enabled: ${SEED_DEMO_DATA:true}
+  # First-page feed id lists cached in Redis (D-025). Only rank order is cached; posts are hydrated per viewer.
+  feed-cache:
+    enabled: ${FEED_CACHE_ENABLED:true}
+    ttl: ${FEED_CACHE_TTL:PT30S}
+  ai:
+    provider: ${AI_PROVIDER:auto}
+    api-key: ${ANTHROPIC_API_KEY:}
+    model: ${AI_MODEL:}
+    effort: ${AI_EFFORT:medium}
+    max-tokens: ${AI_MAX_TOKENS:16000}
+  # Moderator funding (D-022, D-034). demo (simulated) or stripe (hosted Checkout); any other value refuses to start.
+  funding:
+    enabled: ${FUNDING_ENABLED:true}
+    provider: ${FUNDING_PROVIDER:demo}
+    # A live Stripe key (sk_live_) is refused unless live-mode is true AND compliance-ack records the sign-off (D-034).
+    live-mode: ${FUNDING_LIVE_MODE:false}
+    compliance-ack: ${FUNDING_COMPLIANCE_ACK:}
+    stripe:
+      # Server-side only, from the environment or the git-ignored backend/.env.local. Never logged, never sent to the browser.
+      secret-key: ${STRIPE_SECRET_KEY:}
+      webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    # Demo webhooks are HMAC-SHA256 signed with this secret. Set your own outside local development.
+    demo-webhook-secret: ${FUNDING_DEMO_WEBHOOK_SECRET:dev-only-demo-webhook-secret-change-me}
+    webhook-tolerance-seconds: 300
+    jobs-enabled: ${FUNDING_JOBS_ENABLED:true}
+    # Stripe Connect payouts to moderators (D-046, D-047). Off by default; needs FUNDING_PROVIDER=stripe and Connect
+    # activated in the Stripe dashboard. A live key also needs connect.live-mode=true (on top of D-034's acknowledgement).
+    connect:
+      enabled: ${STRIPE_CONNECT_ENABLED:false}
+      live-mode: ${STRIPE_CONNECT_LIVE:false}
+      country: ${STRIPE_CONNECT_COUNTRY:US}
+      # Only when the dashboard has a separate "connected accounts" endpoint with its own secret.
+      webhook-secret: ${STRIPE_CONNECT_WEBHOOK_SECRET:}
+  # Write-time spam heuristics (D-021). Held content goes to the mod queue; "reject" thresholds refuse outright.
+  spam:
+    enabled: ${SPAM_HEURISTICS_ENABLED:true}
+    new-account-age: P7D
+    link-velocity:
+      max-links: 5          # more links than this from a new account within the window is held
+      reject-links: 20
+      window: PT10M
+    duplicate:
+      max-communities: 3    # same content in this many communities within the window is held
+      reject-communities: 6
+      window: PT1H
+      cross-account-min-body: 40
+    burst:
+      max-items: 8          # posts + comments from a new account within the window
+      reject-items: 30
+      window: PT5M
+    mentions:
+      max: 8                # distinct @mentions in one post or comment
+      reject: 25
+  # Web push (D-040). Unavailable (and the UI says so) until a VAPID key pair is set. Generate one with
+  # `java -cp target/classes app.howlers.push.VapidKeyGenerator` (or `npx web-push generate-vapid-keys`).
+  push:
+    vapid-public-key: ${VAPID_PUBLIC_KEY:}
+    vapid-private-key: ${VAPID_PRIVATE_KEY:}
+    vapid-subject: ${VAPID_SUBJECT:}
+    ttl: ${PUSH_TTL:PT24H}
+    allowed-hosts: ${PUSH_ALLOWED_HOSTS:fcm.googleapis.com,push.services.mozilla.com,notify.windows.com,push.apple.com}
+    max-per-user-per-minute: ${PUSH_MAX_PER_USER_PER_MINUTE:6}
+  # Link previews, robots.txt and sitemaps (D-039). Absolute URLs use howlers.app.public-url (APP_PUBLIC_URL).
+  seo:
+    sitemap-page-size: ${SITEMAP_PAGE_SIZE:10000}
+    sitemap-max-posts: ${SITEMAP_MAX_POSTS:100000}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+howlers:
+  cookie:
+    secure: true
+  seed:
+    enabled: ${SEED_DEMO_DATA:false}
+  files:
+    # Fail closed in production when ClamAV is enabled but unreachable (D-029).
+    antivirus-required: ${ANTIVIRUS_REQUIRED:true}
+# Metrics and the full actuator live on a separate port that is never published (Caddy/nginx only proxy 8080).
+management:
+  server:
+    port: ${MANAGEMENT_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        include: ${MANAGEMENT_EXPOSURE:health,info,prometheus}
+# One JSON object per line (Elastic Common Schema), including the request's traceId from the MDC.
+logging:
+  structured:
+    format:
+      console: ${LOG_FORMAT:ecs}

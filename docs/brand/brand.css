@@ -1,0 +1,36 @@
+/* Shared styles for the brand pages (social-preview.html, logo.html). Rendered to PNG by render.sh. */
+@font-face {
+  font-family: 'Unbounded';
+  font-weight: 800;
+  src: url('../../frontend/node_modules/@fontsource/unbounded/files/unbounded-latin-800-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-weight: 100 900;
+  src: url('../../frontend/node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2') format('woff2');
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  color: #f6f4ff;
+  /* Night sky from the landing page (routes/landing/landing.css): --night-0..3 */
+  background:
+    radial-gradient(ellipse 70% 60% at 78% 18%, rgba(184, 168, 255, 0.22), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 12% 95%, rgba(54, 220, 244, 0.12), transparent 70%),
+    linear-gradient(180deg, #07061a 0%, #0d0b26 45%, #16123d 80%, #241b5c 100%);
+  position: relative;
+}
+.stars { position: absolute; inset: 0; }
+.star { position: absolute; border-radius: 50%; background: #fff; }
+.moon {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle at 38% 34%, #fffaf0, #ffeec4 55%, #f6cf8c);
+  box-shadow: 0 0 60px 20px rgba(255, 233, 176, 0.22), 0 0 160px 60px rgba(255, 200, 220, 0.08);
+}
+.hills { position: absolute; left: 0; right: 0; bottom: 0; }
+.wordmark {
+  font-family: 'Unbounded', 'Arial Black', sans-serif; font-weight: 800; letter-spacing: -0.01em; line-height: 1;
+  background: linear-gradient(92deg, #ffe9b0 0%, #ffc4d8 48%, #b8a8ff 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}

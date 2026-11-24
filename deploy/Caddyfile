@@ -1,0 +1,40 @@
+# Howlers behind Caddy: automatic HTTPS (Let's Encrypt / ZeroSSL), HTTP->HTTPS redirect, HTTP/2 and HTTP/3.
+# HOWLERS_DOMAIN and ACME_EMAIL come from the environment (deploy/.env). DNS A/AAAA records must point at this host
+# and ports 80 and 443 must be reachable for the certificate challenge.
+{
+	email {$ACME_EMAIL}
+	# Uncomment while testing to avoid Let's Encrypt rate limits:
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+{$HOWLERS_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		# HSTS for the whole site (the API adds its own on HTTPS requests too). Add "preload" only once you're sure.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	# Everything goes to the web container (nginx), which serves the SPA and proxies /api and /ws to the backend.
+	# Caddy proxies WebSocket upgrades automatically and sets X-Forwarded-Proto/For/Host.
+	reverse_proxy web:80 {
+		# Long-lived STOMP connections: don't cut idle sockets (STOMP heartbeats keep them alive).
+		flush_interval -1
+		transport http {
+			read_timeout 1h
+			write_timeout 1h
+		}
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}
+
+# Optional: Grafana on its own subdomain (only when the monitoring profile is running). Protect it with Grafana's
+# own login (GF_SECURITY_ADMIN_PASSWORD); Prometheus itself is never exposed.
+# grafana.{$HOWLERS_DOMAIN} {
+# 	reverse_proxy grafana:3000
+# }

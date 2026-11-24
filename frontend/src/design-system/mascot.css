@@ -1,0 +1,62 @@
+/*
+ * In-app wolf-pup mascot (Mascot.tsx). Decorative only. Colours are scoped to .mascot so the always-dark landing page
+ * keeps its own fixed palette. Contrast of the fur against the page (docs/ACCESSIBILITY.md):
+ *   light: #6f66d9 on white 4.6:1, on surface-2 3.9:1     dark: #c9d3f7 on #0b0e10 13:1, on surface-2 11:1
+ */
+.mascot {
+  --pup-fur: #6f66d9;
+  --pup-shade: #5249bd;
+  --pup-light: #f1efff;
+  --pup-band: #2b2468;
+  --pup-shadow: #1d1840;
+}
+.dark .mascot {
+  --pup-fur: #c9d3f7;
+  --pup-shade: #a3afe0;
+  --pup-light: #ffffff;
+  --pup-band: #9a93f5;
+  --pup-shadow: #000000;
+}
+
+/* Subtle idle motion, only when the visitor hasn't asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .mascot-idle .pup-body {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: mascot-breathe 4.2s ease-in-out infinite;
+  }
+  .mascot-idle .pup-eyes {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: mascot-blink 6s infinite;
+  }
+  .mascot-idle .pup-tail {
+    transform-box: fill-box;
+    transform-origin: 0% 80%;
+    animation: mascot-wag 2.6s ease-in-out infinite;
+  }
+  .mascot-idle .pup-arm {
+    transform-box: fill-box;
+    transform-origin: 0% 100%;
+    animation: mascot-wave 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes mascot-breathe {
+  0%, 100% { transform: scale(1, 1); }
+  50% { transform: scale(1.015, 0.985); }
+}
+@keyframes mascot-blink {
+  0%, 94%, 100% { transform: scaleY(1); }
+  97% { transform: scaleY(0.1); }
+}
+@keyframes mascot-wag {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-7deg); }
+}
+@keyframes mascot-wave {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  70% { transform: rotate(-12deg); }
+  80% { transform: rotate(6deg); }
+  90% { transform: rotate(-8deg); }
+}

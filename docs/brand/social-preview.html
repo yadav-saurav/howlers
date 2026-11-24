@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Howlers social preview (1280x640)</title>
+<link rel="stylesheet" href="brand.css">
+<style>
+  .frame { position: absolute; inset: 0; }
+  .moon { width: 130px; height: 130px; right: 90px; top: 48px; }
+  .content { position: absolute; left: 110px; top: 0; bottom: 0; display: flex; align-items: center; gap: 56px; }
+  .mark { width: 250px; height: 310px; filter: drop-shadow(0 0 34px rgba(90, 107, 230, 0.55)); }
+  .wordmark { font-size: 128px; }
+  .tagline { margin-top: 26px; font-size: 40px; font-weight: 600; color: #e7e3ff; letter-spacing: -0.005em; }
+  .sub { margin-top: 18px; font-size: 24px; font-weight: 500; color: #a9a3d6; }
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="stars" id="stars"></div>
+  <div class="moon"></div>
+  <svg class="hills" viewBox="0 0 1280 160" preserveAspectRatio="none" width="1280" height="160" aria-hidden="true">
+    <path d="M0 110 C180 70 320 120 520 96 C720 72 860 40 1040 78 C1150 100 1220 92 1280 84 L1280 160 L0 160 Z" fill="#16123d" opacity="0.85"/>
+    <path d="M0 140 C220 112 420 150 640 132 C860 114 1060 128 1280 118 L1280 160 L0 160 Z" fill="#07061a"/>
+  </svg>
+  <div class="content">
+    <img class="mark" src="wolf-mark.svg" alt="">
+    <div>
+      <div class="wordmark">Howlers</div>
+      <div class="tagline">Find your pack &amp; howl together</div>
+      <div class="sub">Communities, discussions and shared knowledge.</div>
+    </div>
+  </div>
+</div>
+<script>
+  // Deterministic star field (same idea as the landing page's makeStars).
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+  const host = document.getElementById('stars');
+  for (let i = 0; i < 120; i++) {
+    const s = document.createElement('span');
+    const size = rnd() < 0.12 ? 3 : rnd() < 0.5 ? 2 : 1.2;
+    s.className = 'star';
+    Object.assign(s.style, { left: rnd() * 100 + '%', top: rnd() * 78 + '%', width: size + 'px', height: size + 'px', opacity: (0.35 + rnd() * 0.65).toFixed(2) });
+    host.appendChild(s);
+  }
+</script>
+</body>
+</html>
