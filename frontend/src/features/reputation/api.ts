@@ -47,12 +47,15 @@ export const recognitionKeys = {
 
 const STALE = 60_000;
 
+/** Leaderboards poll while open so they move as people post, vote and moderate (the server refreshes within seconds). */
+const LIVE = 15_000;
+
 export const useTopicLeaders = (slug: string) =>
-  useQuery({ queryKey: recognitionKeys.topicLeaders(slug), queryFn: () => recognitionApi.topicLeaders(slug), staleTime: STALE });
+  useQuery({ queryKey: recognitionKeys.topicLeaders(slug), queryFn: () => recognitionApi.topicLeaders(slug), staleTime: LIVE, refetchInterval: LIVE });
 export const useReputationOverview = () =>
-  useQuery({ queryKey: recognitionKeys.overview, queryFn: recognitionApi.overview, staleTime: STALE });
+  useQuery({ queryKey: recognitionKeys.overview, queryFn: recognitionApi.overview, staleTime: LIVE, refetchInterval: LIVE });
 export const useUserReputation = (username: string) =>
-  useQuery({ queryKey: recognitionKeys.user(username), queryFn: () => recognitionApi.userReputation(username), staleTime: STALE, retry: false });
+  useQuery({ queryKey: recognitionKeys.user(username), queryFn: () => recognitionApi.userReputation(username), staleTime: LIVE, refetchInterval: LIVE, retry: false });
 
 /** One request per thread page; every comment's chip reads from this cached map. */
 export const usePostExpertise = (postId: number) =>
@@ -68,14 +71,14 @@ export const useModLeaderboard = (period: string, community: string) =>
   useQuery({
     queryKey: recognitionKeys.modLeaderboard(period, community),
     queryFn: () => recognitionApi.modLeaderboard(period || undefined, community || undefined),
-    staleTime: STALE,
+    staleTime: LIVE, refetchInterval: LIVE,
     retry: false,
   });
 export const useMemberLeaderboard = (period: string, community: string) =>
   useQuery({
     queryKey: recognitionKeys.memberLeaderboard(period, community),
     queryFn: () => recognitionApi.memberLeaderboard(period || undefined, community || undefined),
-    staleTime: 30_000,
+    staleTime: LIVE, refetchInterval: LIVE,
     retry: false,
   });
 export const useModRecord = (username: string) =>

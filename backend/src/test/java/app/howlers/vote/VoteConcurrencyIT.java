@@ -74,6 +74,6 @@ class VoteConcurrencyIT extends IntegrationTest {
         assertThat(c).isEqualTo(truth);
         assertThat(c.up() + c.down()).isEqualTo(16); // one row per voter, never duplicated
         int karma = jdbc.sql("SELECT post_karma FROM users WHERE id = ?").param(author.id()).query(Integer.class).single();
-        assertThat(karma).isEqualTo(truth.score());
+        assertThat(karma).isEqualTo(PostService.POST_KARMA + truth.score()); // +2 for posting, then the votes
     }
 }

@@ -4,15 +4,15 @@ Implemented in `backend/.../vote/ScoreMath.java`; unit-tested in `ScoreMathTest`
 
 ## Posts: `hot_rank`
 ```
-hot = sign(net)·log10(max(|net|, 1))      // order of magnitude of net votes
+e   = upvotes − downvotes + comments      // engagement: an upvote and a comment each count 1
+hot = sign(e)·log10(max(|e|, 1))          // order of magnitude of engagement
     + 1.5 · wilson(up, down)              // approval quality, 80% Wilson lower bound
-    + 0.35 · log10(1 + comments)          // discussion, logarithmic so reply-farming barely helps
-    + (created_epoch − 1.7e9) / 50 400    // time: every 14 h ≈ one order of magnitude of votes
+    + (created_epoch − 1.7e9) / 50 400    // time: every 14 h ≈ one order of magnitude of engagement
 ```
 Why this shape:
-- **Log of net score**: the 10th vote matters as much as the next 90 — big communities don't drown small ones.
+- **Upvotes and comments decide**: the posts people vote on and talk about rise. Downvotes take a point off.
+- **Log of engagement**: the 10th point matters as much as the next 90 — big communities don't drown small ones.
 - **Wilson term**: a post at 22↑/2↓ beats one at 120↑/100↓ with the same net score. Divisive bait isn't rewarded.
-- **Comments are a capped bonus**: 1 000 comments add < 1.1, less than one order of magnitude of votes.
 - **Time is additive in log space**, so rank never needs periodic recomputation and keyset pagination is stable.
 
 ## Feeds (scope × sort)
@@ -23,7 +23,7 @@ Why this shape:
 | Latest | public communities | new |
 | Popular | public communities | hot |
 | Rising | public, last 24 h | `(score + 2·comments) / (age_h + 2)^1.2` |
-| Top | public, window hour/day/week/month/year/all | score |
+| Top | public, window hour/day/week/month/year/all | score + comments |
 
 Private communities appear only to members; hidden posts never appear to the user who hid them.
 
@@ -33,5 +33,13 @@ Private communities appear only to members; hidden posts never appear to the use
 - **Top / New / Old**: score, id desc, id asc.
 
 ## Karma
-Each vote changes the author's karma by the vote delta (−2…+2 on switches). Self-votes never count.
-Topic-scoped reputation (Phase 3/4) will build on vote events with quality weighting; see ROADMAP.
+- **+2 post karma** for each published post, **+1 comment karma** for each published comment (taken back if the
+  author deletes it; held or removed content never earns it).
+- On top of that, each vote changes the author's karma by the vote delta (−2…+2 on switches). Self-votes never count.
+- Profile shows post and comment karma separately; their sum is the user's total.
+
+## Live leaderboards
+- **Members**: computed on request from posts, comments and upvotes this month.
+- **Moderators**: recomputed within ~15 s of any removal, ban, handled report, appeal or endorsement.
+- **Topics**: authors are recomputed within ~5 s of receiving a vote.
+- The leaderboard pages refetch every 15 s while open.

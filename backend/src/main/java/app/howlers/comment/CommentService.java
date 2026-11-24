@@ -49,6 +49,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentService {
     private final app.howlers.common.metrics.HowlersMetrics metrics;
     public static final int MAX_DEPTH = 10;
+    /** Karma for publishing a comment (votes on it add or take away more). See docs/RANKING.md. */
+    public static final int COMMENT_KARMA = 1;
     private static final String COLS = """
             c.id, c.post_id, c.parent_id, c.depth, c.body, c.author_id, c.score, c.best_rank, c.controversy,
             c.reply_count, c.removed, c.deleted_at IS NOT NULL AS deleted, c.created_at, c.edited_at, c.pending""";
@@ -334,6 +336,7 @@ public class CommentService {
             users.findByUsernameIgnoreCase(name).filter(u -> u.isActive())
                     .ifPresent(u -> notifications.mention(u.getId(), authorId, authorName, postId, id));
         }
+        if (authorId > 0) jdbc.sql("UPDATE users SET comment_karma = comment_karma + ? WHERE id = ?").params(COMMENT_KARMA, authorId).update();
         realtime.commentCreated(postId, id, parentId, authorId);
         counters.postChanged(postId);
     }
@@ -383,6 +386,9 @@ public class CommentService {
         if (r.deleted()) return;
         if (r.authorId() == null || r.authorId() != user.id()) throw ApiException.forbidden("Only the author can delete this comment");
         jdbc.sql("UPDATE comments SET deleted_at = now() WHERE id = ?").param(commentId).update();
+        if (!r.removed() && !r.pending()) {
+            jdbc.sql("UPDATE users SET comment_karma = comment_karma - ? WHERE id = ?").params(COMMENT_KARMA, user.id()).update();
+        }
     }
 
     private CommentNode single(long id, AuthUser user) {

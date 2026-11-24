@@ -152,7 +152,7 @@ public class DemoDataSeeder implements ApplicationRunner {
                     .query(Long.class).single();
             posts++;
             int[] votes = castVotes("post_votes", "post_id", pid, author, p.get("upvotes").asInt(), p.get("downvotes").asInt());
-            jdbc.sql("UPDATE users SET post_karma = post_karma + ? WHERE id = ?").params(votes[0] - votes[1], author).update();
+            jdbc.sql("UPDATE users SET post_karma = post_karma + ? WHERE id = ?").params(2 + votes[0] - votes[1], author).update();
             int comments = 0;
             for (JsonNode cm : p.get("comments")) comments += seedComment(cm, pid, null, 0, created.plus(Duration.ofMinutes(20)));
             jdbc.sql("UPDATE posts SET upvotes = ?, downvotes = ?, score = ?, comment_count = ?, hot_rank = ? WHERE id = ?")
@@ -171,7 +171,7 @@ public class DemoDataSeeder implements ApplicationRunner {
                 .params(postId, parentId, author, depth, n.get("body").asText(), ts(at))
                 .query(Long.class).single();
         int[] v = castVotes("comment_votes", "comment_id", id, author, n.path("upvotes").asInt(0), n.path("downvotes").asInt(0));
-        jdbc.sql("UPDATE users SET comment_karma = comment_karma + ? WHERE id = ?").params(v[0] - v[1], author).update();
+        jdbc.sql("UPDATE users SET comment_karma = comment_karma + ? WHERE id = ?").params(1 + v[0] - v[1], author).update();
         int count = 1;
         int replies = 0;
         Instant next = at.plus(Duration.ofMinutes(35));

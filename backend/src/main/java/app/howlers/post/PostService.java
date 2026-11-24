@@ -83,6 +83,9 @@ public class PostService {
     }
 
     /** Loads a post and the community it lives in, enforcing view permission. */
+    /** Karma for publishing a post (votes on it add or take away more). See docs/RANKING.md. */
+    public static final int POST_KARMA = 2;
+
     public record PostContext(Post post, Community community, Optional<CommunityRole> role) {}
 
     /** Loads a post with no permission check, for internal callers that already checked (e.g. releasing held content). */
@@ -196,6 +199,7 @@ public class PostService {
 
     private void publish(long postId, Community c, long authorId, String authorName, String text) {
         jdbc.sql("UPDATE communities SET post_count = post_count + 1 WHERE id = ?").param(c.getId()).update();
+        jdbc.sql("UPDATE users SET post_karma = post_karma + ? WHERE id = ?").params(POST_KARMA, authorId).update();
         notifyMentions(authorId, authorName, text, postId);
         realtime.postCreated(postId, c.getId(), c.getSlug(), c.visibility() == Community.Visibility.PRIVATE, authorId);
     }
@@ -274,8 +278,10 @@ public class PostService {
         if (p.getDeletedAt() != null) return;
         boolean owner = p.getAuthorId() != null && p.getAuthorId() == user.id();
         if (!owner) throw ApiException.forbidden("Only the author can delete this post");
+        boolean counted = !p.isRemoved() && !p.isPending();
         p.softDelete();
         jdbc.sql("UPDATE communities SET post_count = GREATEST(post_count - 1, 0) WHERE id = ?").param(p.getCommunityId()).update();
+        if (counted) jdbc.sql("UPDATE users SET post_karma = post_karma - ? WHERE id = ?").params(POST_KARMA, user.id()).update();
     }
 
     @Transactional

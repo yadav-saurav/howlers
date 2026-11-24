@@ -6,7 +6,7 @@ import java.time.Instant;
  * Howlers' ranking maths. Documented in docs/RANKING.md — keep the two in sync.
  *
  * <p>Design goals: reward <em>approval ratio</em> over raw volume (Wilson bound), give discussion a small,
- * logarithmic (so un-farmable) boost, and decay with age so the front page turns over.
+ * logarithmic boost equal to a vote's, and decay with age so the front page turns over.
  */
 public final class ScoreMath {
     private ScoreMath() {}
@@ -27,19 +27,23 @@ public final class ScoreMath {
         return (p + z2 / (2 * n) - Z * Math.sqrt((p * (1 - p) + z2 / (4 * n)) / n)) / (1 + z2 / n);
     }
 
+    /** Engagement that drives Hot, Top and Rising: every upvote and every comment counts one, a downvote takes one off. */
+    public static int engagement(int up, int down, int comments) {
+        return up - down + Math.max(comments, 0);
+    }
+
     /**
-     * hot = sign(net)·log10(max(|net|,1)) + 1.5·wilson + 0.35·log10(1 + comments) + age/DECAY.
-     * The log on net score means the 10th vote matters as much as the next 90; the Wilson term lets a
-     * well-received small post beat a large divisive one; comments are capped by the log so reply
-     * farming barely moves the needle.
+     * hot = sign(e)·log10(max(|e|,1)) + 1.5·wilson + age/DECAY, where e = upvotes − downvotes + comments.
+     * Upvotes and comments weigh the same, so the posts people vote on and talk about rise; the log means
+     * the 10th point matters as much as the next 90; the Wilson term lets a well-received small post beat
+     * a large divisive one; and age decay keeps the front page turning over.
      */
     public static double hot(int up, int down, int comments, Instant createdAt) {
-        int net = up - down;
-        double order = Math.log10(Math.max(Math.abs(net), 1)) * Math.signum(net);
+        int e = engagement(up, down, comments);
+        double order = Math.log10(Math.max(Math.abs(e), 1)) * Math.signum(e);
         double quality = 1.5 * wilson(up, down);
-        double discussion = 0.35 * Math.log10(1 + Math.max(comments, 0));
         double age = (createdAt.getEpochSecond() - EPOCH) / DECAY_SECONDS;
-        return order + quality + discussion + age;
+        return order + quality + age;
     }
 
     /** Large and evenly split = controversial. 0 when one side is empty. */

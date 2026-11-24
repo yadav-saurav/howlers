@@ -34,10 +34,13 @@ class ScoreMathTest {
     }
 
     @Test
-    void commentFarmingBarelyMovesRank() {
+    void commentsCountLikeUpvotes() {
         Instant t = Instant.parse("2026-11-01T12:00:00Z");
-        double delta = ScoreMath.hot(10, 0, 1000, t) - ScoreMath.hot(10, 0, 0, t);
-        assertThat(delta).isLessThan(1.1); // 1000 comments < one order of magnitude of votes
+        assertThat(ScoreMath.engagement(10, 2, 5)).isEqualTo(13);
+        // A discussed post outranks an equally voted quiet one.
+        assertThat(ScoreMath.hot(10, 0, 30, t)).isGreaterThan(ScoreMath.hot(10, 0, 0, t));
+        // Ten comments move the rank like ten extra upvotes would (minus the small Wilson quality term).
+        assertThat(Math.abs(ScoreMath.hot(10, 0, 90, t) - ScoreMath.hot(100, 0, 0, t))).isLessThan(0.3);
     }
 
     @Test

@@ -1,9 +1,11 @@
 import { CalendarDays, MessageSquare, Settings, UserX } from 'lucide-react';
 import { BlockButton } from '@/features/moderation/components/BlockControls';
 import { MuteUserButton } from '@/features/mutes/components/MuteControls';
+import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Button, buttonClasses } from '@/components/ui/Button';
 import { Avatar, Badge, Card, CardHeader, Skeleton } from '@/components/ui/Display';
+import { Dialog } from '@/components/ui/Dialog';
 import { EmptyState, ErrorState, LoadMore } from '@/components/ui/States';
 import { Segmented } from '@/components/ui/Tabs';
 import { toast } from '@/components/ui/Toast';
@@ -22,6 +24,28 @@ import { compactNumber, displayName, formatDate, timeAgo } from '@/utils/format'
 
 type Tab = 'posts' | 'comments' | 'about';
 
+/** The profile picture: tap it to see it full size. */
+function ProfileAvatar({ p }: { p: PublicProfile }) {
+  const [open, setOpen] = useState(false);
+  const avatar = <Avatar src={p.avatarUrl} name={p.username} size="xl" className="border-4 border-surface" />;
+  if (!p.avatarUrl) return <div className="-mt-10">{avatar}</div>;
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={`View u/${p.username}'s profile picture`}
+        className="-mt-10 rounded-full transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      >
+        {avatar}
+      </button>
+      <Dialog open={open} onOpenChange={setOpen} title={`u/${p.username}`} size="md">
+        <img src={p.avatarUrl} alt={`u/${p.username}`} className="mx-auto max-h-[70vh] w-full rounded-lg object-contain" />
+      </Dialog>
+    </>
+  );
+}
+
 function Header({ p }: { p: PublicProfile }) {
   const { isAuthed } = useAuth();
   const follow = useFollow(p.username);
@@ -33,7 +57,7 @@ function Header({ p }: { p: PublicProfile }) {
         aria-hidden="true"
       />
       <div className="flex flex-wrap items-end gap-4 px-4 pb-4">
-        <Avatar src={p.avatarUrl} name={p.username} size="xl" className="-mt-10 border-4 border-surface" />
+        <ProfileAvatar p={p} />
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-serif text-2xl font-semibold">{displayName(p)}</h1>
           <p className="text-sm text-muted">u/{p.username}</p>
@@ -102,7 +126,7 @@ function AboutTab({ p }: { p: PublicProfile }) {
         <div className="space-y-2 p-4 text-sm text-muted">
           {p.bio ? <p>{p.bio}</p> : <p>No bio yet.</p>}
           <p className="flex items-center gap-2"><CalendarDays size={14} /> Member since {formatDate(p.createdAt)}</p>
-          <p className="text-xs text-faint">Karma reflects votes from other members. It is not a credential.</p>
+          <p className="text-xs text-faint">Karma: +2 for each post, +1 for each comment, plus upvotes from other members. It is not a credential.</p>
         </div>
       </Card>
       <TopicStandings username={p.username} isSelf={!!p.isSelf} />
