@@ -1,4 +1,6 @@
-/* Howlers design tokens. Values are RGB triplets so Tailwind can apply alpha. See docs/DESIGN_SYSTEM.md */
+/* Howlers design tokens. Values are RGB triplets so Tailwind can apply alpha. See docs/DESIGN_SYSTEM.md
+ * Palette: the landing page's night sky. Dark = deep indigo surfaces with lilac/violet accents; light = white with
+ * lavender tints and violet accents. Upvotes use the accent, downvotes a distinct blue. */
 :root {
   /* Logo gradient (top → bottom). Light theme: deeper tones so the wolf stays clear on white (all stops >= 4.5:1). */
   --logo-1: #6a1bb0;
@@ -6,18 +8,18 @@
   --logo-3: #0b7896;
   --bg: 255 255 255;
   --surface: 255 255 255;
-  --surface-2: 234 237 239;
-  --surface-3: 220 224 228;
-  --border: 222 226 230;
-  --text: 15 26 28;
-  --text-muted: 87 99 104;
-  --text-faint: 99 108 113;
-  --accent: 0 110 76;
+  --surface-2: 239 237 251;
+  --surface-3: 227 224 246;
+  --border: 224 221 243;
+  --text: 21 18 58;
+  --text-muted: 88 84 130;
+  --text-faint: 98 94 140;
+  --accent: 91 63 224;
   --accent-fg: 255 255 255;
-  --brand: 71 74 232;
+  --brand: 75 63 214;
   --brand-fg: 255 255 255;
-  --down: 106 90 224;
-  --danger: 176 45 38;
+  --down: 24 104 196;
+  --danger: 178 38 64;
   --danger-fg: 255 255 255;
   --warning: 122 84 0;
   --info: 24 94 200;
@@ -29,23 +31,23 @@
   --logo-1: #8e2fd0;
   --logo-2: #5a6be6;
   --logo-3: #36dcf4;
-  --bg: 11 14 16;
-  --surface: 11 14 16;
-  --surface-2: 26 31 35;
-  --surface-3: 38 45 50;
-  --border: 39 46 51;
-  --text: 238 241 243;
-  --text-muted: 158 168 173;
-  --text-faint: 138 148 153;
-  --accent: 46 204 148;
-  --accent-fg: 4 22 15;
-  --brand: 122 125 255;
-  --brand-fg: 11 14 16;
-  --down: 150 136 255;
-  --danger: 239 92 84;
-  --danger-fg: 11 14 16;
-  --warning: 226 178 56;
-  --info: 98 170 255;
+  --bg: 12 10 31;
+  --surface: 12 10 31;
+  --surface-2: 25 22 58;
+  --surface-3: 36 31 77;
+  --border: 44 39 86;
+  --text: 243 241 255;
+  --text-muted: 172 166 216;
+  --text-faint: 150 144 198;
+  --accent: 170 150 255;
+  --accent-fg: 12 10 31;
+  --brand: 140 128 255;
+  --brand-fg: 12 10 31;
+  --down: 105 180 255;
+  --danger: 255 107 129;
+  --danger-fg: 12 10 31;
+  --warning: 255 206 110;
+  --info: 120 182 255;
   --shadow-float: 0 10px 28px rgb(0 0 0 / 0.5);
   color-scheme: dark;
 }

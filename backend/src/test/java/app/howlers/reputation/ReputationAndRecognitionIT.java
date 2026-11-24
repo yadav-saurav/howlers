@@ -259,6 +259,44 @@ class ReputationAndRecognitionIT extends IntegrationTest {
         assertThat(recognition.leaderboard(null, slug, 50, null).entries()).anySatisfy(e -> assertThat(e.moderator().id()).isEqualTo(m1.id()));
     }
 
+    @Autowired app.howlers.recognition.MemberLeaderboard memberBoard;
+
+    @Test
+    void membersBoardCountsFromTheFirstPost() {
+        AuthUser author = veteran("mba");
+        AuthUser helper = veteran("mbh");
+        String slug = community(author, "programming");
+
+        long first = post(author, slug, List.of());
+        var board = memberBoard.board(null, slug, 50, null);
+        assertThat(board.entries()).singleElement().satisfies(e -> {
+            assertThat(e.user().id()).isEqualTo(author.id());
+            assertThat(e.posts()).isEqualTo(1);
+            assertThat(e.points()).isEqualTo(3); // one post is enough to appear
+            assertThat(e.rank()).isEqualTo(1);
+        });
+
+        comments.create(first, helper, new CreateCommentRequest("Nice write-up, thanks for sharing " + uniq(), null));
+        votes.votePost(first, helper, 1);
+        votes.votePost(first, author, 1); // self-votes never count
+        long gone = post(author, slug, List.of());
+        posts.delete(gone, author);       // deleted posts never count
+
+        board = memberBoard.board(null, slug, 50, null);
+        assertThat(board.entries()).extracting(e -> e.user().id()).containsExactly(author.id(), helper.id());
+        var top = board.entries().getFirst();
+        assertThat(top.posts()).isEqualTo(1);
+        assertThat(top.upvotes()).isEqualTo(1);
+        assertThat(top.points()).isEqualTo(4);
+        assertThat(board.entries().get(1).comments()).isEqualTo(1);
+        assertThat(board.entries().get(1).points()).isEqualTo(1);
+        assertThat(board.periods()).hasSize(6).first().isEqualTo(board.period());
+
+        // The site-wide board includes public communities, and an empty month is simply empty.
+        assertThat(memberBoard.board(null, null, 100, null).entries()).anySatisfy(e -> assertThat(e.user().id()).isEqualTo(author.id()));
+        assertThat(memberBoard.board("2001-01", slug, 50, null).entries()).isEmpty();
+    }
+
     @Test
     void aMonthWithNoScoresLoadsEmptyInsteadOfFailing() {
         // A brand-new site has no moderator scores: max(computed_at) is NULL and used to crash the leaderboard (500).

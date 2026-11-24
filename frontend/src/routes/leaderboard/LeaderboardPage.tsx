@@ -1,12 +1,12 @@
-import { Award, ChevronDown, ShieldCheck, Trophy } from 'lucide-react';
-import { useId, useMemo, useState } from 'react';
+import { Award, ChevronDown, ShieldCheck, Trophy, UsersRound } from 'lucide-react';
+import { useId, useMemo, useState, type ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Avatar, Card, CardHeader, Skeleton } from '@/components/ui/Display';
 import { Select } from '@/components/ui/Field';
 import { EmptyState, ErrorState } from '@/components/ui/States';
 import { Segmented } from '@/components/ui/Tabs';
 import { useMyCommunities } from '@/features/communities/hooks';
-import { useModLeaderboard, useReputationOverview } from '@/features/reputation/api';
+import { useMemberLeaderboard, useModLeaderboard, useReputationOverview } from '@/features/reputation/api';
 import { formatPoints, periodLabel } from '@/features/reputation/logic';
 import { FormulaPanel, ModBadges, ScoreBreakdown } from '@/features/reputation/components/ScoreBreakdown';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -14,7 +14,7 @@ import { PageColumns, PageHeader } from '@/layouts/PageColumns';
 import type { ModeratorScore, ScoreFormula } from '@/types/recognition';
 import { timeAgo } from '@/utils/format';
 
-type Tab = 'moderators' | 'topics';
+type Tab = 'members' | 'moderators' | 'topics';
 
 /**
  * One ranking row. The links stay plain links and a separate disclosure button opens the breakdown
@@ -106,7 +106,7 @@ function ModeratorsTab() {
           <EmptyState
             icon={ShieldCheck}
             title={`No ranked moderators for ${periodLabel(d!.period)}`}
-            description={`Moderators appear once they have at least ${d!.formula.minActivity} removals, bans or handled reports in the month. Scores are computed from real moderation activity only, so a quiet month stays empty.`}
+            description={`Moderators appear once they have at least ${d!.formula.minActivity === 1 ? 'one removal, ban or handled report' : `${d!.formula.minActivity} removals, bans or handled reports`} in the month. Scores are computed from real moderation activity only, so a quiet month stays empty.`}
             mascot="sleepy"
           />
         ) : (
@@ -116,6 +116,81 @@ function ModeratorsTab() {
         )}
       </Card>
       {d?.computedAt && <p className="px-4 text-xs text-faint sm:px-0">Scores recomputed {timeAgo(d.computedAt)}. Select a row to see how its score is made up.</p>}
+    </div>
+  );
+}
+
+const MEDALS = ['bg-[#f5c542] text-[#3b2a00]', 'bg-[#c9ced6] text-[#22262b]', 'bg-[#d98c4f] text-[#2c1404]'];
+
+/** Most active members this month: fills in from the very first post. */
+function MembersTab() {
+  const [params, setParams] = useSearchParams();
+  const period = params.get('period') ?? '';
+  const community = params.get('community') ?? '';
+  const q = useMemberLeaderboard(period, community);
+  const mine = useMyCommunities();
+  const set = (k: string, v: string) => {
+    const next = new URLSearchParams(params);
+    if (v) next.set(k, v); else next.delete(k);
+    setParams(next, { replace: true });
+  };
+  const d = q.data;
+  const joined = mine.data ?? [];
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2 px-4 sm:px-0">
+        <label className="sr-only" htmlFor="lbm-period">Period</label>
+        <Select id="lbm-period" className="w-auto min-w-[170px]" value={d?.period ?? period} onChange={(e) => set('period', e.target.value)}>
+          {(d?.periods ?? (period ? [period] : [])).map((p) => <option key={p} value={p}>{periodLabel(p)}</option>)}
+        </Select>
+        <label className="sr-only" htmlFor="lbm-scope">Community</label>
+        <Select id="lbm-scope" className="w-auto min-w-[190px]" value={community} onChange={(e) => set('community', e.target.value)}>
+          <option value="">All public communities</option>
+          {joined.map((c) => <option key={c.slug} value={c.slug}>c/{c.slug}</option>)}
+          {community && !joined.some((c) => c.slug === community) && <option value={community}>c/{community}</option>}
+        </Select>
+      </div>
+      <Card className="rounded-none border-x-0 sm:rounded-lg sm:border-x">
+        {q.isPending ? (
+          <div className="space-y-3 p-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12" />)}</div>
+        ) : q.isError ? (
+          <ErrorState error={q.error} onRetry={() => q.refetch()} />
+        ) : d!.entries.length === 0 ? (
+          <EmptyState
+            icon={UsersRound}
+            title={`Nobody on the board for ${periodLabel(d!.period)} yet`}
+            description="Post, comment or earn an upvote this month and you appear here straight away."
+            mascot="sleepy"
+          />
+        ) : (
+          <ol className="divide-y divide-border" aria-label={`Most active members for ${periodLabel(d!.period)}`}>
+            {d!.entries.map((e) => (
+              <li key={e.user.id} className="flex items-center gap-3 px-4 py-3">
+                <span
+                  className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold tabular-nums ${MEDALS[e.rank - 1] ?? 'text-muted'}`}
+                  aria-label={`Rank ${e.rank}`}
+                >
+                  {e.rank}
+                </span>
+                <Avatar src={e.user.avatarUrl} name={e.user.username} size="md" />
+                <div className="min-w-0 flex-1">
+                  <Link to={`/u/${e.user.username}`} className="inline-flex min-h-6 items-center truncate text-sm font-semibold hover:underline">
+                    u/{e.user.username}
+                  </Link>
+                  <p className="text-xs text-muted">
+                    {e.posts} {e.posts === 1 ? 'post' : 'posts'} · {e.comments} {e.comments === 1 ? 'comment' : 'comments'} · {e.upvotes} {e.upvotes === 1 ? 'upvote' : 'upvotes'}
+                  </p>
+                </div>
+                <span className="shrink-0 text-right">
+                  <span className="block text-lg font-bold tabular-nums text-accent">{e.points}</span>
+                  <span className="block text-[11px] text-muted">points</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </Card>
+      <p className="px-4 text-xs text-faint sm:px-0">Updates as people post, comment and vote.</p>
     </div>
   );
 }
@@ -153,53 +228,91 @@ function TopicsTab() {
   );
 }
 
+/** A card whose explanation stays folded until it's tapped, so the ranking stays the focus. */
+function Explainer({ title, children }: { title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  return (
+    <Card>
+      <h2>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={() => setOpen((o) => !o)}
+          className="flex min-h-11 w-full items-center justify-between gap-2 px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted hover:text-text"
+        >
+          {title}
+          <ChevronDown size={16} className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
+        </button>
+      </h2>
+      <div id={panelId} hidden={!open} className="border-t border-border">
+        {open && children}
+      </div>
+    </Card>
+  );
+}
+
 function Rail({ tab }: { tab: Tab }) {
   const q = useModLeaderboard('', '');
+  if (tab === 'members') {
+    return (
+      <Explainer title="How points work">
+        <ul className="space-y-1.5 p-4 text-sm text-muted">
+          <li><strong className="text-text">3 points</strong> for each post</li>
+          <li><strong className="text-text">1 point</strong> for each comment</li>
+          <li><strong className="text-text">1 point</strong> for each upvote from someone else</li>
+          <li className="pt-1 text-xs text-faint">Self-votes, deleted or removed posts and private communities never count. The board starts fresh every month.</li>
+        </ul>
+      </Explainer>
+    );
+  }
   if (tab === 'topics') {
     return (
-      <Card>
-        <CardHeader title="Topic reputation" />
+      <Explainer title="Topic reputation">
         <div className="space-y-2 p-4 text-sm text-muted">
           <p>Members earn reputation in a topic when others upvote their posts and comments there. A post’s topics are its community’s topic plus any tags that name a topic.</p>
           <p>Upvotes from people who already know the topic count more; brand-new and low-karma accounts count less; self-votes never count.</p>
           <p>Open a topic to see the exact caps and weights.</p>
         </div>
-      </Card>
+      </Explainer>
     );
   }
   return (
-    <Card>
-      <CardHeader title="How the score works" />
+    <Explainer title="How the score works">
       <div className="p-4">{q.data ? <FormulaPanel formula={q.data.formula} /> : <Skeleton className="h-40" />}</div>
-    </Card>
+    </Explainer>
   );
 }
 
 /** Moderator recognition and topic reputation leaderboards. */
 export default function LeaderboardPage() {
   const [params, setParams] = useSearchParams();
-  const tab: Tab = params.get('tab') === 'topics' ? 'topics' : 'moderators';
-  useDocumentTitle(tab === 'topics' ? 'Topic leaderboards' : 'Moderator leaderboard');
+  const raw = params.get('tab');
+  const tab: Tab = raw === 'topics' || raw === 'moderators' ? raw : 'members';
+  useDocumentTitle(tab === 'topics' ? 'Topic leaderboards' : tab === 'moderators' ? 'Moderator leaderboard' : 'Leaderboard');
+  const description = {
+    members: 'The most active members this month: posts, comments and the upvotes they earn.',
+    moderators: 'Moderators recognised for careful, timely, fair moderation, not for how much they removed.',
+    topics: 'Who members trust in each topic, from quality-weighted votes.',
+  }[tab];
   return (
     <PageColumns rail={<Rail tab={tab} />}>
-      <PageHeader
-        title="Leaderboard"
-        description={tab === 'topics' ? 'Who members trust in each topic, from quality-weighted votes.' : 'Moderators recognised for careful, timely, fair moderation, not for how much they removed.'}
-      />
+      <PageHeader title="Leaderboard" description={description} />
       <div className="mb-3 px-3 sm:px-0">
         <Segmented<Tab>
           label="Leaderboard type"
           value={tab}
-          onChange={(v) => setParams(v === 'topics' ? { tab: v } : {}, { replace: true })}
+          onChange={(v) => setParams(v === 'members' ? {} : { tab: v }, { replace: true })}
           options={[
+            { value: 'members', label: 'Members', icon: <UsersRound size={14} /> },
             { value: 'moderators', label: 'Moderators', icon: <Trophy size={14} /> },
             { value: 'topics', label: 'Topics', icon: <Award size={14} /> },
           ]}
         />
       </div>
-      {tab === 'moderators' ? <ModeratorsTab /> : <TopicsTab />}
+      {tab === 'members' ? <MembersTab /> : tab === 'moderators' ? <ModeratorsTab /> : <TopicsTab />}
       <div className="mt-4 px-4 lg:hidden"><Rail tab={tab} /></div>
     </PageColumns>
   );
 }
-

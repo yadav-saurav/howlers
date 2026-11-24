@@ -21,7 +21,7 @@ export function resolveTheme(pref: ThemePref): 'dark' | 'light' {
 function apply(pref: ThemePref) {
   const resolved = resolveTheme(pref);
   document.documentElement.classList.toggle('dark', resolved === 'dark');
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#0E0F11' : '#F7F6F3');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'dark' ? '#0C0A1F' : '#FFFFFF');
 }
 
 interface ThemeState {

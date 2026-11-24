@@ -13,7 +13,7 @@ describe('chat theme registry', () => {
     expect(getTheme(null).id).toBe(DEFAULT_THEME_ID);
     expect(getTheme('').id).toBe('classic');
     expect(getTheme('vaporwave').id).toBe('classic');
-    expect(getTheme('sunset').name).toBe('Sunset');
+    expect(getTheme('sunset').name).toBe('Golden Hour');
     expect(isThemeId('ocean')).toBe(true);
     expect(isThemeId('Ocean')).toBe(false);
   });
@@ -28,8 +28,7 @@ describe('chat theme registry', () => {
     for (const mode of ['light', 'dark'] as const) {
       it(`${t.id} (${mode}) keeps bubble text at 4.5:1 or better`, () => {
         const p = t[mode];
-        expect(contrastRatio(p.outFg, p.out[0])).toBeGreaterThanOrEqual(4.5);
-        expect(contrastRatio(p.outFg, p.out[1])).toBeGreaterThanOrEqual(4.5);
+        for (const stop of p.out) expect(contrastRatio(p.outFg, stop)).toBeGreaterThanOrEqual(4.5);
         expect(contrastRatio(p.inFg, p.incoming)).toBeGreaterThanOrEqual(4.5);
         expect(contrastRatio(p.accentFg, p.accent)).toBeGreaterThanOrEqual(4.5);
         // Sender names and quote labels are drawn in the accent on incoming bubbles.
@@ -42,9 +41,11 @@ describe('chat theme registry', () => {
 
   it('exposes both palettes as CSS variables', () => {
     const v = themeVars(getTheme('neon')) as Record<string, string>;
-    expect(v['--ct-out-1-l']).toBe('#6d28d9');
-    expect(v['--ct-out-1-d']).toBe('#a21caf');
-    expect(v['--ct-pattern-image']).toContain('var(--ct-pattern)');
+    expect(v['--ct-out-1-l']).toBe('#a21caf');
+    expect(v['--ct-out-3-d']).toBe('#0b63a8');
+    expect(v['--ct-pattern-image']).toBe('none');
+    const stars = themeVars(getTheme('midnight')) as Record<string, string>;
+    expect(stars['--ct-pattern-image']).toContain('var(--ct-pattern)');
   });
 });
 

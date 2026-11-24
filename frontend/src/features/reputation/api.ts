@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { http } from '@/services/apiClient';
 import type {
+  MemberLeaderboard,
   ModerationRecord,
   ModeratorSettings,
   ModLeaderboard,
@@ -21,6 +22,8 @@ export const recognitionApi = {
   postExpertise: (postId: number) => http.get<PostExpertise>(`/posts/${postId}/expertise`),
   modLeaderboard: (period?: string, community?: string) =>
     http.get<ModLeaderboard>('/moderators/leaderboard', { period, community: community || undefined }),
+  memberLeaderboard: (period?: string, community?: string) =>
+    http.get<MemberLeaderboard>('/leaderboard/members', { period, community: community || undefined }),
   modRecord: (username: string) => http.get<ModerationRecord>(`${u(username)}/moderation-record`),
   peers: (slug: string) => http.get<ModPeers>(`${c(slug)}/peers`),
   endorse: (slug: string, username: string, note?: string) =>
@@ -36,6 +39,7 @@ export const recognitionKeys = {
   user: (username: string) => ['reputation', 'user', username] as const,
   post: (postId: number) => ['reputation', 'post', postId] as const,
   modLeaderboard: (period: string, community: string) => ['mod-recognition', 'leaderboard', period, community] as const,
+  memberLeaderboard: (period: string, community: string) => ['members-leaderboard', period, community] as const,
   modRecord: (username: string) => ['mod-recognition', 'record', username] as const,
   peers: (slug: string) => ['mod-recognition', 'peers', slug] as const,
   settings: ['mod-recognition', 'settings'] as const,
@@ -65,6 +69,13 @@ export const useModLeaderboard = (period: string, community: string) =>
     queryKey: recognitionKeys.modLeaderboard(period, community),
     queryFn: () => recognitionApi.modLeaderboard(period || undefined, community || undefined),
     staleTime: STALE,
+    retry: false,
+  });
+export const useMemberLeaderboard = (period: string, community: string) =>
+  useQuery({
+    queryKey: recognitionKeys.memberLeaderboard(period, community),
+    queryFn: () => recognitionApi.memberLeaderboard(period || undefined, community || undefined),
+    staleTime: 30_000,
     retry: false,
   });
 export const useModRecord = (username: string) =>

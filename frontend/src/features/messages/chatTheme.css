@@ -1,67 +1,83 @@
 /* Chat themes (themes.ts sets the -l / -d variables inline; this picks the palette for the app theme). */
 .chat-theme {
   --ct-bg: var(--ct-bg-l);
-  --ct-pattern: var(--ct-pattern-l);
   --ct-out-1: var(--ct-out-1-l);
   --ct-out-2: var(--ct-out-2-l);
+  --ct-out-3: var(--ct-out-3-l);
   --ct-out-fg: var(--ct-out-fg-l);
   --ct-in: var(--ct-in-l);
   --ct-in-fg: var(--ct-in-fg-l);
   --ct-accent: var(--ct-accent-l);
   --ct-accent-fg: var(--ct-accent-fg-l);
+  --ct-pattern: color-mix(in srgb, var(--ct-accent) 22%, transparent);
+  --ct-in-alpha: 86%;
+  --ct-grain-opacity: 0.05;
 }
 .dark .chat-theme {
   --ct-bg: var(--ct-bg-d);
-  --ct-pattern: var(--ct-pattern-d);
   --ct-out-1: var(--ct-out-1-d);
   --ct-out-2: var(--ct-out-2-d);
+  --ct-out-3: var(--ct-out-3-d);
   --ct-out-fg: var(--ct-out-fg-d);
   --ct-in: var(--ct-in-d);
   --ct-in-fg: var(--ct-in-fg-d);
   --ct-accent: var(--ct-accent-d);
   --ct-accent-fg: var(--ct-accent-fg-d);
+  --ct-in-alpha: 82%;
+  --ct-grain-opacity: 0.07;
 }
 
+/* Wallpaper: soft glows over a base gradient, an optional fine detail, and a film grain on top. */
 .chat-wallpaper {
+  position: relative;
+  isolation: isolate;
   background-color: rgb(var(--surface));
   background-image: var(--ct-pattern-image), var(--ct-bg);
   background-size: var(--ct-pattern-size), cover;
-  transition: background 240ms ease;
+  transition: background 320ms ease;
 }
-
-.chat-bubble-out {
-  background-image: linear-gradient(180deg, var(--ct-out-1), var(--ct-out-2));
-  background-color: var(--ct-out-1);
-  color: var(--ct-out-fg);
-}
-.chat-bubble-in {
-  background-color: var(--ct-in);
-  color: var(--ct-in-fg);
-  box-shadow: 0 1px 1px rgb(0 0 0 / 0.08);
-}
-
-/* Bubble tails on the first bubble of a run. */
-.chat-tail-out,
-.chat-tail-in {
-  position: relative;
-}
-.chat-tail-out::after,
-.chat-tail-in::after {
+.chat-wallpaper::before {
   content: '';
   position: absolute;
-  top: 0;
-  width: 10px;
-  height: 14px;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: var(--ct-grain-opacity);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 0 0.5  0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 160px 160px;
 }
-.chat-tail-out::after {
-  right: -6px;
-  background: var(--ct-out-1);
-  clip-path: polygon(0 0, 100% 0, 0 100%);
+
+/*
+ * Your bubbles: one gradient fixed to the screen, so each bubble shows the slice behind it and the colours flow as
+ * the chat scrolls (Instagram's signature look). Where fixed backgrounds aren't supported it falls back to a normal
+ * gradient per bubble.
+ */
+.chat-bubble-out {
+  background-color: var(--ct-out-2);
+  background-image: linear-gradient(180deg, var(--ct-out-1) 0%, var(--ct-out-2) 50%, var(--ct-out-3) 100%);
+  background-attachment: fixed;
+  color: var(--ct-out-fg);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
 }
+/* Small previews (theme picker) use a per-bubble gradient so every card shows its colours. */
+.chat-theme-preview .chat-bubble-out {
+  background-attachment: scroll;
+}
+.chat-bubble-in {
+  background-color: color-mix(in srgb, var(--ct-in) var(--ct-in-alpha), transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+  color: var(--ct-in-fg);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+@supports not (background-color: color-mix(in srgb, red 50%, transparent)) {
+  .chat-bubble-in { background-color: var(--ct-in); }
+}
+
+/* Bubbles in a run hug each other on the sender's side, like Instagram; no tails. */
+.chat-tail-out::after,
 .chat-tail-in::after {
-  left: -6px;
-  background: var(--ct-in);
-  clip-path: polygon(0 0, 100% 0, 100% 100%);
+  content: none;
 }
 
 .chat-accent {
@@ -100,6 +116,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .chat-wallpaper { transition: none; }
+  .chat-bubble-out { background-attachment: scroll; }
   .chat-flash { animation: none; outline: 2px solid rgb(var(--brand)); outline-offset: 2px; }
   .chat-rec-dot, .chat-pop { animation: none; }
 }

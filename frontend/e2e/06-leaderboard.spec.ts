@@ -5,6 +5,10 @@ import { expect, test } from './fixtures';
 test('21 · view the leaderboard', async ({ sessions }) => {
   const page = await sessions.open('paperback_jo', '/leaderboard');
   await expect(page.getByRole('heading', { level: 1, name: 'Leaderboard' })).toBeVisible();
+  // Members is the default: it fills in from the first post, and the seeded demo data has plenty.
+  await expect(page.getByRole('tab', { name: 'Members' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('list', { name: /^Most active members for / }).getByRole('listitem').first()).toBeVisible();
+  await page.getByRole('tab', { name: 'Moderators' }).click();
   await expect(page.getByRole('tab', { name: 'Moderators' })).toHaveAttribute('aria-selected', 'true');
   const ranking = page.getByRole('list', { name: /^Moderator ranking for / });
   const empty = page.getByRole('heading', { name: /^No ranked moderators for / });
@@ -20,8 +24,11 @@ test('21 · view the leaderboard', async ({ sessions }) => {
     await expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await expect(row.getByText(/Consistency/).first()).toBeVisible();
   }
-  // The formula is always public.
-  await expect(page.getByRole('heading', { name: 'How the score works' })).toBeVisible();
+  // The formula is always public, folded until opened.
+  const how = page.getByRole('button', { name: 'How the score works' }).first();
+  await expect(how).toHaveAttribute('aria-expanded', 'false');
+  await how.click();
+  await expect(how).toHaveAttribute('aria-expanded', 'true');
 
   await page.getByRole('tab', { name: 'Topics' }).click();
   await expect(page.getByRole('tab', { name: 'Topics' })).toHaveAttribute('aria-selected', 'true');

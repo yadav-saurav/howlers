@@ -312,9 +312,12 @@ disclosure text (`aiVoiceDescription` in `features/podcasts/audioGeneration.ts`)
   `aiStances.state` is `PENDING`.
 ## Landing page (Howlers)
 `/` is `routes/landing/LandingPage.tsx`: hero (`HeroArt`, `NightSky`, `design-system/Pups`), a marquee of real communities
-(`GET /communities?sort=popular&size=12`, falls back to feature names), six feature rows (`FeatureSections`), safety
-cards, a searchable FAQ (`faq.ts`, `filterFaq`) and a closing CTA (`SafetyFaq.tsx`). Signed-in visitors see "Open your
-feed" instead of "Join the pack"; there's no redirect. Motion helpers live in `motion.ts` (intro sequencer, reveal
+(`GET /communities?sort=popular&size=12`, falls back to feature names; names link only for signed-in visitors), four
+feature rows (`FeatureSections`: Threads/Digest/Context Mode, Messages, Pulse, Leaderboard), safety cards, a searchable FAQ
+(`faq.ts`, `filterFaq`) and a closing CTA (`SafetyFaq.tsx`). The mocks copy the real app: `--app-*` colours in
+`landing.css` match the dark tokens, and `ChatMock.tsx` reuses the chat themes from `features/messages/themes.ts`.
+Signed-out visitors get "Join the pack" and "Log in" (both keep a pending `?next=` via `withNext`); signed-in visitors
+see "Open Howlers"; there's no redirect. Motion helpers live in `motion.ts` (intro sequencer, reveal
 observer, play gate, parallax/tilt maths) with Vitest coverage in `motion.test.ts`; styles and keyframes in
 `landing.css`. The page is always dark (see DESIGN_SYSTEM.md, "Landing page"). E2E: `e2e/10-landing.spec.ts`, and the
 landing stays in the axe audit (`08-accessibility`).

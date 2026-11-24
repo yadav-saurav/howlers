@@ -262,7 +262,7 @@ class ChatUpgradeIT extends IntegrationTest {
 
         JsonNode last = messages(ben, convo).get(1);
         assertThat(last.get("kind").asText()).isEqualTo("SYSTEM");
-        assertThat(last.get("body").asText()).isEqualTo(ana.username() + " changed the chat theme to Sunset");
+        assertThat(last.get("body").asText()).isEqualTo(ana.username() + " changed the chat theme to Golden Hour");
         assertThat(jdbc.sql("SELECT system_event FROM dm_messages WHERE id = ?").param(last.get("id").asLong())
                 .query(String.class).single()).isEqualTo("THEME");
         // A theme line is never "unread", and its inbox preview has no sender (so it never reads "You: ...").
@@ -316,7 +316,7 @@ class ChatUpgradeIT extends IntegrationTest {
         assertThat(themed.get("theme").asText()).isEqualTo("aurora");
         assertThat(summary(mira, room).get("theme").asText()).isEqualTo("aurora");
         assertThat(summary(mira, room).get("lastMessage").get("excerpt").asText())
-                .isEqualTo(dev.username() + " changed the chat theme to Aurora");
+                .isEqualTo(dev.username() + " changed the chat theme to Northern Lights");
         theme(eve, room, "{\"theme\":\"neon\"}").andExpect(status().isNotFound());
         theme(dev, room, "{\"theme\":\"Aurora!\"}").andExpect(status().isBadRequest());
     }

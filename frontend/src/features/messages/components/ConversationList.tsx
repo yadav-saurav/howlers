@@ -116,7 +116,7 @@ export function ConversationList({ activeId, q, onQueryChange }: { activeId: num
             </button>
           )}
         </label>
-        <div role="group" aria-label="Filter conversations" className="flex flex-wrap gap-1.5">
+        <div role="group" aria-label="Filter conversations" className="flex flex-nowrap gap-1 overflow-x-auto [scrollbar-width:none]">
           {INBOX_FILTERS.map((f) => {
             const on = filter === f.id;
             return (
@@ -126,7 +126,7 @@ export function ConversationList({ activeId, q, onQueryChange }: { activeId: num
                 aria-pressed={on}
                 onClick={() => setFilter(f.id)}
                 className={cn(
-                  'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium transition-colors',
+                  'inline-flex h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-2.5 text-[12.5px] font-medium transition-colors',
                   on ? 'bg-accent/15 text-accent ring-1 ring-accent/40' : 'bg-surface-2 text-muted hover:bg-surface-3 hover:text-text',
                 )}
               >

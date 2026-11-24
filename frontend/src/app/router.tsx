@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { PageSpinner } from '@/components/ui/Spinner';
 import { AppLayout } from '@/layouts/AppLayout';
 import { PublicLayout } from '@/layouts/PublicLayout';
-import { MembersHome, RedirectIfAuthed, RequireAuth } from './guards';
+import { MembersOnly, RedirectIfAuthed, RequireAuth } from './guards';
 import { RouteError } from '@/routes/RouteError';
 
 const page = (load: () => Promise<{ default: ComponentType }>) => {
@@ -35,14 +35,14 @@ export const router = createBrowserRouter([
       { path: '/privacy', element: page(() => import('@/routes/static/PrivacyPage')) },
       { path: '/onboarding', element: authed(page(() => import('@/routes/onboarding/OnboardingPage'))) },
       { path: '/s/:token', element: <Navigate to="/" replace /> },
-      { path: '/security/e2ee', element: page(() => import('@/routes/static/E2eeSecurityPage')) },
+      { path: '/security/e2ee', element: <Navigate to="/" replace /> },
     ],
   },
   {
-    element: <AppLayout />,
+    element: <MembersOnly><AppLayout /></MembersOnly>,
     errorElement: <RouteError />,
     children: [
-      { path: '/home', element: <MembersHome>{page(() => import('@/routes/feed/HomePage'))}</MembersHome> },
+      { path: '/home', element: page(() => import('@/routes/feed/HomePage')) },
       { path: '/popular', element: <Navigate to="/home?tab=popular" replace /> },
       { path: '/explore', element: page(() => import('@/routes/explore/ExplorePage')) },
       { path: '/communities', element: page(() => import('@/routes/communities/CommunitiesPage')) },

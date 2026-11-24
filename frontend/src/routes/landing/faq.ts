@@ -12,9 +12,14 @@ export const FAQ: FaqItem[] = [
     a: 'No. Joining, posting and chatting are free.',
   },
   {
-    id: 'browse',
-    q: 'Can I look around without an account?',
-    a: 'Yes. Public communities and posts are open to browse signed out. You need an account to post, vote, join or send messages.',
+    id: 'account',
+    q: 'Do I need an account?',
+    a: 'Yes. Communities, posts and messages are for members, so sign up or log in to look inside. Joining is free, and you can add a passkey or two-factor sign-in from your settings.',
+  },
+  {
+    id: 'messages',
+    q: 'What can I do in Messages?',
+    a: 'Chat one-to-one or in pack rooms (group chats), send photos and voice notes, reply to a specific message, and see typing dots and read ticks. Pick one of twelve chat themes; everyone in the chat sees the same one.',
   },
   {
     id: 'e2ee',
@@ -35,6 +40,11 @@ export const FAQ: FaqItem[] = [
     id: 'appeal',
     q: 'Can I appeal a moderator’s decision?',
     a: 'Yes. You get your own page showing what was removed and why, and you can appeal from there. If the appeal succeeds, the action is reversed. Every action goes into an append-only log.',
+  },
+  {
+    id: 'leaderboard',
+    q: 'How does the leaderboard work?',
+    a: 'Members are ranked by activity this month: 3 points a post, 1 a comment and 1 for every upvote from someone else. Moderators get a quality score from 0 to 100 for consistency, response time, appeal outcomes, community health and peer feedback, never for how much they remove. Topics rank people by the upvotes they earn there.',
   },
   {
     id: 'private',

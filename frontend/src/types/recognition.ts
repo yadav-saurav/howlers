@@ -149,6 +149,24 @@ export interface ModLeaderboard {
   computedAt: string | null;
 }
 
+/** GET /leaderboard/members: most active members in a month (3 points a post, 1 a comment, 1 per upvote from others). */
+export interface MemberEntry {
+  rank: number;
+  user: UserSummary;
+  posts: number;
+  comments: number;
+  upvotes: number;
+  points: number;
+}
+
+export interface MemberLeaderboard {
+  period: string;
+  periods: string[];
+  community: CommunityRef | null;
+  entries: MemberEntry[];
+  formula: string;
+}
+
 export interface ModerationRecord {
   hidden: boolean;
   optedOut: boolean;

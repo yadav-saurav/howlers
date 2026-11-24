@@ -60,12 +60,12 @@ function Meta({ iso, tick }: { iso: string; tick?: TickState | null }) {
   );
 }
 
-/** Rounded bubble; the first bubble of a run gets a tail. */
+/** Soft, round bubbles; later bubbles in a run tuck their top corner in on the sender's side (Instagram style). */
 export function bubbleClasses(mine: boolean, first: boolean) {
   return cn(
-    'relative rounded-2xl px-2.5 py-1.5 text-[15px] leading-snug',
+    'relative rounded-[20px] px-3 py-1.5 text-[15px] leading-snug',
     mine ? 'chat-bubble-out' : 'chat-bubble-in',
-    first && (mine ? 'chat-tail-out rounded-tr-[4px]' : 'chat-tail-in rounded-tl-[4px]'),
+    !first && (mine ? 'rounded-tr-md' : 'rounded-tl-md'),
   );
 }
 

@@ -502,8 +502,15 @@ public class DmService {
     }
 
     static String themeName(String theme) {
-        return Character.toUpperCase(theme.charAt(0)) + theme.substring(1);
+        return THEME_NAMES.getOrDefault(theme, Character.toUpperCase(theme.charAt(0)) + theme.substring(1));
     }
+
+    /** Display names for the theme ids; keep in step with frontend/src/features/messages/themes.ts. */
+    private static final Map<String, String> THEME_NAMES = Map.ofEntries(
+            Map.entry("classic", "Howl"), Map.entry("midnight", "Velvet Night"), Map.entry("ocean", "Tidal"),
+            Map.entry("sunset", "Golden Hour"), Map.entry("forest", "Evergreen"), Map.entry("candy", "Bubblegum"),
+            Map.entry("neon", "Afterglow"), Map.entry("lavender", "Lavender Haze"), Map.entry("mono", "Noir"),
+            Map.entry("aurora", "Northern Lights"), Map.entry("ember", "Ember"), Map.entry("sakura", "Sakura"));
 
     // ---------------------------------------------------------------- shared with rooms and reactions
 

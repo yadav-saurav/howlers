@@ -1,6 +1,7 @@
 import { useRef, type CSSProperties } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { withNext } from '@/app/guards';
 import { useAuth } from '@/features/auth/hooks';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { FeatureSections } from './FeatureSections';
@@ -20,6 +21,7 @@ const v = (vars: Record<string, string | number>) => vars as CSSProperties;
 export default function LandingPage() {
   useDocumentTitle(null);
   const { isAuthed } = useAuth();
+  const { search } = useLocation();
   const rootRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLElement>(null);
   const artRef = useRef<HTMLDivElement>(null);
@@ -55,28 +57,32 @@ export default function LandingPage() {
               <span className="ln"><span className="ln-i glow" style={v({ '--d': '0.29s' })}>Let’s howl.</span></span>
             </h1>
             <p className="hero-sub in-el" style={v({ '--d': '0.45s' })}>
-              Howlers is home for communities that like each other: threads that make sense, live messages with
-              voice notes and chat themes, Pulse polls and a leaderboard for the people who keep it kind.
+              Howlers is home for communities that like each other: threads with Digest and Context Mode, Pulse polls,
+              chats with voice notes, themes and pack rooms, and a leaderboard for the people who show up.
             </p>
             <div className="cta-row in-el" style={v({ '--d': '0.58s' })}>
               {isAuthed ? (
                 <Link to="/home" className="hl-btn hl-btn-white">
-                  Open your feed <ArrowRight aria-hidden="true" />
+                  Open Howlers <ArrowRight aria-hidden="true" />
                 </Link>
               ) : (
-                <Link to="/register" className="hl-btn hl-btn-white">
-                  Join the pack <ArrowRight aria-hidden="true" />
-                </Link>
+                <>
+                  <Link to={withNext('/register', search)} className="hl-btn hl-btn-white">
+                    Join the pack <ArrowRight aria-hidden="true" />
+                  </Link>
+                  <Link to={withNext('/login', search)} className="hl-btn hl-btn-glow">Log in</Link>
+                </>
               )}
-              <Link to="/explore" className="hl-btn hl-btn-glow">Explore Howlers</Link>
             </div>
-            <p className="hero-note in-el" style={v({ '--d': '0.7s' })}>Free to join. Browse without an account.</p>
+            <p className="hero-note in-el" style={v({ '--d': '0.7s' })}>
+              {isAuthed ? 'Welcome back. Your pack is waiting.' : 'Free to join, post and chat.'}
+            </p>
           </div>
           <HeroArt ref={artRef} />
         </div>
       </section>
 
-      <PackMarquee />
+      <PackMarquee isAuthed={isAuthed} />
       <FeatureSections />
       <SafetySection />
       <FaqSection />

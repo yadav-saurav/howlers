@@ -29,8 +29,11 @@ public final class ModeratorScoreMath {
     public static final double W_PEER = 0.15;
     public static final double RESPONSE_HALF_HOURS = 12;
     public static final int PEER_FULL_AT = 3;
-    /** Decisions + reports handled needed to appear on a leaderboard. A gate, never a ranking input. */
-    public static final int MIN_ACTIVITY = 3;
+    /**
+     * Decisions + reports handled needed to appear on a leaderboard. A gate, never a ranking input. One action is
+     * enough, so a new community's moderators show up straight away.
+     */
+    public static final int MIN_ACTIVITY = 1;
 
     public record Inputs(int decisions, int reversed, int reportsHandled, Double medianResponseMinutes, int appealsUpheld,
                          int appealsOverturned, int endorsements, int coModerators, int communityReports,

@@ -63,7 +63,7 @@ test.describe.serial('account journey', () => {
   test('2 · log out and log in again', async () => {
     await page.getByRole('button', { name: 'Account menu' }).click();
     await page.getByRole('menuitem', { name: 'Log out' }).click();
-    await expect(page.getByRole('link', { name: 'Log in' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Log in' }).first()).toBeVisible();
 
     await page.goto('/login');
     await page.getByLabel('Username or email').fill(username);

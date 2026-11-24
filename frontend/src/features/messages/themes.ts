@@ -2,18 +2,17 @@ import type { CSSProperties } from 'react';
 import type { ChatThemeId } from '@/types/messages';
 
 /*
- * Chat themes: shared per conversation (PUT /me/conversations/{id}/theme). Each theme has a light and a dark
- * palette so it reads well in either app theme. Wallpapers are CSS only: a gradient plus a repeating pattern drawn
- * with gradients in the pattern colour. chatTheme.css picks the palette for the current app theme.
+ * Chat themes: shared per conversation (PUT /me/conversations/{id}/theme), in the spirit of Instagram's chat themes.
+ * Your bubbles share one gradient that spans the whole chat (fixed to the screen), so colours shift as messages scroll,
+ * and the wallpaper is a soft mesh of coloured glows with a fine grain. Each theme has a light and a dark palette;
+ * chatTheme.css picks one for the app theme. Everything is CSS: no images.
  */
 
 export interface ThemePalette {
-  /** Wallpaper gradient (any CSS background-image). */
+  /** Wallpaper: soft radial glows over a base gradient (any CSS background-image list). */
   bg: string;
-  /** Colour of the wallpaper pattern (with alpha). */
-  pattern: string;
-  /** Outgoing bubble gradient stops; the text colour must pass 4.5:1 against both. */
-  out: [string, string];
+  /** Outgoing gradient stops from the top of the screen to the bottom; the text must pass 4.5:1 on each. */
+  out: [string, string, string];
   outFg: string;
   incoming: string;
   inFg: string;
@@ -34,40 +33,20 @@ export interface ChatTheme {
 }
 
 const P = 'var(--ct-pattern)';
+/** Optional fine details over the mesh, drawn in a faint tint of the accent. Most themes use none. */
 const patterns = {
-  dots: { image: `radial-gradient(${P} 1.2px, transparent 1.6px)`, size: '18px 18px' },
+  none: { image: 'none', size: 'auto' },
   stars: {
-    image: `radial-gradient(${P} 1px, transparent 1.5px), radial-gradient(${P} 1.6px, transparent 2px)`,
-    size: '46px 46px, 97px 97px',
-  },
-  waves: {
-    image: `radial-gradient(circle at 50% 100%, transparent 14px, ${P} 15px, ${P} 16px, transparent 17px)`,
-    size: '36px 18px',
-  },
-  leaves: {
-    image: `radial-gradient(ellipse 6px 11px at 30% 30%, ${P} 90%, transparent 100%), radial-gradient(ellipse 5px 9px at 75% 75%, ${P} 90%, transparent 100%)`,
-    size: '54px 54px',
-  },
-  grid: {
-    image: `linear-gradient(${P} 1px, transparent 1px), linear-gradient(90deg, ${P} 1px, transparent 1px)`,
-    size: '28px 28px',
-  },
-  diagonal: { image: `repeating-linear-gradient(45deg, ${P} 0 1px, transparent 1px 14px)`, size: 'auto' },
-  hearts: {
-    image: `radial-gradient(circle at 40% 40%, ${P} 3px, transparent 3.5px), radial-gradient(circle at 60% 40%, ${P} 3px, transparent 3.5px)`,
-    size: '40px 40px',
-  },
-  ribbons: {
-    image: `repeating-linear-gradient(-20deg, transparent 0 22px, ${P} 22px 24px, transparent 24px 60px)`,
-    size: 'auto',
+    image: `radial-gradient(${P} 0.8px, transparent 1.2px), radial-gradient(${P} 1.2px, transparent 1.6px)`,
+    size: '61px 61px, 137px 137px',
   },
   sparks: {
-    image: `radial-gradient(${P} 1.5px, transparent 2px), radial-gradient(${P} 1px, transparent 1.5px)`,
-    size: '30px 30px, 13px 13px',
+    image: `radial-gradient(${P} 1px, transparent 1.4px), radial-gradient(${P} 0.7px, transparent 1.1px)`,
+    size: '73px 73px, 29px 29px',
   },
   petals: {
-    image: `radial-gradient(ellipse 4px 7px at 25% 30%, ${P} 90%, transparent 100%), radial-gradient(ellipse 7px 4px at 70% 70%, ${P} 90%, transparent 100%)`,
-    size: '48px 48px',
+    image: `radial-gradient(ellipse 3px 6px at 25% 30%, ${P} 90%, transparent 100%), radial-gradient(ellipse 6px 3px at 70% 72%, ${P} 90%, transparent 100%)`,
+    size: '96px 96px',
   },
 } as const;
 
@@ -81,42 +60,42 @@ const theme = (
 ): ChatTheme => ({ id, name, vibe, patternImage: patterns[pattern].image, patternSize: patterns[pattern].size, light, dark });
 
 export const CHAT_THEMES: readonly ChatTheme[] = [
-  theme('classic', 'Classic', 'Clean Howlers indigo', 'dots',
-    { bg: 'linear-gradient(180deg, #f4f5fb, #e8ebf5)', pattern: 'rgb(71 74 232 / 0.09)', out: ['#474ae8', '#4b3bd0'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#0f1a1c', accent: '#474ae8', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(180deg, #0b0e10, #12161c)', pattern: 'rgb(122 125 255 / 0.08)', out: ['#4f52e0', '#4636c4'], outFg: '#ffffff', incoming: '#1f252b', inFg: '#eef1f3', accent: '#7a7dff', accentFg: '#0b0e10' }),
-  theme('midnight', 'Midnight', 'Starry late-night talks', 'stars',
-    { bg: 'linear-gradient(160deg, #dfe6f7, #c9d3ee)', pattern: 'rgb(30 42 90 / 0.18)', out: ['#1e2a5a', '#2c3e8f'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#121a33', accent: '#2c3e8f', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(160deg, #050816, #0d1433 60%, #1a1040)', pattern: 'rgb(255 255 255 / 0.22)', out: ['#3546b8', '#4f37b0'], outFg: '#ffffff', incoming: '#161d3a', inFg: '#e6e9ff', accent: '#8ea2ff', accentFg: '#050816' }),
-  theme('ocean', 'Ocean', 'Calm tides and deep blue', 'waves',
-    { bg: 'linear-gradient(180deg, #e0f4fb, #bfe6f3)', pattern: 'rgb(3 105 161 / 0.12)', out: ['#0369a1', '#0e7490'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#0c2a36', accent: '#0369a1', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(180deg, #03131c, #062a3a)', pattern: 'rgb(56 189 248 / 0.1)', out: ['#0e7490', '#0369a1'], outFg: '#ffffff', incoming: '#0d2b38', inFg: '#e0f4fb', accent: '#38bdf8', accentFg: '#03131c' }),
-  theme('sunset', 'Sunset', 'Golden hour, warm and hazy', 'ribbons',
-    { bg: 'linear-gradient(160deg, #ffe8d6, #ffd1dc 55%, #e8d5ff)', pattern: 'rgb(194 65 12 / 0.08)', out: ['#c2410c', '#be185d'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#3b1a12', accent: '#b03a0a', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(160deg, #2a0f12, #3a1030 60%, #1e1240)', pattern: 'rgb(251 146 60 / 0.08)', out: ['#c2410c', '#be185d'], outFg: '#ffffff', incoming: '#3a1a24', inFg: '#ffe8d6', accent: '#fb923c', accentFg: '#2a0f12' }),
-  theme('forest', 'Forest', 'Mossy, quiet, outdoors', 'leaves',
-    { bg: 'linear-gradient(180deg, #e7f3e4, #cfe5c7)', pattern: 'rgb(22 101 52 / 0.1)', out: ['#166534', '#15803d'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#14281a', accent: '#166534', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(180deg, #07140b, #0f2416)', pattern: 'rgb(74 222 128 / 0.07)', out: ['#15803d', '#166534'], outFg: '#ffffff', incoming: '#15291b', inFg: '#e2f2e0', accent: '#4ade80', accentFg: '#07140b' }),
-  theme('candy', 'Candy', 'Sweet pink and bubblegum', 'hearts',
-    { bg: 'linear-gradient(135deg, #ffe4f1, #e0f0ff)', pattern: 'rgb(219 39 119 / 0.1)', out: ['#be185d', '#9333ea'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#3a0f2a', accent: '#be185d', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(135deg, #2a0b1f, #14183a)', pattern: 'rgb(244 114 182 / 0.09)', out: ['#be185d', '#7e22ce'], outFg: '#ffffff', incoming: '#2e1430', inFg: '#ffe4f1', accent: '#f472b6', accentFg: '#2a0b1f' }),
-  theme('neon', 'Neon', 'Electric city nights', 'grid',
-    { bg: 'linear-gradient(135deg, #ede9fe, #cffafe)', pattern: 'rgb(109 40 217 / 0.08)', out: ['#6d28d9', '#0e7490'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#1e1033', accent: '#6d28d9', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(135deg, #07010f, #0f0524)', pattern: 'rgb(34 211 238 / 0.09)', out: ['#a21caf', '#6d28d9'], outFg: '#ffffff', incoming: '#160a2e', inFg: '#e9d5ff', accent: '#22d3ee', accentFg: '#07010f' }),
-  theme('lavender', 'Lavender', 'Soft, dreamy and light', 'dots',
-    { bg: 'linear-gradient(180deg, #f3ecff, #e6dcff)', pattern: 'rgb(124 58 237 / 0.1)', out: ['#7c3aed', '#6d28d9'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#2a1a4a', accent: '#6d28d9', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(180deg, #120c22, #1d1336)', pattern: 'rgb(196 181 253 / 0.08)', out: ['#6d28d9', '#5b21b6'], outFg: '#ffffff', incoming: '#241a3d', inFg: '#ede4ff', accent: '#c4b5fd', accentFg: '#120c22' }),
-  theme('mono', 'Mono', 'Minimal black and white', 'grid',
-    { bg: 'linear-gradient(180deg, #f4f4f5, #e4e4e7)', pattern: 'rgb(24 24 27 / 0.05)', out: ['#18181b', '#27272a'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#18181b', accent: '#18181b', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(180deg, #09090b, #18181b)', pattern: 'rgb(244 244 245 / 0.05)', out: ['#f4f4f5', '#e4e4e7'], outFg: '#09090b', incoming: '#27272a', inFg: '#f4f4f5', accent: '#f4f4f5', accentFg: '#09090b' }),
-  theme('aurora', 'Aurora', 'Northern lights shimmer', 'sparks',
-    { bg: 'linear-gradient(160deg, #d9fbe8, #d6ecff 50%, #ecdcff)', pattern: 'rgb(4 120 87 / 0.12)', out: ['#047857', '#1d4ed8'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#0b2530', accent: '#047857', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(160deg, #03161a, #071a33 50%, #1a0b33)', pattern: 'rgb(94 234 212 / 0.12)', out: ['#0f766e', '#4338ca'], outFg: '#ffffff', incoming: '#102a33', inFg: '#dcfce7', accent: '#5eead4', accentFg: '#03161a' }),
-  theme('ember', 'Ember', 'Fireside glow', 'sparks',
-    { bg: 'linear-gradient(180deg, #fff1e6, #ffd9c2)', pattern: 'rgb(185 28 28 / 0.1)', out: ['#b91c1c', '#c2410c'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#3a120a', accent: '#b91c1c', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(180deg, #1a0805, #2e0f08)', pattern: 'rgb(251 146 60 / 0.12)', out: ['#b91c1c', '#9a3412'], outFg: '#ffffff', incoming: '#33150e', inFg: '#ffe4d6', accent: '#fb923c', accentFg: '#1a0805' }),
-  theme('sakura', 'Sakura', 'Cherry blossom spring', 'petals',
-    { bg: 'linear-gradient(180deg, #fff0f5, #ffe1ec)', pattern: 'rgb(190 24 93 / 0.12)', out: ['#be185d', '#9d174d'], outFg: '#ffffff', incoming: '#ffffff', inFg: '#3d0f22', accent: '#be185d', accentFg: '#ffffff' },
-    { bg: 'linear-gradient(180deg, #1f0a14, #2d0f1f)', pattern: 'rgb(249 168 212 / 0.1)', out: ['#9d174d', '#be185d'], outFg: '#ffffff', incoming: '#351525', inFg: '#ffe1ec', accent: '#f9a8d4', accentFg: '#1f0a14' }),
+  theme('classic', "Howl", "Signature violet into indigo", 'none',
+    { bg: "radial-gradient(70% 70% at 12% 8%, rgb(140 82 255 / 0.20), transparent 70%), radial-gradient(65% 65% at 90% 35%, rgb(64 120 255 / 0.16), transparent 70%), radial-gradient(70% 70% at 40% 100%, rgb(255 92 170 / 0.12), transparent 70%), linear-gradient(180deg, #f7f5ff, #eef1ff)", out: ["#8a2be2", "#5b3fe0", "#2f5be0"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#191433", accent: "#5b3fe0", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 15% 5%, rgb(140 82 255 / 0.30), transparent 70%), radial-gradient(65% 65% at 90% 40%, rgb(64 120 255 / 0.22), transparent 70%), radial-gradient(70% 70% at 35% 100%, rgb(255 92 170 / 0.16), transparent 70%), linear-gradient(180deg, #0b0918, #0d1022)", out: ["#8a2be2", "#5b3fe0", "#2f5be0"], outFg: "#ffffff", incoming: "#1e1b33", inFg: "#f1eeff", accent: "#b9a6ff", accentFg: "#0b0918" }),
+  theme('midnight', "Velvet Night", "Deep navy, a few quiet stars", 'stars',
+    { bg: "radial-gradient(70% 70% at 20% 10%, rgb(40 60 140 / 0.16), transparent 70%), radial-gradient(70% 70% at 85% 85%, rgb(90 60 160 / 0.12), transparent 70%), linear-gradient(170deg, #eef1fa, #dfe4f4)", out: ["#1c2a6b", "#2b2f8a", "#3b2a8f"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#141a33", accent: "#2b2f8a", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 20% 0%, rgb(70 90 200 / 0.28), transparent 70%), radial-gradient(70% 70% at 90% 90%, rgb(120 70 200 / 0.22), transparent 70%), linear-gradient(170deg, #04060f, #0a0f26 60%, #140b2a)", out: ["#2b3a9a", "#33309c", "#46309e"], outFg: "#ffffff", incoming: "#151a33", inFg: "#e6e9ff", accent: "#9fb0ff", accentFg: "#04060f" }),
+  theme('ocean', "Tidal", "Lagoon teal fading into the deep", 'none',
+    { bg: "radial-gradient(70% 70% at 10% 10%, rgb(0 170 200 / 0.18), transparent 70%), radial-gradient(70% 70% at 90% 60%, rgb(0 90 200 / 0.14), transparent 70%), radial-gradient(70% 70% at 40% 100%, rgb(0 200 170 / 0.12), transparent 70%), linear-gradient(180deg, #eefbfd, #dff1f8)", out: ["#00737e", "#0567a8", "#1d4fb8"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#0b2731", accent: "#0567a8", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 10% 0%, rgb(0 170 200 / 0.26), transparent 70%), radial-gradient(70% 70% at 90% 60%, rgb(0 90 200 / 0.22), transparent 70%), radial-gradient(70% 70% at 40% 100%, rgb(0 200 170 / 0.16), transparent 70%), linear-gradient(180deg, #02121a, #041d2e)", out: ["#00737e", "#0567a8", "#1d4fb8"], outFg: "#ffffff", incoming: "#0f2633", inFg: "#e2f6fb", accent: "#5fd4f0", accentFg: "#02121a" }),
+  theme('sunset', "Golden Hour", "Amber, coral and dusk pink", 'none',
+    { bg: "radial-gradient(70% 70% at 15% 5%, rgb(255 170 60 / 0.24), transparent 70%), radial-gradient(70% 70% at 90% 45%, rgb(255 90 110 / 0.16), transparent 70%), radial-gradient(70% 70% at 30% 100%, rgb(190 90 255 / 0.14), transparent 70%), linear-gradient(170deg, #fff6ee, #ffece9 55%, #f6ebff)", out: ["#b4520a", "#c22f4f", "#a3267a"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#3a1a12", accent: "#b23a1e", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 15% 0%, rgb(255 150 50 / 0.26), transparent 70%), radial-gradient(70% 70% at 90% 45%, rgb(255 80 110 / 0.20), transparent 70%), radial-gradient(70% 70% at 30% 100%, rgb(170 80 255 / 0.18), transparent 70%), linear-gradient(170deg, #1d0c08, #2a0c1c 55%, #1a0c2c)", out: ["#b4520a", "#c22f4f", "#a3267a"], outFg: "#ffffff", incoming: "#33191f", inFg: "#ffeee4", accent: "#ffad6b", accentFg: "#1d0c08" }),
+  theme('forest', "Evergreen", "Moss, pine and morning light", 'none',
+    { bg: "radial-gradient(70% 70% at 15% 10%, rgb(60 160 90 / 0.18), transparent 70%), radial-gradient(70% 70% at 85% 80%, rgb(160 190 60 / 0.14), transparent 70%), linear-gradient(180deg, #f3faf1, #e3f1e2)", out: ["#1f6f43", "#17694f", "#0f5f5a"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#14281a", accent: "#1f6f43", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 15% 0%, rgb(60 160 90 / 0.24), transparent 70%), radial-gradient(70% 70% at 85% 85%, rgb(160 190 60 / 0.14), transparent 70%), linear-gradient(180deg, #06120a, #0b1d12)", out: ["#1f6f43", "#17694f", "#0f5f5a"], outFg: "#ffffff", incoming: "#142a1c", inFg: "#e3f3e2", accent: "#7fdc9a", accentFg: "#06120a" }),
+  theme('candy', "Bubblegum", "Pink to lilac, sweet but sharp", 'none',
+    { bg: "radial-gradient(70% 70% at 10% 15%, rgb(255 105 180 / 0.20), transparent 70%), radial-gradient(70% 70% at 90% 70%, rgb(150 110 255 / 0.18), transparent 70%), linear-gradient(135deg, #fff2f8, #f3efff)", out: ["#c2185b", "#a11fa0", "#7a2cc4"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#3a0f2a", accent: "#b0195f", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 10% 10%, rgb(255 105 180 / 0.26), transparent 70%), radial-gradient(70% 70% at 90% 75%, rgb(150 110 255 / 0.24), transparent 70%), linear-gradient(135deg, #1d0816, #140c2a)", out: ["#c2185b", "#a11fa0", "#7a2cc4"], outFg: "#ffffff", incoming: "#2c1530", inFg: "#ffe6f2", accent: "#ff8cc6", accentFg: "#1d0816" }),
+  theme('neon', "Afterglow", "Magenta, violet and electric cyan", 'none',
+    { bg: "radial-gradient(70% 70% at 10% 10%, rgb(220 60 255 / 0.18), transparent 70%), radial-gradient(70% 70% at 90% 85%, rgb(0 200 255 / 0.18), transparent 70%), radial-gradient(60% 60% at 60% 40%, rgb(120 80 255 / 0.12), transparent 70%), linear-gradient(135deg, #f8f2ff, #ecfbff)", out: ["#a21caf", "#6d28d9", "#0b63a8"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#1e1033", accent: "#6d28d9", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 10% 5%, rgb(220 60 255 / 0.30), transparent 70%), radial-gradient(70% 70% at 90% 85%, rgb(0 200 255 / 0.24), transparent 70%), radial-gradient(60% 60% at 60% 45%, rgb(120 80 255 / 0.16), transparent 70%), linear-gradient(135deg, #07010f, #0a0620)", out: ["#a21caf", "#6d28d9", "#0b63a8"], outFg: "#ffffff", incoming: "#170d2c", inFg: "#efe3ff", accent: "#5fe3ff", accentFg: "#07010f" }),
+  theme('lavender', "Lavender Haze", "Soft lilac, calm and dreamy", 'none',
+    { bg: "radial-gradient(70% 70% at 15% 10%, rgb(170 130 255 / 0.20), transparent 70%), radial-gradient(70% 70% at 85% 80%, rgb(255 170 230 / 0.14), transparent 70%), linear-gradient(180deg, #f8f4ff, #efe8ff)", out: ["#7a4fd6", "#6a45c9", "#5a3db8"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#2a1a4a", accent: "#6a45c9", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 15% 5%, rgb(170 130 255 / 0.24), transparent 70%), radial-gradient(70% 70% at 85% 85%, rgb(255 150 220 / 0.14), transparent 70%), linear-gradient(180deg, #100b1e, #181030)", out: ["#7a4fd6", "#6a45c9", "#5a3db8"], outFg: "#ffffff", incoming: "#231a3a", inFg: "#efe7ff", accent: "#cdb8ff", accentFg: "#100b1e" }),
+  theme('mono', "Noir", "Black, white and nothing else", 'none',
+    { bg: "radial-gradient(70% 70% at 20% 10%, rgb(0 0 0 / 0.05), transparent 70%), radial-gradient(70% 70% at 80% 90%, rgb(0 0 0 / 0.06), transparent 70%), linear-gradient(180deg, #fafafa, #ededee)", out: ["#111113", "#1c1c20", "#2a2a2f"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#18181b", accent: "#18181b", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 20% 5%, rgb(255 255 255 / 0.05), transparent 70%), radial-gradient(70% 70% at 80% 90%, rgb(255 255 255 / 0.04), transparent 70%), linear-gradient(180deg, #060607, #111114)", out: ["#f5f5f6", "#e8e8ea", "#dcdcdf"], outFg: "#0a0a0b", incoming: "#1f1f23", inFg: "#f4f4f5", accent: "#f4f4f5", accentFg: "#09090b" }),
+  theme('aurora', "Northern Lights", "Green and violet ribbons of light", 'sparks',
+    { bg: "radial-gradient(70% 70% at 10% 5%, rgb(40 220 150 / 0.20), transparent 70%), radial-gradient(70% 70% at 70% 40%, rgb(80 140 255 / 0.16), transparent 70%), radial-gradient(70% 70% at 30% 100%, rgb(170 90 255 / 0.16), transparent 70%), linear-gradient(170deg, #effcf6, #eaf2ff 55%, #f3ecff)", out: ["#04785a", "#0e6a8a", "#4a3bc0"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#0b2530", accent: "#04785a", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 10% 0%, rgb(40 220 150 / 0.26), transparent 70%), radial-gradient(70% 70% at 70% 40%, rgb(80 140 255 / 0.20), transparent 70%), radial-gradient(70% 70% at 30% 100%, rgb(170 90 255 / 0.22), transparent 70%), linear-gradient(170deg, #021310, #041427 55%, #120a26)", out: ["#04785a", "#0e6a8a", "#4a3bc0"], outFg: "#ffffff", incoming: "#0f2630", inFg: "#dcfce9", accent: "#6ff0c4", accentFg: "#021310" }),
+  theme('ember', "Ember", "Firelight red and smoky amber", 'sparks',
+    { bg: "radial-gradient(70% 70% at 15% 10%, rgb(255 120 40 / 0.20), transparent 70%), radial-gradient(70% 70% at 85% 85%, rgb(220 40 40 / 0.14), transparent 70%), linear-gradient(180deg, #fff6f0, #ffeadd)", out: ["#b8361a", "#a82c1f", "#8f2414"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#3a120a", accent: "#a82c1f", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 15% 0%, rgb(255 120 40 / 0.26), transparent 70%), radial-gradient(70% 70% at 85% 90%, rgb(220 40 40 / 0.20), transparent 70%), linear-gradient(180deg, #160604, #240b06)", out: ["#b8361a", "#a82c1f", "#8f2414"], outFg: "#ffffff", incoming: "#301610", inFg: "#ffe9dd", accent: "#ffa06a", accentFg: "#160604" }),
+  theme('sakura', "Sakura", "Cherry blossom, blush and plum", 'petals',
+    { bg: "radial-gradient(70% 70% at 15% 10%, rgb(255 130 170 / 0.20), transparent 70%), radial-gradient(70% 70% at 85% 80%, rgb(200 120 220 / 0.12), transparent 70%), linear-gradient(180deg, #fff5f8, #ffe9f0)", out: ["#b81d5c", "#a0195f", "#86185f"], outFg: "#ffffff", incoming: "#ffffff", inFg: "#3d0f22", accent: "#a0195f", accentFg: "#ffffff" },
+    { bg: "radial-gradient(70% 70% at 15% 0%, rgb(255 130 170 / 0.24), transparent 70%), radial-gradient(70% 70% at 85% 85%, rgb(200 120 220 / 0.16), transparent 70%), linear-gradient(180deg, #1a0911, #280d1c)", out: ["#b81d5c", "#a0195f", "#86185f"], outFg: "#ffffff", incoming: "#33162a", inFg: "#ffe4ee", accent: "#ffa8cb", accentFg: "#1a0911" }),
 ];
 
 export const DEFAULT_THEME_ID: ChatThemeId = 'classic';
@@ -126,7 +105,7 @@ const byId = new Map(CHAT_THEMES.map((t) => [t.id, t]));
 
 export const isThemeId = (v: unknown): v is ChatThemeId => typeof v === 'string' && byId.has(v as ChatThemeId);
 
-/** The theme for a conversation's stored id; unknown, null or "" fall back to Classic. */
+/** The theme for a conversation's stored id; unknown, null or "" fall back to the default (Howl). */
 export function getTheme(id: string | null | undefined): ChatTheme {
   return (isThemeId(id) && byId.get(id)) || byId.get(DEFAULT_THEME_ID)!;
 }
@@ -139,9 +118,9 @@ export function themeVars(t: ChatTheme): CSSProperties {
   };
   for (const [suffix, p] of [['l', t.light], ['d', t.dark]] as const) {
     vars[`--ct-bg-${suffix}`] = p.bg;
-    vars[`--ct-pattern-${suffix}`] = p.pattern;
     vars[`--ct-out-1-${suffix}`] = p.out[0];
     vars[`--ct-out-2-${suffix}`] = p.out[1];
+    vars[`--ct-out-3-${suffix}`] = p.out[2];
     vars[`--ct-out-fg-${suffix}`] = p.outFg;
     vars[`--ct-in-${suffix}`] = p.incoming;
     vars[`--ct-in-fg-${suffix}`] = p.inFg;

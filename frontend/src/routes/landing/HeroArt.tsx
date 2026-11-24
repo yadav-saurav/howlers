@@ -1,15 +1,26 @@
 import { forwardRef, type CSSProperties } from 'react';
-import { ArrowBigDown, ArrowBigUp, BarChart3, Bookmark, Home, MessageSquare, Mic, Quote, Search, Trophy } from 'lucide-react';
+import {
+  ArrowBigDown,
+  ArrowBigUp,
+  BarChart3,
+  Bookmark,
+  Home,
+  MessageSquare,
+  ScrollText,
+  Search,
+  Trophy,
+} from 'lucide-react';
 import { Moon } from './NightSky';
+import { ChatMock, Quote, Ticks, TypingBubble, VoiceBubble } from './ChatMock';
 import { Pup, Sparkle } from '@/design-system/Pups';
 
 const v = (vars: Record<string, string | number>) => vars as CSSProperties;
 
 /**
- * Hero art: an illustrated mock of the Howlers app (community feed card, a thread Digest, a Pulse poll),
- * a phone with a live DM, a voice note, the moon and the pups. Purely decorative (aria-hidden); the
- * people, communities and numbers in it are illustrative, which the window's title bar also says.
- * Sizes are in em so the whole scene scales with the font-size set on `.hero-art` in landing.css.
+ * Hero art: an illustrated copy of the Howlers app (a community feed post with its vote pill and reactions, a thread
+ * Digest, a Pulse poll and this month's leaderboard), a phone with a themed chat (quoted reply, voice note, composer),
+ * the moon and the pups. Purely decorative (aria-hidden); the people, communities and numbers in it are illustrative,
+ * which the window's title bar also says. Sizes are in em so the scene scales with the font-size on `.hero-art`.
  */
 export const HeroArt = forwardRef<HTMLDivElement>(function HeroArt(_, ref) {
   return (
@@ -54,71 +65,89 @@ export const HeroArt = forwardRef<HTMLDivElement>(function HeroArt(_, ref) {
                 <span className="rail-ico"><Trophy /></span>
                 <span className="rail-ico"><Bookmark /></span>
                 <span className="rail-sep" />
-                <span className="rail-comm" style={{ background: '#7a7dff' }}>N</span>
-                <span className="rail-comm" style={{ background: '#2ecc94' }}>T</span>
-                <span className="rail-comm" style={{ background: '#ff8fbd' }}>B</span>
+                <span className="rail-comm" style={{ background: '#8c80ff' }}>N</span>
+                <span className="rail-comm" style={{ background: '#69b4ff' }}>T</span>
+                <span className="rail-comm" style={{ background: '#ff9fc6' }}>B</span>
               </div>
               <div className="win-main">
                 <div className="win-head">
                   <span className="comm-ico">N</span>
                   <b>c/night_sky</b>
+                  <span className="seg-mini">
+                    <span className="on">Posts</span>
+                    <span>Pulse</span>
+                  </span>
                   <span className="pill-joined">Joined</span>
                 </div>
                 <div className="win-cols">
                   <div className="win-col">
                     <div className="post-card">
-                      <div className="votes">
-                        <span className="vote-up"><ArrowBigUp /></span>
-                        <b>128</b>
-                        <span className="vote-down"><ArrowBigDown /></span>
-                        <span className="plus-one f1">+1</span>
-                        <span className="plus-one f2">+1</span>
+                      <div className="meta">
+                        <span className="meta-av">N</span> <b>c/night_sky</b> · u/luna_howls · 2h
                       </div>
-                      <div className="post-main">
-                        <div className="meta">u/luna_howls · 2h</div>
-                        <div className="post-title">Where&apos;s the darkest sky within an hour of town?</div>
-                        <div className="post-actions">
-                          <span><MessageSquare /> 42</span>
-                          <span className="chip chip-brand">Digest</span>
-                          <span className="chip">Context Mode</span>
-                        </div>
+                      <div className="post-title">Where&apos;s the darkest sky within an hour of town?</div>
+                      <div className="post-actions">
+                        <span className="vpill on">
+                          <ArrowBigUp className="filled" />
+                          <b>128</b>
+                          <ArrowBigDown />
+                          <span className="plus-one f1">+1</span>
+                          <span className="plus-one f2">+1</span>
+                        </span>
+                        <span className="apill"><MessageSquare /> 42</span>
+                        <span className="rx mine"><i>🐺</i> 9</span>
+                        <span className="rx"><i>🔥</i> 4</span>
                       </div>
                     </div>
-                    <div className="ai-card">
-                      <div className="ai-head"><Quote /> Thread Digest</div>
-                      <div className="ai-q">Where do people go to see the aurora?</div>
-                      <div className="ai-a">
+                    <div className="digest-card">
+                      <div className="dg-head"><ScrollText /> Thread digest</div>
+                      <div className="dg-sec">Summary</div>
+                      <div className="dg-p">
                         Most of the pack points to the north ridge lot <span className="cite c1">1</span>. Bring a red
-                        light and arrive before 11 <span className="cite c2">2</span>.
+                        light and get there before 11 <span className="cite c2">2</span>.
                       </div>
-                      <div className="ai-src">
-                        <span>u/luna_howls</span>
-                        <span>u/river.wolf</span>
-                      </div>
+                      <div className="dg-sec">Unresolved questions</div>
+                      <div className="dg-p muted">Is the gate open after dark?</div>
                     </div>
                   </div>
                   <div className="win-col narrow">
                     <div className="pulse-card">
-                      <div className="pulse-head"><BarChart3 /> Pulse · poll</div>
+                      <div className="pulse-meta">
+                        <span className="badge-info"><BarChart3 /> Poll</span>
+                        <span>214 votes · Fri</span>
+                      </div>
                       <div className="pulse-q">Meteor shower plans?</div>
                       {[
-                        ['Ridge hike', 58],
-                        ['Backyard', 31],
-                        ['Sleeping in', 11],
-                      ].map(([label, pct], i) => (
-                        <div key={label} className="pbar">
-                          <span className="pbar-fill" style={v({ '--w': `${pct}%`, '--d': `${i * 0.25}s` })} />
-                          <span className="pbar-label">{label}</span>
-                          <span className="pbar-pct">{pct}%</span>
+                        ['Ridge hike', 58, true],
+                        ['Backyard', 31, false],
+                        ['Staying in', 11, false],
+                      ].map(([label, pct, mine], i) => (
+                        <div key={String(label)} className="rbar">
+                          <span className="rbar-label">{label}</span>
+                          <span className="rbar-track">
+                            <span
+                              className={`rbar-fill${mine ? ' mine' : ''}`}
+                              style={v({ '--w': `${pct}%`, '--d': `${i * 0.25}s` })}
+                            />
+                          </span>
+                          <span className="rbar-pct">{pct}%</span>
                         </div>
                       ))}
-                      <div className="pulse-foot">214 votes · closes Fri</div>
                     </div>
-                    <div className="digest-card">
-                      <div className="digest-head">Thread Digest</div>
-                      <span className="dl" style={v({ '--w': '92%' })} />
-                      <span className="dl" style={v({ '--w': '74%' })} />
-                      <span className="dl" style={v({ '--w': '84%' })} />
+                    <div className="lb-card">
+                      <div className="lb-head"><Trophy /> Top this month</div>
+                      {[
+                        ['1', 'luna_howls', '#ff9fc6', 214],
+                        ['2', 'river.wolf', '#69b4ff', 187],
+                        ['3', 'kai_moon', '#ffe9b0', 152],
+                      ].map(([rank, who, color, pts]) => (
+                        <div key={String(who)} className="lb-mini">
+                          <span className="lb-rank">#{rank}</span>
+                          <span className="lb-av" style={{ background: String(color) }}>{String(who)[0].toUpperCase()}</span>
+                          <span className="lb-name">{who}</span>
+                          <b>{pts}</b>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
@@ -127,56 +156,37 @@ export const HeroArt = forwardRef<HTMLDivElement>(function HeroArt(_, ref) {
           </div>
         </div>
 
-        {/* DM bubble floating over the window */}
+        {/* inbox preview floating over the window */}
         <div className="px art-dm" style={v({ '--depth': 1.4 })}>
           <div className="dm-float bob-slow">
-            <span className="dm-av" style={{ background: '#ff8fbd' }}>K</span>
-            <div>
-              <div className="dm-name">kai_moon</div>
-              <div className="dm-text">coming to the ridge tonight?</div>
+            <span className="dm-av" style={{ background: '#ff9fc6' }}>K</span>
+            <div className="dm-body">
+              <div className="dm-name">kai_moon <span className="dm-time">now</span></div>
+              <div className="dm-text">
+                <span className="dm-typing-txt">typing…</span>
+              </div>
             </div>
-          </div>
-          <div className="dm-typing">
-            <span /><span /><span />
+            <span className="dm-badge">2</span>
           </div>
         </div>
 
-        {/* voice note */}
-        <div className="px art-pod" style={v({ '--depth': 1.2 })}>
-          <div className="pod-chip">
-            <span className="pod-cover"><Mic /></span>
-            <div className="pod-meta">
-              <div className="pod-title">Voice note from kai_moon</div>
-              <div className="pod-sub">Pack room · 0:12</div>
-              <div className="pod-track"><span className="pod-progress" /></div>
-            </div>
-            <span className="eq"><i /><i /><i /><i /></span>
-          </div>
-        </div>
-
-        {/* phone with a live DM */}
+        {/* phone with a themed chat */}
         <div className="px art-phone" style={v({ '--depth': 0.9 })}>
-          <div className="phone app">
+          <div className="phone">
             <div className="phone-notch" />
-            <div className="phone-head">
-              <span className="dm-av sm" style={{ background: '#7a7dff' }}>R</span>
-              <div>
-                <div className="ph-name">river.wolf</div>
-                <div className="ph-status"><span className="live-dot" /> online</div>
+            <ChatMock theme="sunset" name="kai_moon" status="online" avatar={{ letter: 'K', color: '#ff9fc6' }}>
+              <div className="tc-day">Today</div>
+              <div className="tb in m1">is the meteor shower tonight?</div>
+              <div className="tb out m2">
+                <Quote who="kai_moon" text="is the meteor shower tonight?" tone="out" />
+                yes! ridge at 11 <Ticks time="21:02" />
               </div>
-            </div>
-            <div className="chat">
-              <div className="day">Today</div>
-              <div className="bubble out">is the meteor shower tonight?</div>
-              <div className="bubble in m1">howl at 9?</div>
-              <div className="bubble out m2">only if you bring snacks</div>
               <div className="slot">
-                <div className="bubble in typing-b"><span /><span /><span /></div>
-                <div className="bubble in m3">deal. see you at the ridge</div>
+                <TypingBubble />
+                <VoiceBubble tone="in" duration="0:12" className="m3" />
               </div>
-              <div className="seen m4">Seen</div>
-            </div>
-            <div className="phone-input">Message river.wolf</div>
+              <div className="tb out m4">bringing cocoa <Ticks time="21:04" /></div>
+            </ChatMock>
           </div>
         </div>
 

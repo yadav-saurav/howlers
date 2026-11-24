@@ -16,14 +16,25 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 }
 
 /**
- * The home feed is for members. Anyone signed out who opens it (a shared /home link, an old bookmark) sees the
- * landing page instead, which explains Howlers and offers sign-up. Shared posts and communities stay public.
+ * Everything inside the app is for members. Anyone signed out who opens an app link (a shared post, a community, an
+ * old bookmark, or the app right after logging out) lands on the landing page instead. The link they opened is kept
+ * as ?next= so signing up or logging in takes them straight to it.
  */
-export function MembersHome({ children }: { children: ReactNode }) {
+export function MembersOnly({ children }: { children: ReactNode }) {
   const status = useAuthStore((s) => s.status);
+  const location = useLocation();
   if (status === 'booting') return <PageSpinner />;
-  if (status !== 'authenticated') return <Navigate to="/" replace />;
+  if (status !== 'authenticated') {
+    const here = location.pathname + location.search;
+    return <Navigate to={here === '/home' || here === '/' ? '/' : `/?next=${encodeURIComponent(here)}`} replace />;
+  }
   return <>{children}</>;
+}
+
+/** Appends the visitor's pending ?next= (from MembersOnly) to an auth link, so they return to what was shared. */
+export function withNext(path: string, search: string): string {
+  const next = new URLSearchParams(search).get('next');
+  return next && next.startsWith('/') && !next.startsWith('//') ? `${path}?next=${encodeURIComponent(next)}` : path;
 }
 
 /** Keeps signed-in users away from login/register; honours ?next=. */

@@ -32,9 +32,9 @@ export function ThemePicker({
                   selected ? 'border-transparent ring-2 ring-brand' : 'border-border hover:shadow-float',
                 )}
               >
-                <span className="chat-theme chat-wallpaper relative block h-24 px-2.5 py-2" style={themeVars(t)} aria-hidden="true">
-                  <span className="chat-bubble-in block w-3/5 rounded-xl rounded-tl-sm px-2 py-1 text-[10px] leading-tight">Hey!</span>
-                  <span className="chat-bubble-out ml-auto mt-1.5 block w-2/3 rounded-xl rounded-tr-sm px-2 py-1 text-right text-[10px] leading-tight">Love this vibe</span>
+                <span className="chat-theme chat-theme-preview chat-wallpaper relative block h-24 px-2.5 py-2" style={themeVars(t)} aria-hidden="true">
+                  <span className="chat-bubble-in block w-3/5 rounded-2xl px-2.5 py-1 text-[10px] leading-tight">Hey!</span>
+                  <span className="chat-bubble-out ml-auto mt-1.5 block w-2/3 rounded-2xl px-2.5 py-1 text-right text-[10px] leading-tight">Love this vibe</span>
                   <span className="chat-accent absolute bottom-2 right-2.5 h-4 w-4 rounded-full" />
                   {selected && (
                     <span className="absolute left-2 top-[3.75rem] inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand text-brand-fg">

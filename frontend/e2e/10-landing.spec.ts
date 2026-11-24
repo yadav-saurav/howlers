@@ -5,12 +5,21 @@ import { expect, test } from '@playwright/test';
 test('landing: headline, tagline and CTAs', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Let’s howl.');
+  await expect(page.getByRole('heading', { level: 2, name: /Climb up/ })).toBeVisible();
   await expect(page.getByText('Find your pack & howl together').first()).toBeVisible();
   const main = page.getByRole('main');
   await expect(main.getByRole('link', { name: 'Join the pack' }).first()).toHaveAttribute('href', '/register');
-  await expect(main.getByRole('link', { name: 'Explore Howlers' }).first()).toHaveAttribute('href', '/explore');
+  await expect(main.getByRole('link', { name: 'Log in' }).first()).toHaveAttribute('href', '/login');
+  await expect(main.getByRole('link', { name: 'Explore Howlers' })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Howlers home' })).toBeVisible();
   await expect(page.getByRole('contentinfo')).toContainText('Howlers.');
+});
+
+test('landing: Join and Log in keep a pending ?next=', async ({ page }) => {
+  await page.goto('/?next=%2Fmessages');
+  const main = page.getByRole('main');
+  await expect(main.getByRole('link', { name: 'Join the pack' }).first()).toHaveAttribute('href', '/register?next=%2Fmessages');
+  await expect(main.getByRole('link', { name: 'Log in' }).first()).toHaveAttribute('href', '/login?next=%2Fmessages');
 });
 
 test('landing: FAQ search filters real answers', async ({ page }) => {

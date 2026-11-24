@@ -2,6 +2,7 @@ import { Link, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
 import { buttonClasses } from '@/components/ui/Button';
 import { HOWLERS, HowlersMark } from '@/design-system/HowlersMark';
 import { useAuth } from '@/features/auth/hooks';
+import { withNext } from '@/app/guards';
 import { cn } from '@/utils/format';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -12,6 +13,7 @@ import { ThemeToggle } from './ThemeToggle';
  */
 export function PublicHeader({ landing = false }: { landing?: boolean }) {
   const { isAuthed } = useAuth();
+  const location = useLocation();
   const link = 'hidden rounded-full px-3 py-2 text-sm font-medium text-muted transition-colors hover:text-text';
   return (
     <header
@@ -34,12 +36,16 @@ export function PublicHeader({ landing = false }: { landing?: boolean }) {
           </nav>
         )}
         <nav aria-label="Primary" className="flex items-center gap-1.5">
-          <Link to="/explore" className={cn(link, 'sm:block')}>
-            Explore
-          </Link>
-          <Link to="/communities" className={cn(link, landing ? 'md:block' : 'sm:block')}>
-            Communities
-          </Link>
+          {isAuthed && (
+            <>
+              <Link to="/explore" className={cn(link, 'sm:block')}>
+                Explore
+              </Link>
+              <Link to="/communities" className={cn(link, landing ? 'md:block' : 'sm:block')}>
+                Communities
+              </Link>
+            </>
+          )}
           {!landing && <ThemeToggle />}
           {isAuthed ? (
             <Link to="/home" className={buttonClasses('primary', 'sm', landing ? 'bg-white text-[#15113a] hover:bg-white/90' : undefined)}>
@@ -47,11 +53,11 @@ export function PublicHeader({ landing = false }: { landing?: boolean }) {
             </Link>
           ) : (
             <>
-              <Link to="/login" className={buttonClasses('ghost', 'sm')}>
+              <Link to={withNext('/login', location.search)} className={buttonClasses('ghost', 'sm')}>
                 Log in
               </Link>
               <Link
-                to="/register"
+                to={withNext('/register', location.search)}
                 className={buttonClasses('primary', 'sm', landing ? 'bg-white px-4 text-[#15113a] hover:bg-white/90' : undefined)}
               >
                 Join
@@ -81,9 +87,9 @@ export function PublicFooter({ landing = false }: { landing?: boolean }) {
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           <nav aria-label="Product" className={col}>
             <span className={head}>Product</span>
-            <Link to="/explore" className={a}>Explore</Link>
-            <Link to="/communities" className={a}>Communities</Link>
-            <Link to="/leaderboard" className={a}>Leaderboard</Link>
+            <a href="/#features" className={a}>Features</a>
+            <a href="/#safety" className={a}>Safety</a>
+            <a href="/#faq" className={a}>FAQ</a>
           </nav>
           <nav aria-label="Howlers" className={col}>
             <span className={head}>Howlers</span>
@@ -93,7 +99,6 @@ export function PublicFooter({ landing = false }: { landing?: boolean }) {
           </nav>
           <nav aria-label="Trust" className={col}>
             <span className={head}>Trust</span>
-            <Link to="/security/e2ee" className={a}>File encryption</Link>
             <Link to="/terms" className={a}>Terms</Link>
             <Link to="/privacy" className={a}>Privacy</Link>
           </nav>

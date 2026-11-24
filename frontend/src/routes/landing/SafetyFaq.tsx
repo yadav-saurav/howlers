@@ -1,6 +1,7 @@
 import { useId, useMemo, useState, type CSSProperties } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight, Award, ChevronDown, Gavel, Search, ShieldCheck, VolumeX } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { ArrowRight, ChevronDown, Gavel, KeyRound, Search, ShieldCheck, VolumeX } from 'lucide-react';
+import { withNext } from '@/app/guards';
 import { useCommunities } from '@/features/communities/hooks';
 import { FAQ, filterFaq } from './faq';
 import { Moon, Stars } from './NightSky';
@@ -10,17 +11,18 @@ const v = (vars: Record<string, string | number>) => vars as CSSProperties;
 
 /* ---------------------------------------------------------------------------------------------------------- */
 
-const FALLBACK = ['Threads', 'Context Mode', 'Digest', 'Messages', 'Voice notes', 'Pulse', 'Chat themes', 'Leaderboard'];
+const FALLBACK = ['Communities', 'Threads', 'Context Mode', 'Digest', 'Pulse', 'Messages', 'Pack rooms', 'Voice notes', 'Chat themes', 'Reactions', 'Leaderboard'];
 
 /**
  * A slow marquee of real community names from this instance's API. If the list can't load, it shows the feature
- * names instead (decorative), never invented communities.
+ * names instead (decorative), never invented communities. Names link to the community only for signed-in visitors:
+ * signed-out visitors can't browse inside the app, so for them the names are plain text.
  */
-export function PackMarquee() {
+export function PackMarquee({ isAuthed }: { isAuthed: boolean }) {
   const q = useCommunities({ sort: 'popular', page: 0, size: 12 });
   const comms = q.data?.items ?? [];
   const real = comms.length > 0;
-  const items = real ? comms.map((c) => ({ key: c.slug, label: `c/${c.slug}`, to: `/c/${c.slug}` })) : FALLBACK.map((f) => ({ key: f, label: f, to: null }));
+  const items = real ? comms.map((c) => ({ key: c.slug, label: `c/${c.slug}`, to: isAuthed ? `/c/${c.slug}` : null })) : FALLBACK.map((f) => ({ key: f, label: f, to: null }));
   const row = (copy: number) =>
     items.map((it) => (
       <li key={`${copy}-${it.key}`} className="mq-item">
@@ -50,19 +52,19 @@ const SAFETY = [
   {
     icon: Gavel,
     title: 'Moderation with appeals',
-    body: 'Reports go to a moderator queue, every action is logged, and you can appeal a removal. Win the appeal and it’s reversed.',
+    body: 'Automod catches spam early, reports go to a moderator queue, every action is logged, and you can appeal a removal. Win and it’s reversed.',
     tint: '#8ff0d6',
   },
   {
-    icon: Award,
-    title: 'Fair moderator recognition',
-    body: 'Mods are recognised for consistency, response time and fair appeal outcomes, never for ban counts. The formula is public.',
+    icon: KeyRound,
+    title: 'Passkeys and two-factor',
+    body: 'Sign in with a passkey or add a second step with an authenticator app, so your account stays yours.',
     tint: '#ffe9b0',
   },
   {
     icon: ShieldCheck,
     title: 'Your data, your call',
-    body: 'Choose who can message you, keep collections private, and delete your account whenever you like. Your posts are anonymised.',
+    body: 'Choose who can message you: everyone, people you follow, or nobody. Delete your account whenever you like and your posts are anonymised.',
     tint: '#b8a8ff',
   },
 ];
@@ -169,6 +171,7 @@ export function FaqSection() {
 /* ---------------------------------------------------------------------------------------------------------- */
 
 export function ClosingCta({ isAuthed }: { isAuthed: boolean }) {
+  const { search } = useLocation();
   return (
     <section aria-labelledby="cta-title" className="closing" data-play>
       <Stars count={46} seed={21} />
@@ -184,18 +187,20 @@ export function ClosingCta({ isAuthed }: { isAuthed: boolean }) {
         <h2 id="cta-title" className="hl-display closing-title">
           <span>Your pack is online.</span> <span className="glow">Come howl.</span>
         </h2>
-        <p className="sec-body center">Find your pack &amp; howl together. It takes a minute to join, and no time at all to look around.</p>
+        <p className="sec-body center">Find your pack &amp; howl together. Joining is free and takes a minute.</p>
         <div className="cta-row center">
           {isAuthed ? (
             <Link to="/home" className="hl-btn hl-btn-white">
-              Open your feed <ArrowRight aria-hidden="true" />
+              Open Howlers <ArrowRight aria-hidden="true" />
             </Link>
           ) : (
-            <Link to="/register" className="hl-btn hl-btn-white">
-              Join the pack <ArrowRight aria-hidden="true" />
-            </Link>
+            <>
+              <Link to={withNext('/register', search)} className="hl-btn hl-btn-white">
+                Join the pack <ArrowRight aria-hidden="true" />
+              </Link>
+              <Link to={withNext('/login', search)} className="hl-btn hl-btn-glow">Log in</Link>
+            </>
           )}
-          <Link to="/explore" className="hl-btn hl-btn-glow">Explore Howlers</Link>
         </div>
       </div>
     </section>
