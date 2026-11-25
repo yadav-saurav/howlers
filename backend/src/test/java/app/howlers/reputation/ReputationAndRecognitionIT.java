@@ -274,6 +274,7 @@ class ReputationAndRecognitionIT extends IntegrationTest {
     }
 
     @Autowired app.howlers.recognition.MemberLeaderboard memberBoard;
+    @Autowired app.howlers.recognition.CommunityLeaderboard communityBoard;
 
     @Test
     void membersBoardCountsFromTheFirstPost() {
@@ -303,6 +304,17 @@ class ReputationAndRecognitionIT extends IntegrationTest {
         assertThat(top.upvotes()).isEqualTo(1);
         assertThat(top.points()).isEqualTo(3);
         assertThat(board.entries().get(1).comments()).isEqualTo(1);
+
+        // The community earns what its members earned inside it: post 2 + comment 1 + upvote 1, from two people.
+        var communitiesBoard = communityBoard.board(null, 100);
+        assertThat(communitiesBoard.entries()).anySatisfy(e -> {
+            assertThat(e.community().slug()).isEqualTo(slug);
+            assertThat(e.posts()).isEqualTo(1);
+            assertThat(e.comments()).isEqualTo(1);
+            assertThat(e.upvotes()).isEqualTo(1);
+            assertThat(e.activeMembers()).isEqualTo(2);
+            assertThat(e.points()).isEqualTo(4);
+        });
         assertThat(board.entries().get(1).points()).isEqualTo(1);
         assertThat(board.periods()).hasSize(6).first().isEqualTo(board.period());
 

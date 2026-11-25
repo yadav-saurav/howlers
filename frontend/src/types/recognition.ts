@@ -171,6 +171,24 @@ export interface MemberLeaderboard {
   formula: string;
 }
 
+/** GET /leaderboard/communities: most active communities in a month (the points their members earn there). */
+export interface CommunityEntry {
+  rank: number;
+  community: CommunityRef;
+  posts: number;
+  comments: number;
+  upvotes: number;
+  activeMembers: number;
+  points: number;
+}
+
+export interface CommunityLeaderboard {
+  period: string;
+  periods: string[];
+  entries: CommunityEntry[];
+  formula: string;
+}
+
 export interface ModerationRecord {
   hidden: boolean;
   optedOut: boolean;

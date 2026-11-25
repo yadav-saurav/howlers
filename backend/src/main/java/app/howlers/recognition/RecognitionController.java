@@ -31,11 +31,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1")
 public class RecognitionController {
     private final RecognitionService recognition;
+    private final CommunityLeaderboard communityBoard;
     private final MemberLeaderboard members;
 
-    public RecognitionController(RecognitionService recognition, MemberLeaderboard members) {
+    public RecognitionController(RecognitionService recognition, MemberLeaderboard members, CommunityLeaderboard communityBoard) {
         this.recognition = recognition;
         this.members = members;
+        this.communityBoard = communityBoard;
+    }
+
+    /** Most active communities this month: the points their members earn there. Public communities only. */
+    @GetMapping("/leaderboard/communities")
+    public CommunityLeaderboard.CommunityBoard communities(@RequestParam(required = false) String period,
+                                                         @RequestParam(defaultValue = "50") int limit) {
+        return communityBoard.board(period, limit);
     }
 
     /** Most active members this month (posts, comments, upvotes from others); fills in from the first post. */

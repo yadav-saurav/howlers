@@ -15,7 +15,6 @@ import { ReactionBar } from '@/features/reactions/components/ReactionBar';
 import { errorMessage } from '@/services/apiError';
 import type { CommentNode } from '@/types/api';
 import { useIsNewComment } from '@/features/live/newComments';
-import { ExpertiseChip } from '@/features/reputation/components/ExpertiseChip';
 import { absoluteUrl, cn, timeAgo } from '@/utils/format';
 import { useCommentVote, useCreateComment, useDeleteComment, useUpdateComment } from '../hooks';
 import { CommentComposer } from './CommentComposer';
@@ -89,7 +88,6 @@ export function CommentItem({ node, level }: { node: CommentNode; level: number 
               {t.opId != null && node.author?.id === t.opId && !gone && (
                 <span className="rounded-full bg-brand/15 px-1.5 text-[10px] font-bold uppercase text-brand">OP</span>
               )}
-              {!gone && <ExpertiseChip postId={t.postId} userId={node.author?.id} />}
               <span aria-hidden="true">•</span>
               <time dateTime={node.createdAt} title={new Date(node.createdAt).toLocaleString()}>{timeAgo(node.createdAt)}</time>
               {node.editedAt && !gone && <span className="text-faint">(edited)</span>}

@@ -13,8 +13,6 @@ import { useAuth } from '@/features/auth/hooks';
 import { Markdown } from '@/features/comments/components/Markdown';
 import { MessageButton } from '@/features/messages/components/MessageButton';
 import { PostList } from '@/features/posts/components/PostList';
-import { ModeratorRecord } from '@/features/reputation/components/ModeratorRecord';
-import { TopicStandings } from '@/features/reputation/components/TopicStandings';
 import { useFollow, useProfile, useUserComments, useUserPosts } from '@/features/users/hooks';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { PageColumns } from '@/layouts/PageColumns';
@@ -148,8 +146,6 @@ function AboutTab({ p }: { p: PublicProfile }) {
           <p className="text-xs text-faint">Karma: +2 for each post, +1 for each comment, plus upvotes from other members. It is not a credential.</p>
         </div>
       </Card>
-      <TopicStandings username={p.username} isSelf={!!p.isSelf} />
-      <ModeratorRecord username={p.username} isSelf={!!p.isSelf} />
       {p.moderatorOf.length > 0 && (
         <Card>
           <CardHeader title="Moderates" />

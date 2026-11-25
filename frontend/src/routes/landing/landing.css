@@ -1114,6 +1114,9 @@
 .hl .tab.t1::before { opacity: 1; animation: tab-a 15s var(--e) infinite; }
 .hl .tab.t2::before { animation: tab-b 15s var(--e) infinite; }
 .hl .tab.t3::before { animation: tab-c 15s var(--e) infinite; }
+/* Two-tab mock (Leaderboard): the highlight follows the cyc2 states. */
+.hl .seg2 .tab.t1::before { animation: tab2-a 10s var(--e) infinite; }
+.hl .seg2 .tab.t2::before { animation: tab2-b 10s var(--e) infinite; }
 .hl .mock-stage {
   position: relative;
   display: grid;
@@ -1754,6 +1757,14 @@
 }
 
 /* two-state cross-fade, 10 s: vote, then results */
+@keyframes tab2-a {
+  0%, 44%, 100% { opacity: 1; }
+  50%, 94% { opacity: 0; }
+}
+@keyframes tab2-b {
+  0%, 44%, 100% { opacity: 0; }
+  50%, 94% { opacity: 1; }
+}
 @keyframes cyc2-a {
   0%, 44% { opacity: 1; transform: none; }
   50%, 94% { opacity: 0; transform: translate3d(0, 0.4em, 0); }

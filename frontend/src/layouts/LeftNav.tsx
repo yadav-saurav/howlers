@@ -111,7 +111,6 @@ export function LeftNav({ compact, onNavigate }: { compact?: boolean; onNavigate
         <Link to="/about" className="hover:text-muted">About</Link>
         <Link to="/terms" className="hover:text-muted">Terms</Link>
         <Link to="/privacy" className="hover:text-muted">Privacy</Link>
-        <Link to="/developers" className="hover:text-muted">API docs</Link>
       </div>
     </nav>
   );

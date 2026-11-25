@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { http } from '@/services/apiClient';
 import type {
+  CommunityLeaderboard,
   MemberLeaderboard,
   ModerationRecord,
   ModeratorSettings,
@@ -24,6 +25,7 @@ export const recognitionApi = {
     http.get<ModLeaderboard>('/moderators/leaderboard', { period, community: community || undefined }),
   memberLeaderboard: (period?: string, community?: string) =>
     http.get<MemberLeaderboard>('/leaderboard/members', { period, community: community || undefined }),
+  communityLeaderboard: (period?: string) => http.get<CommunityLeaderboard>('/leaderboard/communities', { period }),
   modRecord: (username: string) => http.get<ModerationRecord>(`${u(username)}/moderation-record`),
   peers: (slug: string) => http.get<ModPeers>(`${c(slug)}/peers`),
   endorse: (slug: string, username: string, note?: string) =>
@@ -40,6 +42,7 @@ export const recognitionKeys = {
   post: (postId: number) => ['reputation', 'post', postId] as const,
   modLeaderboard: (period: string, community: string) => ['mod-recognition', 'leaderboard', period, community] as const,
   memberLeaderboard: (period: string, community: string) => ['members-leaderboard', period, community] as const,
+  communityLeaderboard: (period: string) => ['communities-leaderboard', period] as const,
   modRecord: (username: string) => ['mod-recognition', 'record', username] as const,
   peers: (slug: string) => ['mod-recognition', 'peers', slug] as const,
   settings: ['mod-recognition', 'settings'] as const,
@@ -78,6 +81,13 @@ export const useMemberLeaderboard = (period: string, community: string) =>
   useQuery({
     queryKey: recognitionKeys.memberLeaderboard(period, community),
     queryFn: () => recognitionApi.memberLeaderboard(period || undefined, community || undefined),
+    staleTime: LIVE, refetchInterval: LIVE,
+    retry: false,
+  });
+export const useCommunityLeaderboard = (period: string) =>
+  useQuery({
+    queryKey: recognitionKeys.communityLeaderboard(period),
+    queryFn: () => recognitionApi.communityLeaderboard(period || undefined),
     staleTime: LIVE, refetchInterval: LIVE,
     retry: false,
   });

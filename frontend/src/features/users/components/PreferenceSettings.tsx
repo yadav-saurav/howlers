@@ -8,7 +8,6 @@ import { errorMessage } from '@/services/apiError';
 import type { Me, UserSettings } from '@/types/api';
 import { cn } from '@/utils/format';
 import { useUpdateSettings } from '../hooks';
-import { ModeratorRankingSetting } from '@/features/reputation/components/ModeratorRankingSetting';
 
 const THEMES: { value: ThemePref; label: string; icon: typeof Sun }[] = [
   { value: 'dark', label: 'Dark', icon: Moon },
@@ -72,7 +71,6 @@ export function PreferenceSettings({ me }: { me: Me }) {
           </Select>
         </div>
       </Card>
-      <ModeratorRankingSetting />
       <Card>
         <CardHeader title="Notifications" />
         <div className="px-4">

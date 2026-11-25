@@ -79,7 +79,7 @@ export const router = createBrowserRouter([
       { path: '/funding/payouts', element: retired },
       { path: '/soon/funding', element: retired },
       { path: '/leaderboard', element: page(() => import('@/routes/leaderboard/LeaderboardPage')) },
-      { path: '/topics/:slug/leaders', element: page(() => import('@/routes/leaderboard/TopicLeadersPage')) },
+      { path: '/topics/:slug/leaders', element: <Navigate to="/leaderboard?tab=communities" replace /> },
       { path: '/soon/leaderboard', element: <Navigate to="/leaderboard" replace /> },
       { path: '/soon/:feature', element: page(() => import('@/routes/static/ComingSoonPage')) },
       { path: '*', element: page(() => import('@/routes/static/NotFoundPage')) },

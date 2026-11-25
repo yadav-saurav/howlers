@@ -1,9 +1,8 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import {
-  Award,
   ArrowBigDown,
   ArrowBigUp,
-  BadgeCheck,
+  Building2,
   BarChart3,
   Clock,
   Search,
@@ -232,18 +231,17 @@ const MEMBERS = [
   { who: 'fern_scout', c: '#8ff0d6', posts: 6, comments: 37, pts: 118 },
 ];
 
-/** The Leaderboard page: Members, Moderators and Topics tabs. */
+/** The Leaderboard page: Members and Communities tabs. */
 function LeaderboardMock() {
   return (
     <div className="tilt mock app lb-mock">
       <div className="lb-title">Leaderboard</div>
-      <div className="seg">
+      <div className="seg seg2">
         <span className="tab t1"><Users /> Members</span>
-        <span className="tab t2"><Trophy /> Moderators</span>
-        <span className="tab t3"><Award /> Topics</span>
+        <span className="tab t2"><Building2 /> Communities</span>
       </div>
       <div className="mock-stage">
-        <div className="state cyc3-a">
+        <div className="state cyc2-a">
           <div className="lb-sub">Most active this month</div>
           <ol className="lb-list">
             {MEMBERS.map((m, i) => (
@@ -260,49 +258,26 @@ function LeaderboardMock() {
           </ol>
           <div className="lb-foot">2 points a post · 1 a comment · 1 per upvote from someone else</div>
         </div>
-        <div className="state cyc3-b">
-          <div className="lb-sub">Moderators · quality score</div>
+        <div className="state cyc2-b">
+          <div className="lb-sub">Liveliest communities this month</div>
           <ol className="lb-list">
             {[
-              ['river.wolf', 'c/trail_talk', '#69b4ff', '92.4', ['Fast responder', 'Consistent']],
-              ['luna_howls', 'c/night_sky', '#ff9fc6', '88.1', ['Upheld on appeal']],
-              ['moss_den', 'c/campfire', '#b8a8ff', '81.7', ['Peer endorsed']],
-            ].map(([who, comm, c, score, badges], i) => (
-              <li key={String(who)} className="lb-row">
-                <span className="lb-rank">#{i + 1}</span>
-                <span className="lb-av" style={{ background: String(c) }}>{String(who)[0].toUpperCase()}</span>
+              ['trail_talk', '#69b4ff', 14, 212],
+              ['night_sky', '#ff9fc6', 9, 167],
+              ['campfire', '#b8a8ff', 6, 98],
+            ].map(([slug, c, members, pts], i) => (
+              <li key={String(slug)} className="lb-row">
+                <span className={`lb-rank r${i + 1}`}>#{i + 1}</span>
+                <span className="lb-av" style={{ background: String(c) }}>{String(slug)[0].toUpperCase()}</span>
                 <span className="lb-main">
-                  <b>u/{who} <em>{comm}</em></b>
-                  <span className="lb-badges">
-                    {(badges as string[]).map((b) => <span key={b} className="mod-badge"><BadgeCheck /> {b}</span>)}
-                  </span>
+                  <b>c/{slug}</b>
+                  <span>{members} active members</span>
                 </span>
-                <span className="lb-score"><b>{score}</b><span>of 100</span></span>
+                <span className="lb-pts"><b>{pts}</b> pts</span>
               </li>
             ))}
           </ol>
-          <div className="lb-foot">Consistency, response time, appeal outcomes, community health and peer feedback</div>
-        </div>
-        <div className="state cyc3-c">
-          <div className="lb-topics">
-            {[
-              ['Astronomy', [['luna_howls', '#ff9fc6', '1.2k'], ['kai_moon', '#ffe9b0', '860']]],
-              ['Hiking', [['river.wolf', '#69b4ff', '940'], ['fern_scout', '#8ff0d6', '512']]],
-            ].map(([topic, rows]) => (
-              <div key={String(topic)} className="lb-topic">
-                <div className="lb-topic-h">{topic}</div>
-                {(rows as string[][]).map(([who, c, pts], i) => (
-                  <div key={who} className="lb-mini">
-                    <span className="lb-rank">#{i + 1}</span>
-                    <span className="lb-av" style={{ background: c }}>{who[0].toUpperCase()}</span>
-                    <span className="lb-name">u/{who}</span>
-                    <b>{pts}</b>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-          <div className="lb-foot">Topic reputation comes from upvotes by other members</div>
+          <div className="lb-foot">A community earns what its members earn inside it</div>
         </div>
       </div>
       <Pup pose="sit" fur="frost" className="mock-pup peek bob" />
@@ -362,8 +337,7 @@ export function FeatureSections() {
         body={
           <>
             See who kept the pack talking this month: 2 points a post, 1 a comment and 1 for every upvote from someone
-            else. Moderators get a quality score for being consistent, quick and fair, and topic rankings show whose
-            answers people trust.
+            else. Communities climb too, with every point their members earn inside them.
           </>
         }
       >

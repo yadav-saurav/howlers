@@ -9,7 +9,7 @@ import { modKeys, useModStats } from '@/features/moderation/api';
 import { useTopic } from '@/features/realtime/RealtimeProvider';
 import { AppealsTab, BansTab, LogTab } from '@/features/moderation/components/DashboardTabs';
 import { QueueTab } from '@/features/moderation/components/QueueTab';
-import { PeerEndorsements } from '@/features/reputation/components/PeerEndorsements';
+import { MembersList } from '@/features/communities/components/MembersList';
 import { HeldTab } from '@/features/moderation/components/HeldTab';
 import { AutomodTab } from '@/features/automod/components/AutomodTab';
 import { CommunityDashboard } from '@/features/moderation/components/CommunityDashboard';
@@ -86,7 +86,9 @@ export default function ModPage() {
         {tab === 'appeals' && <AppealsTab slug={slug} />}
         {tab === 'bans' && <BansTab slug={slug} />}
         {tab === 'log' && <LogTab slug={slug} />}
-        {tab === 'team' && <PeerEndorsements slug={slug} />}
+        {tab === 'team' && (
+          <MembersList slug={slug} canManageRoles={community.data?.viewer.role === 'OWNER' || community.data?.viewer.role === 'ADMIN'} />
+        )}
       </div>
     </div>
   );
