@@ -37,7 +37,7 @@ const EMPTY: Record<FeedTab, { title: string; description: string; mascot: Masco
   latest: { title: 'No posts yet', description: 'Be the first to start a discussion. The pack is listening.', mascot: 'howl' },
   popular: { title: 'Nothing popular yet', description: 'Posts with strong engagement appear here.', mascot: 'headphones' },
   rising: { title: 'Nothing rising right now', description: 'Fresh posts gaining traction appear here. Check back soon.', mascot: 'sleepy' },
-  top: { title: 'No top posts in this range', description: 'Try a longer time range.', mascot: 'sit' },
+  top: { title: 'Nothing trending yet', description: 'No posts with upvotes, comments or views in this range. Try Week or All.', mascot: 'sit' },
 };
 
 /**
@@ -58,7 +58,8 @@ export default function HomePage() {
   const requested = params.get('tab') as FeedTab | null;
   // Hot, New, Following and Top. Hot is the default; old links to Best or Rising open Hot.
   const tab: FeedTab = tabs.some((t) => t.value === requested) ? requested! : 'popular';
-  const t = (params.get('t') as TimeRange) || 'week';
+  // Top opens on Today: trending today. Week, Month, Year and All are a tap away.
+  const t = (params.get('t') as TimeRange) || 'day';
   const feed = useFeed(tab, t);
   const mine = useMyCommunities();
   const scope = useMemo<FeedScope>(() => liveScope(tab, mine.data?.map((c) => c.id)), [tab, mine.data]);

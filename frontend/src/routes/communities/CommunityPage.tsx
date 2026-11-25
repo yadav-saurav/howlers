@@ -129,7 +129,7 @@ function Posts({ c }: { c: CommunityDetail }) {
   const requestedSort = params.get('sort') as CommunitySort | null;
   // Hot, New and Top; an old link to Rising opens Hot.
   const sort: CommunitySort = SORTS.some((s) => s.value === requestedSort) ? requestedSort! : 'hot';
-  const t = (params.get('t') as TimeRange) || 'week';
+  const t = (params.get('t') as TimeRange) || 'day';
   const posts = useCommunityPosts(c.slug, sort, t, c.viewer.canView);
   const { isAuthed } = useAuth();
   // Only subscribe once the detail says we may view it: a rejected SUBSCRIBE closes the whole socket.

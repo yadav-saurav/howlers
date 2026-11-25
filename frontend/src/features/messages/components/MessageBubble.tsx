@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Ban, Check, CheckCheck, Clock3, Copy, MoreHorizontal, Reply, Trash2 } from 'lucide-react';
+import { Ban, Check, CheckCheck, Clock3, Copy, Reply, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react';
 import { Menu, MenuContent, MenuItem, MenuTrigger } from '@/components/ui/Menu';
 import { toast } from '@/components/ui/Toast';
@@ -96,7 +96,7 @@ export function MessageBubble({ m, mine, first, senderLabel, tick, replySender, 
     press.current = null;
   };
   useEffect(() => clearPress, []);
-  // Touch: swipe right to reply, long-press for the message menu.
+  // Touch: swipe right to reply, long-press for the message menu (copy, and delete on your own messages).
   const onTouchStart = (e: TouchEvent) => {
     if (e.touches.length !== 1) return;
     touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, active: false };
@@ -193,6 +193,12 @@ export function MessageBubble({ m, mine, first, senderLabel, tick, replySender, 
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
       onTouchCancel={onTouchEnd}
+      // Right-click opens the same menu on a computer.
+      onContextMenu={(e) => {
+        if (!actionable || (!m.body && !mine)) return;
+        e.preventDefault();
+        setMenuOpen(true);
+      }}
       style={{ touchAction: 'pan-y' }}
     >
       {dx > 0 && (
@@ -226,14 +232,23 @@ export function MessageBubble({ m, mine, first, senderLabel, tick, replySender, 
             </button>
           )}
           <AddReactionButton type="MESSAGE" id={m.id} compact popupAlign={mine ? 'end' : 'start'} />
+          {m.body && (
+            <button
+              type="button"
+              onClick={copy}
+              aria-label="Copy text"
+              title="Copy text"
+              className="rounded-full p-1.5 text-faint hover:bg-surface hover:text-text"
+            >
+              <Copy size={15} />
+            </button>
+          )}
+          {/* Long-press (phone) or right-click (computer) menu; it has no button of its own. */}
           <Menu open={menuOpen} onOpenChange={setMenuOpen}>
             <MenuTrigger asChild>
-              <button type="button" aria-label="Message options" className="rounded-full p-1.5 text-faint hover:bg-surface hover:text-text">
-                <MoreHorizontal size={15} />
-              </button>
+              <span aria-hidden="true" className="pointer-events-none h-0 w-0" tabIndex={-1} />
             </MenuTrigger>
             <MenuContent align={mine ? 'end' : 'start'}>
-              {replyable && <MenuItem icon={<Reply />} onSelect={onReply}>Reply</MenuItem>}
               {m.body && <MenuItem icon={<Copy />} onSelect={copy}>Copy text</MenuItem>}
               {mine && <MenuItem danger icon={<Trash2 />} onSelect={onDelete}>Delete for everyone</MenuItem>}
             </MenuContent>

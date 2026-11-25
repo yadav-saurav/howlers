@@ -23,7 +23,7 @@ Why this shape:
 | Latest | public communities | new |
 | Popular | public communities | hot |
 | Rising | public, last 24 h | `(score + 2·comments) / (age_h + 2)^1.2` |
-| Top | public, window hour/day/week/month/year/all | score + comments |
+| Top | public, window day (default, "trending today")/week/month/year/all | score + comments + views |
 
 Private communities appear only to members; hidden posts never appear to the user who hid them.
 

@@ -94,7 +94,8 @@ public class PostQueryService {
         switch (spec.sort()) {
             case HOT -> sql.append("p.hot_rank AS k ");
             case NEW -> sql.append("p.id AS k ");
-            case TOP -> sql.append("(p.score + p.comment_count) AS k ");
+            // Top: net upvotes + comments + views (each member who opened the post counts once).
+            case TOP -> sql.append("(p.score + p.comment_count + p.view_count) AS k ");
             case RISING -> sql.append("""
                     (p.score + 2 * p.comment_count)::float8
                       / power(extract(epoch FROM now() - p.created_at) / 3600.0 + 2, 1.2) AS k """);
@@ -131,11 +132,11 @@ public class PostQueryService {
             }
             case TOP -> {
                 if (key != null) {
-                    sql.append(" AND (p.score + p.comment_count, p.id) < (:cv, :cid)");
+                    sql.append(" AND (p.score + p.comment_count + p.view_count, p.id) < (:cv, :cid)");
                     params.put("cv", (int) key.value());
                     params.put("cid", key.id());
                 }
-                sql.append(" ORDER BY (p.score + p.comment_count) DESC, p.id DESC");
+                sql.append(" ORDER BY (p.score + p.comment_count + p.view_count) DESC, p.id DESC");
             }
             case RISING, RELEVANCE -> {
                 offset = key == null ? 0 : Cursors.decodeOffset(spec.cursor());
