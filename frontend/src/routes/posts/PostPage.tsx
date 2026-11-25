@@ -8,7 +8,6 @@ import { EmptyState, ErrorState } from '@/components/ui/States';
 import { toast } from '@/components/ui/Toast';
 import { useAuth } from '@/features/auth/hooks';
 import { CommentSection } from '@/features/comments/components/CommentSection';
-import { DiscussionTabs } from '@/features/insight/components/DiscussionTabs';
 import { AboutCard, RulesCard } from '@/features/communities/components/CommunitySidebar';
 import { useCommunity } from '@/features/communities/hooks';
 import { usePostLive } from '@/features/live/usePostLive';
@@ -189,7 +188,7 @@ export default function PostPage() {
       </div>
 
       <div className="mt-6 px-4 sm:px-2">
-        <DiscussionTabs postId={p.id} commentCount={p.commentCount} comments={<CommentSection postId={p.id} locked={p.locked} commentCount={p.commentCount} opId={p.author?.id ?? null} canModerate={p.viewer.canModerate} communitySlug={p.community.slug} />} />
+        <CommentSection postId={p.id} locked={p.locked} commentCount={p.commentCount} opId={p.author?.id ?? null} canModerate={p.viewer.canModerate} communitySlug={p.community.slug} />
       </div>
 
       {editing && p.viewer.canEdit && (

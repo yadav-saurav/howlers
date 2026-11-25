@@ -1124,7 +1124,8 @@
   opacity: 0;
 }
 .hl .mock-stage > .cyc3-a,
-.hl .mock-stage > .cyc2-a {
+.hl .mock-stage > .cyc2-a,
+.hl .mock-stage > .still {
   opacity: 1;
 }
 .hl .cyc3-a { animation: cyc3-a 15s var(--e) infinite; }

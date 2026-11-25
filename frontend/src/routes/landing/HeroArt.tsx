@@ -6,7 +6,6 @@ import {
   Bookmark,
   Home,
   MessageSquare,
-  ScrollText,
   Search,
   Trophy,
 } from 'lucide-react';
@@ -17,8 +16,8 @@ import { Pup, Sparkle } from '@/design-system/Pups';
 const v = (vars: Record<string, string | number>) => vars as CSSProperties;
 
 /**
- * Hero art: an illustrated copy of the Howlers app (a community feed post with its vote pill and reactions, a thread
- * Digest, a Pulse poll and this month's leaderboard), a phone with a themed chat (quoted reply, voice note, composer),
+ * Hero art: an illustrated copy of the Howlers app (a community feed post with its vote pill and reactions, its top
+ * comments, a Pulse poll and this month's leaderboard), a phone with a themed chat (quoted reply, voice note, composer),
  * the moon and the pups. Purely decorative (aria-hidden); the people, communities and numbers in it are illustrative,
  * which the window's title bar also says. Sizes are in em so the scene scales with the font-size on `.hero-art`.
  */
@@ -100,13 +99,12 @@ export const HeroArt = forwardRef<HTMLDivElement>(function HeroArt(_, ref) {
                       </div>
                     </div>
                     <div className="digest-card">
-                      <div className="dg-head"><ScrollText /> Thread digest</div>
-                      <div className="dg-sec">Summary</div>
+                      <div className="dg-head"><MessageSquare /> Top comments</div>
+                      <div className="dg-sec">u/luna_howls · 2h · 31 upvotes</div>
                       <div className="dg-p">
-                        Most of the pack points to the north ridge lot <span className="cite c1">1</span>. Bring a red
-                        light and get there before 11 <span className="cite c2">2</span>.
+                        North ridge lot, no question. Bring a red light and get there before 11.
                       </div>
-                      <div className="dg-sec">Unresolved questions</div>
+                      <div className="dg-sec">u/river.wolf · 1h · 12 upvotes</div>
                       <div className="dg-p muted">Is the gate open after dark?</div>
                     </div>
                   </div>

@@ -27,11 +27,6 @@ export const FAQ: FaqItem[] = [
     a: "No, and we won't pretend they are: direct messages, photos and voice notes are private to the people in the conversation, but not end-to-end encrypted.",
   },
   {
-    id: 'context',
-    q: 'What are Context Mode and Digest?',
-    a: 'Two ways to read a long thread fast. Context Mode maps the supporting and opposing points, the evidence and the open questions. Digest sums the thread up with quotes linked back to their comments.',
-  },
-  {
     id: 'pulse',
     q: 'What is Pulse?',
     a: 'Polls, predictions, opinion and debate prompts inside a community. Results stay hidden until you vote, and predictions track who called it once they resolve.',

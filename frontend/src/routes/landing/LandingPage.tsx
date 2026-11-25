@@ -59,7 +59,7 @@ export default function LandingPage() {
               <span className="ln"><span className="ln-i glow" style={v({ '--d': '0.29s' })}>Let’s howl.</span></span>
             </h1>
             <p className="hero-sub in-el" style={v({ '--d': '0.45s' })}>
-              Howlers is home for communities that like each other: threads with Digest and Context Mode, Pulse polls,
+              Howlers is home for communities that like each other: threads with votes and reactions, Pulse polls,
               chats with voice notes, themes and pack rooms, and a leaderboard for the people who show up.
             </p>
             <div className="cta-row in-el" style={v({ '--d': '0.58s' })}>

@@ -13,7 +13,7 @@ export default function AboutPage() {
       <ul>
         <li><strong>Readable discussions.</strong> Compact feeds, editorial typography and comment threads that stay navigable on any screen.</li>
         <li><strong>Ranking that values quality.</strong> Feeds weigh vote ratio, discussion activity and freshness instead of raw vote counts alone.</li>
-        <li><strong>Knowledge tools.</strong> Context Mode, Thread Digests, Smart Collections and a community-grounded assistant that cites real posts are on the roadmap.</li>
+        
         <li><strong>Support for the people who keep communities healthy.</strong> Moderator recognition and voluntary community funding are planned with transparent rules.</li>
       </ul>
       <h2>What we won’t do</h2>

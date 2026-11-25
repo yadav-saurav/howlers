@@ -6,10 +6,6 @@ import {
   BadgeCheck,
   BarChart3,
   Clock,
-  Link2,
-  MessageSquare,
-  Network,
-  ScrollText,
   Search,
   Trophy,
   Users,
@@ -49,7 +45,7 @@ function Feature({ id, eyebrow, lines, body, flip, children }: FeatureProps) {
   );
 }
 
-/** The post page's discussion switcher: Comments, Digest, Context Mode (same order and look as the app). */
+/** A post's comment thread, as it looks in the app. */
 function ThreadsMock() {
   const comments = [
     { d: 0, who: 'luna_howls', c: '#ff9fc6', text: 'Tent. Wind picks up after midnight up there.', n: 24, up: true },
@@ -63,13 +59,8 @@ function ThreadsMock() {
         <div className="meta"><span className="meta-av">T</span> <b>c/trail_talk</b> · u/new_pup · 5h</div>
         <div className="th-title">Tent or hammock for a first night out?</div>
       </div>
-      <div className="mock-tabs">
-        <span className="tab t1"><MessageSquare /> Comments (42)</span>
-        <span className="tab t2"><ScrollText /> Digest</span>
-        <span className="tab t3"><Network /> Context Mode</span>
-      </div>
       <div className="mock-stage">
-        <div className="state cyc3-a">
+        <div className="state still">
           {comments.map((c, i) => (
             <div key={i} className="th-row" style={v({ '--indent': c.d })}>
               <span className="th-av" style={{ background: c.c }}>{c.who[0].toUpperCase()}</span>
@@ -82,50 +73,6 @@ function ThreadsMock() {
               </div>
             </div>
           ))}
-        </div>
-        <div className="state cyc3-b">
-          <div className="dg-head"><ScrollText /> Thread digest</div>
-          <div className="dg-sec">Summary</div>
-          <div className="dg-p">
-            Most people say a tent is the safer first night <span className="cite">1</span>; hammock fans say it sleeps
-            better if there are trees <span className="cite">3</span>.
-          </div>
-          <div className="dg-sec">Key takeaways</div>
-          {['Wind picks up after midnight', 'An underquilt keeps a hammock warm', 'Bring a tarp either way'].map((t, i) => (
-            <div key={t} className="dg-li">
-              <span>{t}</span>
-              <span className="cite">{[1, 2, 4][i]}</span>
-            </div>
-          ))}
-        </div>
-        <div className="state cyc3-c">
-          <div className="cm-claim">
-            <div className="cm-k">Main claim</div>
-            <div className="cm-t">Tent or hammock for a first night out?</div>
-            <div className="cm-bar">
-              {[
-                ['#2ECC94', 12],
-                ['#EF6B5C', 7],
-                ['#62AAFF', 4],
-                ['#A78BFA', 3],
-              ].map(([c, n], i) => (
-                <span key={i} className="cm-seg" style={v({ '--g': Number(n), background: String(c) })} />
-              ))}
-            </div>
-          </div>
-          {[
-            ['Supporting arguments', 12, '#2ECC94'],
-            ['Counterarguments', 7, '#EF6B5C'],
-            ['Evidence', 4, '#62AAFF'],
-            ['Questions', 3, '#A78BFA'],
-          ].map(([label, n, color]) => (
-            <div key={String(label)} className="stance">
-              <span className="stance-dot" style={{ background: String(color) }} />
-              <span className="stance-label">{label}</span>
-              <span className="stance-n">{n}</span>
-            </div>
-          ))}
-          <div className="evidence"><Link2 /> 4 links cited by participants</div>
         </div>
       </div>
     </div>
@@ -335,13 +282,12 @@ export function FeatureSections() {
     <div id="features" className="features">
       <Feature
         id="threads"
-        eyebrow="Threads · Context Mode · Digest"
+        eyebrow="Threads · Votes · Reactions"
         lines={['Threads that', 'cut through', 'the noise.']}
         body={
           <>
-            Nested comments with upvotes, downvotes and reactions. When a thread runs long, switch to Digest for a short
-            summary with every point linked to its comment, or to Context Mode to see who supports, who pushes back and
-            what evidence people shared.
+            Nested comments with upvotes, downvotes and reactions. The best replies rise to the top, every post shows
+            what people are talking about, and the conversation stays easy to follow however long it runs.
           </>
         }
       >
