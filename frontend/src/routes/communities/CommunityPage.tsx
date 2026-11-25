@@ -51,8 +51,9 @@ function Header({ c }: { c: CommunityDetail }) {
       </div>
       <div className="flex flex-wrap items-end gap-3 px-4 sm:px-4">
         <Avatar src={c.iconUrl} name={c.slug} size="xl" className="-mt-10 border-4 border-bg sm:-mt-12" />
-        <div className="min-w-[200px] flex-1 pb-1">
-          <h1 className="break-words text-2xl font-bold tracking-tight sm:text-[28px]">c/{c.slug}</h1>
+        <div className="min-w-0 flex-1 basis-[200px] pb-1">
+          {/* One line at every width: the size scales with the screen, and a very long name ends in "…". */}
+          <h1 title={`c/${c.slug}`} className="truncate whitespace-nowrap text-[clamp(18px,5.2vw,28px)] font-bold leading-tight tracking-tight">c/{c.slug}</h1>
           <p className="text-sm text-muted">
             {c.name}
             {c.visibility === 'PRIVATE' && <> · <Lock size={12} className="inline" /> Private</>}
