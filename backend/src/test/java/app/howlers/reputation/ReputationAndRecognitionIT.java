@@ -286,7 +286,7 @@ class ReputationAndRecognitionIT extends IntegrationTest {
         assertThat(board.entries()).singleElement().satisfies(e -> {
             assertThat(e.user().id()).isEqualTo(author.id());
             assertThat(e.posts()).isEqualTo(1);
-            assertThat(e.points()).isEqualTo(3); // one post is enough to appear
+            assertThat(e.points()).isEqualTo(2); // one post is enough to appear
             assertThat(e.rank()).isEqualTo(1);
         });
 
@@ -301,7 +301,7 @@ class ReputationAndRecognitionIT extends IntegrationTest {
         var top = board.entries().getFirst();
         assertThat(top.posts()).isEqualTo(1);
         assertThat(top.upvotes()).isEqualTo(1);
-        assertThat(top.points()).isEqualTo(4);
+        assertThat(top.points()).isEqualTo(3);
         assertThat(board.entries().get(1).comments()).isEqualTo(1);
         assertThat(board.entries().get(1).points()).isEqualTo(1);
         assertThat(board.periods()).hasSize(6).first().isEqualTo(board.period());

@@ -259,7 +259,7 @@ function Rail({ tab }: { tab: Tab }) {
     return (
       <Explainer title="How points work">
         <ul className="space-y-1.5 p-4 text-sm text-muted">
-          <li><strong className="text-text">3 points</strong> for each post</li>
+          <li><strong className="text-text">2 points</strong> for each post</li>
           <li><strong className="text-text">1 point</strong> for each comment</li>
           <li><strong className="text-text">1 point</strong> for each upvote from someone else</li>
           <li className="pt-1 text-xs text-faint">Self-votes, deleted or removed posts and private communities never count. The board starts fresh every month.</li>

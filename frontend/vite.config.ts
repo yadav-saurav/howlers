@@ -47,6 +47,7 @@ export default defineConfig({
     proxy: {
       '/api': { target: backend, changeOrigin: true, configure: (p) => rewriteOwnOrigin(p as unknown as ProxyLike) },
       '/swagger-ui': { target: backend, changeOrigin: true },
+      '/v3/api-docs': { target: backend, changeOrigin: true },
       [CRAWLER_DOCS]: crawlerDocs,
       '/ws': {
         target: backend.replace(/^http/, 'ws'), ws: true, changeOrigin: true,

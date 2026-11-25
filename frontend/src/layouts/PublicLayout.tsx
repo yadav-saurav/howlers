@@ -105,7 +105,7 @@ export function PublicFooter({ landing = false }: { landing?: boolean }) {
           </nav>
           <nav aria-label="Developers" className={col}>
             <span className={head}>Developers</span>
-            <a href="/swagger-ui.html" className={a}>API docs</a>
+            <Link to="/developers" className={a}>API docs</Link>
           </nav>
         </div>
       </div>

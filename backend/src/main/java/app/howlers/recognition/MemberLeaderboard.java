@@ -25,7 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
  * others first).
  *
  * <pre>
- *   points = 3 × posts + 1 × comments + 1 × upvotes from other people on their posts and comments
+ *   points = 2 × posts + 1 × comments + 1 × upvotes from other people on their posts and comments
  * </pre>
  *
  * Only live content counts (not deleted, removed or held for review), in public communities (or the one community
@@ -34,7 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class MemberLeaderboard {
-    public static final int POST_POINTS = 3;
+    /** Same weights as karma: 2 a post, 1 a comment, 1 per upvote from someone else. */
+    public static final int POST_POINTS = 2;
     public static final int COMMENT_POINTS = 1;
     public static final int UPVOTE_POINTS = 1;
     static final int MONTHS_LISTED = 6;

@@ -39,7 +39,7 @@ export const FAQ: FaqItem[] = [
   {
     id: 'leaderboard',
     q: 'How does the leaderboard work?',
-    a: 'Members are ranked by activity this month: 3 points a post, 1 a comment and 1 for every upvote from someone else. Moderators get a quality score from 0 to 100 for consistency, response time, appeal outcomes, community health and peer feedback, never for how much they remove. Topics rank people by the upvotes they earn there.',
+    a: 'Members are ranked by activity this month: 2 points a post, 1 a comment and 1 for every upvote from someone else (the same as karma). Moderators get a quality score from 0 to 100 for consistency, response time, appeal outcomes, community health and peer feedback, never for how much they remove. Topics rank people by the upvotes they earn there.',
   },
   {
     id: 'private',

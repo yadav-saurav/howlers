@@ -153,7 +153,7 @@ export interface ModLeaderboard {
   computedAt: string | null;
 }
 
-/** GET /leaderboard/members: most active members in a month (3 points a post, 1 a comment, 1 per upvote from others). */
+/** GET /leaderboard/members: most active members in a month (2 points a post, 1 a comment, 1 per upvote from others). */
 export interface MemberEntry {
   rank: number;
   user: UserSummary;

@@ -258,7 +258,7 @@ function LeaderboardMock() {
               </li>
             ))}
           </ol>
-          <div className="lb-foot">3 points a post · 1 a comment · 1 per upvote from someone else</div>
+          <div className="lb-foot">2 points a post · 1 a comment · 1 per upvote from someone else</div>
         </div>
         <div className="state cyc3-b">
           <div className="lb-sub">Moderators · quality score</div>
@@ -361,7 +361,7 @@ export function FeatureSections() {
         lines={['Show up.', 'Help out.', 'Climb up.']}
         body={
           <>
-            See who kept the pack talking this month: 3 points a post, 1 a comment and 1 for every upvote from someone
+            See who kept the pack talking this month: 2 points a post, 1 a comment and 1 for every upvote from someone
             else. Moderators get a quality score for being consistent, quick and fair, and topic rankings show whose
             answers people trust.
           </>
