@@ -2,7 +2,6 @@ import { ExternalLink, FileText, Image as ImageIcon, MessageSquare, Share2 } fro
 import { PostViews } from './PostViews';
 import { memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/Display';
 import { toast } from '@/components/ui/Toast';
 import { errorMessage } from '@/services/apiError';
 import type { PostSummary } from '@/types/api';
@@ -51,7 +50,6 @@ export const PostRow = memo(function PostRow({ post, showCommunity = true }: { p
       <div className="min-w-0 flex-1">
         <h2 id={`post-${post.id}-title`} className="line-clamp-2 text-[15px] font-semibold leading-snug">
           <Link to={href}>{post.title}</Link>
-          {post.flair && <Badge color={post.flair.color} className="ml-2 rounded-full px-2 align-middle">{post.flair.text}</Badge>}
         </h2>
         <div className="mt-1 flex items-center gap-3">
           <PostMeta post={post} showCommunity={showCommunity} />

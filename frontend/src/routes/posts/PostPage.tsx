@@ -124,9 +124,8 @@ export default function PostPage() {
           </div>
           <div className="min-w-0">
             <h1 id="post-title" className="mt-3 text-2xl font-bold leading-tight tracking-tight sm:text-[26px]">{p.title}</h1>
-            {(p.flair || p.tags.length > 0) && (
+            {p.tags.length > 0 && (
               <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                {p.flair && <Badge color={p.flair.color} className="rounded-full px-2">{p.flair.text}</Badge>}
                 {p.tags.map((t) => <Link key={t} to={`/search?q=${encodeURIComponent(`#${t}`)}`} className="text-xs text-faint hover:text-muted">#{t}</Link>)}
               </div>
             )}
@@ -194,7 +193,6 @@ export default function PostPage() {
       {editing && p.viewer.canEdit && (
         <EditPostDialog
           post={p}
-          flairs={community.data?.flairs ?? []}
           open={editing}
           onOpenChange={(o) => {
             setEditing(o);

@@ -85,7 +85,7 @@ export const GROUP_INFO: { name: string; blurb: string }[] = [
   { name: 'Users', blurb: 'Profiles, your own account and settings, following people.' },
   { name: 'Onboarding', blurb: 'Pick topics and communities when you join.' },
   { name: 'Topics', blurb: 'The topics communities belong to.' },
-  { name: 'Communities', blurb: 'Browse, create, join and manage communities, rules and flairs.' },
+  { name: 'Communities', blurb: 'Browse, create, join and manage communities and their rules.' },
   { name: 'Feeds', blurb: 'Home, Popular, Latest, Rising and Top feeds, and a community’s posts.' },
   { name: 'Posts', blurb: 'Create, read, edit and delete posts; save, hide and vote in polls.' },
   { name: 'Comments', blurb: 'Threaded comments and replies.' },

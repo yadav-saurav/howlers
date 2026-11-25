@@ -4,7 +4,6 @@ import type {
   CommunityMember,
   CommunityRole,
   CommunitySummary,
-  Flair,
   OffsetPage,
   Visibility,
 } from '@/types/api';
@@ -41,8 +40,6 @@ export const communitiesApi = {
   ) => http.patch<CommunityDetail>(base(slug), body),
   putRules: (slug: string, rules: { title: string; description: string }[]) =>
     http.put<CommunityDetail>(`${base(slug)}/rules`, rules),
-  putFlairs: (slug: string, flairs: (Omit<Flair, 'id'> & { id?: number })[]) =>
-    http.put<CommunityDetail>(`${base(slug)}/flairs`, flairs),
   uploadIcon: (slug: string, file: File) => http.upload<CommunityDetail>(`${base(slug)}/icon`, file),
   uploadBanner: (slug: string, file: File) => http.upload<CommunityDetail>(`${base(slug)}/banner`, file),
   join: (slug: string) => http.post<void>(`${base(slug)}/membership`),

@@ -58,11 +58,6 @@ export function usePutRules(slug: string) {
     communitiesApi.putRules(slug, rules),
   );
 }
-export function usePutFlairs(slug: string) {
-  return useDetailMutation(slug, (flairs: Parameters<typeof communitiesApi.putFlairs>[1]) =>
-    communitiesApi.putFlairs(slug, flairs),
-  );
-}
 export function useUploadCommunityImage(slug: string, kind: 'icon' | 'banner') {
   return useDetailMutation(slug, (file: File) =>
     kind === 'icon' ? communitiesApi.uploadIcon(slug, file) : communitiesApi.uploadBanner(slug, file),

@@ -12,7 +12,6 @@ import { MembersList } from '@/features/communities/components/MembersList';
 import { TagInput } from '@/features/communities/components/TagInput';
 import {
   useCommunity,
-  usePutFlairs,
   usePutRules,
   useUpdateCommunity,
   useUploadCommunityImage,
@@ -133,43 +132,6 @@ function RulesSection({ c }: { c: CommunityDetail }) {
   );
 }
 
-function FlairsSection({ c }: { c: CommunityDetail }) {
-  const put = usePutFlairs(c.slug);
-  const [flairs, setFlairs] = useState<{ id?: number; text: string; color: string }[]>(c.flairs);
-  useEffect(() => setFlairs(c.flairs), [c.flairs]);
-  return (
-    <Card>
-      <CardHeader title="Post flairs" />
-      <div className="space-y-2 p-4">
-        {flairs.map((f, i) => (
-          <div key={f.id ?? `n${i}`} className="flex items-center gap-2">
-            <input
-              type="color"
-              aria-label={`Flair ${i + 1} color`}
-              value={f.color}
-              onChange={(e) => setFlairs(flairs.map((x, j) => (j === i ? { ...x, color: e.target.value } : x)))}
-              className="h-10 w-12 cursor-pointer rounded-md border border-border bg-surface-2 p-1"
-            />
-            <Input aria-label={`Flair ${i + 1} text`} maxLength={32} value={f.text} onChange={(e) => setFlairs(flairs.map((x, j) => (j === i ? { ...x, text: e.target.value } : x)))} placeholder="e.g. Question" />
-            <IconButton label={`Remove flair ${i + 1}`} size="sm" onClick={() => setFlairs(flairs.filter((_, j) => j !== i))}><Trash2 size={15} /></IconButton>
-          </div>
-        ))}
-        {!flairs.length && <p className="text-sm text-muted">No flairs yet. Flairs help readers filter and scan posts.</p>}
-        <div className="flex justify-between pt-2">
-          <Button variant="ghost" size="sm" disabled={flairs.length >= 20} onClick={() => setFlairs([...flairs, { text: '', color: '#3FB68B' }])}><Plus size={15} /> Add flair</Button>
-          <Button
-            disabled={flairs.some((f) => !f.text.trim())}
-            loading={put.isPending}
-            onClick={() => put.mutate(flairs.map((f) => ({ ...f, text: f.text.trim() })), { onSuccess: () => toast.success('Flairs saved'), onError: onErr })}
-          >
-            Save flairs
-          </Button>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
 export default function CommunitySettingsPage() {
   const { slug = '' } = useParams();
   const q = useCommunity(slug);
@@ -191,7 +153,6 @@ export default function CommunitySettingsPage() {
         <DetailsSection c={c} />
         <ImagesSection c={c} />
         <RulesSection c={c} />
-        <FlairsSection c={c} />
         <Card>
           <CardHeader title="Members & roles" />
           <MembersList slug={c.slug} canManageRoles={c.viewer.role === 'OWNER' || c.viewer.role === 'ADMIN'} />

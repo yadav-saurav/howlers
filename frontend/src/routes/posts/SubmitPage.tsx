@@ -2,7 +2,7 @@ import { BarChart3, Eye, FileText, Image as ImageIcon, Link2, Pencil, Plus, Tras
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button, IconButton, buttonClasses } from '@/components/ui/Button';
-import { Badge, Card } from '@/components/ui/Display';
+import { Card } from '@/components/ui/Display';
 import { Field, FormAlert, Input, Select } from '@/components/ui/Field';
 import { ImageUpload } from '@/components/ui/ImageUpload';
 import { EmptyState } from '@/components/ui/States';
@@ -48,7 +48,6 @@ export default function SubmitPage() {
   const [options, setOptions] = useState(['', '']);
   const [multiple, setMultiple] = useState(false);
   const [closeDays, setCloseDays] = useState('3');
-  const [flairId, setFlairId] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [preview, setPreview] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -96,7 +95,6 @@ export default function SubmitPage() {
         bodyHtml: body || undefined,
         url: type === 'LINK' ? url.trim() : undefined,
         mediaIds: type === 'IMAGE' ? media.map((m) => m.id) : undefined,
-        flairId: flairId ? Number(flairId) : null,
         tags,
         poll:
           type === 'POLL'
@@ -138,7 +136,6 @@ export default function SubmitPage() {
     );
   }
 
-  const flairs = community.data?.flairs ?? [];
   const cannotPost = community.data && !community.data.viewer.canPost;
 
   return (
@@ -156,7 +153,7 @@ export default function SubmitPage() {
           <FormAlert message={formError} />
           <Field label="Community" error={errors.communitySlug}>
             {(a) => (
-              <Select {...a} value={slug} onChange={(e) => { setSlug(e.target.value); setFlairId(''); }}>
+              <Select {...a} value={slug} onChange={(e) => setSlug(e.target.value)}>
                 <option value="">Choose a community</option>
                 {communityOptions.map((c) => <option key={c.slug} value={c.slug}>c/{c.slug}</option>)}
               </Select>
@@ -173,9 +170,6 @@ export default function SubmitPage() {
               <div className="text-xs text-muted">c/{slug || '…'} · preview</div>
               <h2 className="mt-1 font-serif text-xl font-semibold">{title || 'Untitled'}</h2>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
-                {flairId && flairs.find((f) => String(f.id) === flairId) && (
-                  <Badge color={flairs.find((f) => String(f.id) === flairId)!.color}>{flairs.find((f) => String(f.id) === flairId)!.text}</Badge>
-                )}
                 {tags.map((t) => <span key={t} className="text-xs text-faint">#{t}</span>)}
               </div>
               {type === 'LINK' && url && <p className="mt-3 truncate text-sm text-accent">{url}</p>}
@@ -268,19 +262,7 @@ export default function SubmitPage() {
                 {errors.bodyHtml && <p role="alert" className="mt-1.5 text-xs text-danger">{errors.bodyHtml}</p>}
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                {flairs.length > 0 && (
-                  <Field label="Flair" optional>
-                    {(a) => (
-                      <Select {...a} value={flairId} onChange={(e) => setFlairId(e.target.value)}>
-                        <option value="">No flair</option>
-                        {flairs.map((f) => <option key={f.id} value={f.id}>{f.text}</option>)}
-                      </Select>
-                    )}
-                  </Field>
-                )}
-                <Field label="Tags" optional error={errors.tags}>{(a) => <TagInput id={a.id} value={tags} onChange={setTags} />}</Field>
-              </div>
+              <Field label="Tags" optional error={errors.tags}>{(a) => <TagInput id={a.id} value={tags} onChange={setTags} />}</Field>
             </>
           )}
 

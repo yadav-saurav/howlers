@@ -127,9 +127,8 @@ export const PostCard = memo(function PostCard({ post, showCommunity = true }: {
         <Link to={href}>{post.title}</Link>
       </h2>
 
-      {(post.flair || post.tags.length > 0) && (
+      {post.tags.length > 0 && (
         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-          {post.flair && <Badge color={post.flair.color} className="rounded-full px-2">{post.flair.text}</Badge>}
           {post.tags.map((t) => (
             <Link key={t} to={`/search?q=${encodeURIComponent(t)}`} className="text-xs text-faint hover:text-muted">#{t}</Link>
           ))}

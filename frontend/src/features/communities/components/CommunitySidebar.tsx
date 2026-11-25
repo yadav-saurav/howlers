@@ -10,9 +10,8 @@ export function AboutCard({ c }: { c: CommunityDetail }) {
     <RailPanel title={c.name}>
       <div className="space-y-3 px-4 pb-4 pt-1 text-sm">
         {c.description && <p className="leading-relaxed text-text/85">{c.description}</p>}
-        <div className="grid grid-cols-2 gap-2 border-y border-border py-3">
+        <div className="border-y border-border py-3">
           <div><div className="text-base font-semibold">{c.memberCount.toLocaleString()}</div><div className="text-xs text-muted">{c.memberCount === 1 ? 'Member' : 'Members'}</div></div>
-          <div><div className="text-base font-semibold">{c.flairs.length}</div><div className="text-xs text-muted">Post flairs</div></div>
         </div>
         <dl className="space-y-1.5 text-xs text-muted">
           <div>
