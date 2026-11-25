@@ -2,17 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { http } from '@/services/apiClient';
 import { qk } from '@/services/queryKeys';
 import type { CursorPage, PostDetail, UserSummary } from '@/types/api';
-import type {
-  Appeal,
-  CommentModVerb,
-  CommunityBan,
-  ModAction,
-  ModStats,
-  MyModAction,
-  PostModVerb,
-  QueueItem,
-  ReportBody,
-} from '@/types/moderation';
+import type { Appeal, CommentModVerb, CommunityBan, ModAction, ModOverview, ModStats, MyModAction, PostModVerb, QueueItem, ReportBody } from '@/types/moderation';
 
 const c = (slug: string) => `/communities/${encodeURIComponent(slug)}/mod`;
 
@@ -20,6 +10,7 @@ export const modApi = {
   report: (body: ReportBody) => http.post<void>('/reports', body),
   queue: (slug: string) => http.get<QueueItem[]>(`${c(slug)}/queue`),
   stats: (slug: string) => http.get<ModStats>(`${c(slug)}/stats`),
+  overview: (slug: string) => http.get<ModOverview>(`${c(slug)}/overview`),
   log: (slug: string, cursor?: string) => http.get<CursorPage<ModAction>>(`${c(slug)}/log`, { cursor }),
   bans: (slug: string) => http.get<CommunityBan[]>(`${c(slug)}/bans`),
   ban: (slug: string, body: { username: string; reason: string; days: number | null }) => http.post<CommunityBan>(`${c(slug)}/bans`, body),
@@ -39,6 +30,7 @@ export const modKeys = {
   all: (slug: string) => ['mod', slug] as const,
   queue: (slug: string) => ['mod', slug, 'queue'] as const,
   stats: (slug: string) => ['mod', slug, 'stats'] as const,
+  overview: (slug: string) => ['mod', slug, 'overview'] as const,
   log: (slug: string) => ['mod', slug, 'log'] as const,
   bans: (slug: string) => ['mod', slug, 'bans'] as const,
   appeals: (slug: string, status: string) => ['mod', slug, 'appeals', status] as const,
@@ -49,6 +41,8 @@ export const modKeys = {
 export const useModQueue = (slug: string) => useQuery({ queryKey: modKeys.queue(slug), queryFn: () => modApi.queue(slug), retry: false });
 export const useModStats = (slug: string, enabled = true) =>
   useQuery({ queryKey: modKeys.stats(slug), queryFn: () => modApi.stats(slug), enabled, retry: false, staleTime: 30_000 });
+export const useModOverview = (slug: string) =>
+  useQuery({ queryKey: modKeys.overview(slug), queryFn: () => modApi.overview(slug), retry: false, refetchInterval: 30_000 });
 export const useModBans = (slug: string) => useQuery({ queryKey: modKeys.bans(slug), queryFn: () => modApi.bans(slug), retry: false });
 export const useAppeals = (slug: string, status: 'PENDING' | 'ALL') =>
   useQuery({ queryKey: modKeys.appeals(slug, status), queryFn: () => modApi.appeals(slug, status), retry: false });

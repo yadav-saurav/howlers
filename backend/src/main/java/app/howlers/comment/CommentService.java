@@ -336,7 +336,10 @@ public class CommentService {
             users.findByUsernameIgnoreCase(name).filter(u -> u.isActive())
                     .ifPresent(u -> notifications.mention(u.getId(), authorId, authorName, postId, id));
         }
-        if (authorId > 0) jdbc.sql("UPDATE users SET comment_karma = comment_karma + ? WHERE id = ?").params(COMMENT_KARMA, authorId).update();
+        if (authorId > 0) {
+            jdbc.sql("UPDATE users SET comment_karma = comment_karma + ? WHERE id = ?").params(COMMENT_KARMA, authorId).update();
+            jdbc.sql("INSERT INTO reputation_dirty (user_id) VALUES (?) ON CONFLICT (user_id) DO NOTHING").param(authorId).update();
+        }
         realtime.commentCreated(postId, id, parentId, authorId);
         counters.postChanged(postId);
     }
@@ -388,6 +391,7 @@ public class CommentService {
         jdbc.sql("UPDATE comments SET deleted_at = now() WHERE id = ?").param(commentId).update();
         if (!r.removed() && !r.pending()) {
             jdbc.sql("UPDATE users SET comment_karma = comment_karma - ? WHERE id = ?").params(COMMENT_KARMA, user.id()).update();
+            jdbc.sql("INSERT INTO reputation_dirty (user_id) VALUES (?) ON CONFLICT (user_id) DO NOTHING").param(user.id()).update();
         }
     }
 

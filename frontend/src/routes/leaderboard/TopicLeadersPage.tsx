@@ -82,7 +82,7 @@ export default function TopicLeadersPage() {
                   <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-faint">
                     {e.topContributor && <Badge tone="accent" className="rounded-full px-2">Top contributor</Badge>}
                     {e.tier !== 'NONE' && <Badge className="rounded-full px-2">{TIER_LABELS[e.tier]}</Badge>}
-                    <span>{e.upvotes} up · {e.downvotes} down counted</span>
+                    <span>{e.posts} {e.posts === 1 ? 'post' : 'posts'} · {e.comments} {e.comments === 1 ? 'comment' : 'comments'} · {e.upvotes} up · {e.downvotes} down</span>
                   </div>
                 </div>
                 <span className="text-base font-bold tabular-nums">{formatPoints(e.points)}</span>

@@ -36,6 +36,14 @@ public final class ModerationDtos {
     public record ModStats(long openReports, long pendingAppeals, long activeBans, long actionsLast30Days, long removedLast30Days,
                            long heldForReview) {}
 
+    /** One UTC day of community activity for the moderator dashboard chart. */
+    public record DayActivity(String day, long posts, long comments, long joins) {}
+
+    /** The community owner's dashboard: size, activity and safety numbers, with the last 14 days per day. */
+    public record ModOverview(long members, long newMembers7d, long posts30d, long comments30d, long removals30d,
+                              long automodHits30d, long openReports, long heldForReview, long pendingAppeals,
+                              long activeBans, List<DayActivity> days) {}
+
     public record MyModAction(ModAction action, CommunityRef community, Appeal appeal, boolean canAppeal) {}
 
     public record ReasonRequest(@Size(max = 300) String reason) {}

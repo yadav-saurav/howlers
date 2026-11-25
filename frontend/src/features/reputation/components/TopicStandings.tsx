@@ -29,14 +29,14 @@ export function TopicStandings({ username, isSelf }: { username: string; isSelf:
                 <Link to={`/topics/${t.topic.slug}/leaders`} className="block truncate text-sm font-medium hover:underline">
                   {standingLabel(t, t.topic.name)}
                 </Link>
-                <p className="text-xs text-faint">#{t.rank} in {t.topic.name} · {t.upvotes} upvotes counted</p>
+                <p className="text-xs text-faint">#{t.rank} in {t.topic.name} · {t.posts} {t.posts === 1 ? 'post' : 'posts'} · {t.comments} {t.comments === 1 ? 'comment' : 'comments'} · {t.upvotes} {t.upvotes === 1 ? 'upvote' : 'upvotes'}</p>
               </div>
               <span className="text-sm font-semibold tabular-nums">{formatPoints(t.points)}</span>
             </li>
           ))}
         </ul>
       )}
-      <p className="border-t border-border px-4 py-2 text-[11px] text-faint">Earned from votes, weighted by voter expertise, with anti-farming caps.</p>
+      <p className="border-t border-border px-4 py-2 text-[11px] text-faint">2 points per post and 1 per comment in the topic, plus upvotes weighted by voter expertise, with anti-farming caps.</p>
     </Card>
   );
 }

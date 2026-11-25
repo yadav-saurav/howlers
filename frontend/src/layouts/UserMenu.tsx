@@ -35,7 +35,7 @@ export function UserMenu() {
         <MenuItem icon={<User />} onSelect={() => navigate(`/u/${user.username}`)}>Profile</MenuItem>
         <MenuItem icon={<Bookmark />} onSelect={() => navigate('/saved')}>Saved</MenuItem>
         <MenuItem icon={<Settings />} onSelect={() => navigate('/settings')}>Settings</MenuItem>
-        {user.role === 'ADMIN' && <MenuItem icon={<ShieldHalf />} onSelect={() => navigate('/admin')}>Admin dashboard</MenuItem>}
+        {user.role === 'ADMIN' && <MenuItem icon={<ShieldHalf />} onSelect={() => navigate('/admin')}>Super admin dashboard</MenuItem>}
         <MenuItem
           icon={dark ? <Sun /> : <Moon />}
           onSelect={() => {

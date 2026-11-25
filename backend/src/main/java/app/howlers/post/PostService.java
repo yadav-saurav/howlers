@@ -200,6 +200,7 @@ public class PostService {
     private void publish(long postId, Community c, long authorId, String authorName, String text) {
         jdbc.sql("UPDATE communities SET post_count = post_count + 1 WHERE id = ?").param(c.getId()).update();
         jdbc.sql("UPDATE users SET post_karma = post_karma + ? WHERE id = ?").params(POST_KARMA, authorId).update();
+        jdbc.sql("INSERT INTO reputation_dirty (user_id) VALUES (?) ON CONFLICT (user_id) DO NOTHING").param(authorId).update();
         notifyMentions(authorId, authorName, text, postId);
         realtime.postCreated(postId, c.getId(), c.getSlug(), c.visibility() == Community.Visibility.PRIVATE, authorId);
     }
@@ -271,6 +272,18 @@ public class PostService {
         p.markEdited();
     }
 
+    /** Counts a view: once per signed-in member per post; the author's own visits never count. */
+    @Transactional
+    public void recordView(long postId, AuthUser user) {
+        if (user == null) return;
+        int added = jdbc.sql("""
+                        INSERT INTO post_views (post_id, user_id)
+                        SELECT p.id, :u FROM posts p WHERE p.id = :p AND p.author_id IS DISTINCT FROM :u
+                        ON CONFLICT DO NOTHING""")
+                .param("p", postId).param("u", user.id()).update();
+        if (added > 0) jdbc.sql("UPDATE posts SET view_count = view_count + 1 WHERE id = ?").param(postId).update();
+    }
+
     @Transactional
     public void delete(long postId, AuthUser user) {
         PostContext ctx = context(postId, user);
@@ -282,6 +295,7 @@ public class PostService {
         p.softDelete();
         jdbc.sql("UPDATE communities SET post_count = GREATEST(post_count - 1, 0) WHERE id = ?").param(p.getCommunityId()).update();
         if (counted) jdbc.sql("UPDATE users SET post_karma = post_karma - ? WHERE id = ?").params(POST_KARMA, user.id()).update();
+        jdbc.sql("INSERT INTO reputation_dirty (user_id) VALUES (?) ON CONFLICT (user_id) DO NOTHING").param(user.id()).update();
     }
 
     @Transactional

@@ -1,4 +1,5 @@
 import { ArrowLeft, Bookmark, BookmarkCheck, ExternalLink, FileX, Lock, MessageSquare, Pin, Share2 } from 'lucide-react';
+import { PostViews } from '@/features/posts/components/PostViews';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { buttonClasses } from '@/components/ui/Button';
@@ -173,6 +174,7 @@ export default function PostPage() {
               <ActionPill label={`${compactNumber(p.commentCount)} comments`} onClick={() => document.getElementById('comments')?.scrollIntoView({ behavior: 'smooth' })}>
                 <MessageSquare size={15} /> {compactNumber(p.commentCount)}
               </ActionPill>
+              <PostViews views={p.views} />
               {isAuthed && (
                 <ActionPill pressed={p.saved} active={p.saved} onClick={() => save.mutate(!p.saved, { onSuccess: () => toast.success(p.saved ? 'Removed from saved' : 'Saved'), onError: (e) => toast.error(errorMessage(e)) })}>
                   {p.saved ? <BookmarkCheck size={15} /> : <Bookmark size={15} />} {p.saved ? 'Saved' : 'Save'}

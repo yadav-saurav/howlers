@@ -7,12 +7,11 @@ import { AuditTab } from '@/features/admin/components/AuditTab';
 import { CommunitiesTab } from '@/features/admin/components/CommunitiesTab';
 import { FlagsTab } from '@/features/admin/components/FlagsTab';
 import { OverviewTab } from '@/features/admin/components/OverviewTab';
-import { PaymentsTab } from '@/features/admin/components/PaymentsTab';
 import { UsersTab } from '@/features/admin/components/UsersTab';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { cn } from '@/utils/format';
 
-type Tab = 'overview' | 'users' | 'communities' | 'flags' | 'audit' | 'payments';
+type Tab = 'overview' | 'users' | 'communities' | 'flags' | 'audit';
 
 const TABS: { v: Tab; label: string }[] = [
   { v: 'overview', label: 'Overview' },
@@ -20,12 +19,11 @@ const TABS: { v: Tab; label: string }[] = [
   { v: 'communities', label: 'Communities' },
   { v: 'flags', label: 'Flags' },
   { v: 'audit', label: 'Audit log' },
-  { v: 'payments', label: 'Payments' },
 ];
 
 /** Platform admin dashboard. The server enforces the ADMIN role on every call; this check only avoids a dead page. */
 export default function AdminPage() {
-  useDocumentTitle('Admin');
+  useDocumentTitle('Super admin');
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();
   const tab = (TABS.find((t) => t.v === params.get('tab'))?.v ?? 'overview') as Tab;
@@ -34,7 +32,7 @@ export default function AdminPage() {
   if (user?.role !== 'ADMIN') {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
-        <EmptyState icon={ShieldAlert} title="Admins only" description="This dashboard is for platform administrators."
+        <EmptyState icon={ShieldAlert} title="Super admins only" description="This dashboard is for the platform's super admin."
           action={<Link to="/home" className={buttonClasses('primary', 'sm')}>Back to home</Link>} />
       </div>
     );
@@ -45,7 +43,7 @@ export default function AdminPage() {
       <div className="mb-4 flex items-center gap-3">
         <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-surface-2 text-brand"><ShieldHalf size={18} /></span>
         <div>
-          <h1 className="text-2xl font-bold">Admin</h1>
+          <h1 className="text-2xl font-bold">Super admin</h1>
           <p className="text-sm text-muted">Site-wide accounts, communities and flags. Every action is recorded in the audit log.</p>
         </div>
       </div>
@@ -63,7 +61,6 @@ export default function AdminPage() {
         {tab === 'communities' && <CommunitiesTab />}
         {tab === 'flags' && <FlagsTab />}
         {tab === 'audit' && <AuditTab />}
-        {tab === 'payments' && <PaymentsTab />}
       </div>
     </div>
   );

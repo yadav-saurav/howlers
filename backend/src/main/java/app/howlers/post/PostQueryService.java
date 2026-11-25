@@ -189,7 +189,7 @@ public class PostQueryService {
                         long communityId, String slug, String communityName, String iconUrl, Long flairId,
                         String flairText, String flairColor, List<String> tags, int up, int down, int score,
                         int comments, boolean pinned, boolean locked, boolean removed, Instant createdAt,
-                        Instant editedAt, boolean deleted, boolean pending) {}
+                        Instant editedAt, boolean deleted, boolean pending, int views) {}
 
     public List<PostSummary> hydrate(List<Long> ids, Long viewerId) {
         if (ids.isEmpty()) return List.of();
@@ -198,7 +198,7 @@ public class PostQueryService {
                         SELECT p.id, p.type, p.title, p.body_text, p.url, p.author_id, p.community_id, c.slug, c.name,
                                c.icon_url, p.flair_id, f.text AS flair_text, f.color AS flair_color, p.tags, p.upvotes,
                                p.downvotes, p.score, p.comment_count, p.pinned, p.locked, p.removed, p.created_at,
-                               p.edited_at, p.deleted_at IS NOT NULL AS deleted, p.pending
+                               p.edited_at, p.deleted_at IS NOT NULL AS deleted, p.pending, p.view_count
                         FROM posts p JOIN communities c ON c.id = p.community_id
                         LEFT JOIN community_flairs f ON f.id = p.flair_id
                         WHERE p.id IN (:ids)""")
@@ -210,7 +210,7 @@ public class PostQueryService {
                         textArray(rs.getArray("tags")), rs.getInt("upvotes"), rs.getInt("downvotes"), rs.getInt("score"),
                         rs.getInt("comment_count"), rs.getBoolean("pinned"), rs.getBoolean("locked"),
                         rs.getBoolean("removed"), instant(rs, "created_at"), instant(rs, "edited_at"),
-                        rs.getBoolean("deleted"), rs.getBoolean("pending")))
+                        rs.getBoolean("deleted"), rs.getBoolean("pending"), rs.getInt("view_count")))
                 .list().forEach(b -> base.put(b.id(), b));
 
         Map<Long, UserSummary> authors = users.summaries(base.values().stream().map(Base::authorId).toList());
@@ -246,7 +246,9 @@ public class PostQueryService {
                     b.flairId() == null ? null : new FlairDto(b.flairId(), b.flairText(), b.flairColor()),
                     b.tags(), b.score(), b.up(), b.down(), b.comments(), votes.getOrDefault(id, 0),
                     saved.contains(id), b.pinned(), b.locked(), b.removed(), b.createdAt(), b.editedAt(), held,
-                    new SummaryViewer(moderated.contains(b.communityId()))));
+                    new SummaryViewer(moderated.contains(b.communityId())),
+                    // Views are private to the author, as on Reddit.
+                    viewerId != null && b.authorId() != null && b.authorId().equals(viewerId) ? b.views() : null));
         }
         return out;
     }

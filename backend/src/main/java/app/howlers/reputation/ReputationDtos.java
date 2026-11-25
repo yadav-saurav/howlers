@@ -25,7 +25,7 @@ public final class ReputationDtos {
     public record TierInfo(String tier, String label, double minPoints) {}
 
     public record LeaderEntry(int rank, UserSummary user, double points, String tier, boolean topContributor,
-                              int upvotes, int downvotes) {}
+                              int upvotes, int downvotes, int posts, int comments) {}
 
     public record TopicLeaderboard(TopicDto topic, List<LeaderEntry> entries, long contributors, Instant computedAt,
                                    Policy policy) {}
@@ -35,7 +35,7 @@ public final class ReputationDtos {
     public record ReputationOverview(List<TopicOverview> topics, Instant computedAt) {}
 
     public record TopicStanding(TopicDto topic, double points, String tier, int rank, boolean topContributor,
-                                int upvotes, int downvotes) {}
+                                int upvotes, int downvotes, int posts, int comments) {}
 
     /** {@code hidden} when the profile is private and the viewer isn't its owner. */
     public record UserReputation(boolean hidden, List<TopicStanding> topics, Instant computedAt) {}

@@ -85,10 +85,14 @@ public class ReputationService {
         List<VoteFact> facts = loadFacts(null);
         Map<Long, Voter> voters = loadVoters(null);
         Map<Key, Totals> totals = ReputationMath.computeTwoPass(facts, voters);
+        Map<Key, int[]> taking = loadParticipation(null);
         jdbc.sql("DELETE FROM topic_reputation").update();
-        int rows = write(totals);
+        int rows = write(totals, taking);
         jdbc.sql("DELETE FROM reputation_dirty WHERE queued_at <= ?").param(started.atOffset(java.time.ZoneOffset.UTC)).update();
-        int authors = (int) totals.keySet().stream().map(Key::userId).distinct().count();
+        Set<Long> everyone = new HashSet<>();
+        totals.keySet().forEach(k -> everyone.add(k.userId()));
+        taking.keySet().forEach(k -> everyone.add(k.userId()));
+        int authors = everyone.size();
         jdbc.sql("INSERT INTO reputation_runs (kind, authors, rows_written) VALUES ('FULL', ?, ?)").params(authors, rows).update();
         return new RunResult(authors, rows);
     }
@@ -117,10 +121,11 @@ public class ReputationService {
         }
         Map<Key, Totals> totals = ReputationMath.compute(facts, voters,
                 (v, t) -> Math.max(0, bases.getOrDefault(new Key(v, t), 0.0)));
+        Map<Key, int[]> taking = loadParticipation(authors);
         for (List<Long> chunk : chunks(authors)) {
             jdbc.sql("DELETE FROM topic_reputation WHERE user_id IN (:ids)").param("ids", chunk).update();
         }
-        int rows = write(totals);
+        int rows = write(totals, taking);
         jdbc.sql("INSERT INTO reputation_runs (kind, authors, rows_written) VALUES ('INCREMENTAL', ?, ?)").params(authors.size(), rows).update();
         return new RunResult(authors.size(), rows);
     }
@@ -129,17 +134,73 @@ public class ReputationService {
         jdbc.sql("SELECT pg_advisory_xact_lock(?)").param(LOCK_KEY).query(Object.class).list();
     }
 
-    private int write(Map<Key, Totals> totals) {
+    /** Topic points for taking part: per published post and per published comment (votes add on top). */
+    public static final int POST_POINTS = 2;
+    public static final int COMMENT_POINTS = 1;
+
+    private int write(Map<Key, Totals> totals, Map<Key, int[]> taking) {
+        Set<Key> keys = new java.util.LinkedHashSet<>(totals.keySet());
+        keys.addAll(taking.keySet());
         List<Object[]> args = new ArrayList<>();
-        totals.forEach((k, t) -> {
-            if (t.up() + t.down() + t.capped() == 0) return;
-            args.add(new Object[]{k.userId(), k.topicId(), t.points(), t.base(), t.up(), t.down(), t.capped()});
-        });
+        for (Key k : keys) {
+            Totals t = totals.get(k);
+            int[] pc = taking.getOrDefault(k, new int[2]);
+            int up = t == null ? 0 : t.up(), down = t == null ? 0 : t.down(), capped = t == null ? 0 : t.capped();
+            if (up + down + capped + pc[0] + pc[1] == 0) continue;
+            double points = (t == null ? 0 : t.points()) + POST_POINTS * pc[0] + COMMENT_POINTS * pc[1];
+            args.add(new Object[]{k.userId(), k.topicId(), points, t == null ? 0 : t.base(), up, down, capped, pc[0], pc[1]});
+        }
         if (args.isEmpty()) return 0;
         template.batchUpdate("""
-                INSERT INTO topic_reputation (user_id, topic_id, points, base_points, upvotes_counted, downvotes_counted, votes_capped)
-                VALUES (?, ?, ?, ?, ?, ?, ?)""", args);
+                INSERT INTO topic_reputation (user_id, topic_id, points, base_points, upvotes_counted, downvotes_counted,
+                                              votes_capped, posts_counted, comments_counted)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", args);
         return args.size();
+    }
+
+    private static final String PARTICIPATION = """
+            SELECT 'P' AS kind, p.author_id AS author, p.tags AS tags, c.topic_id AS topic_id
+            FROM posts p JOIN communities c ON c.id = p.community_id
+            WHERE p.author_id IS NOT NULL AND p.deleted_at IS NULL AND p.removed = FALSE AND p.pending = FALSE
+              AND c.visibility <> 'PRIVATE' AND p.author_id IN (:ids)
+            UNION ALL
+            SELECT 'C', cm.author_id, p.tags, c.topic_id
+            FROM comments cm JOIN posts p ON p.id = cm.post_id JOIN communities c ON c.id = p.community_id
+            WHERE cm.author_id IS NOT NULL AND cm.deleted_at IS NULL AND cm.removed = FALSE AND cm.pending = FALSE
+              AND p.deleted_at IS NULL AND c.visibility <> 'PRIVATE' AND cm.author_id IN (:ids)
+            """;
+
+    /** Published posts and comments per (author, topic), for {@code authors} or everyone when null. */
+    Map<Key, int[]> loadParticipation(Collection<Long> authors) {
+        Map<String, Long> topicBySlug = topicSlugs();
+        Map<Key, int[]> out = new HashMap<>();
+        Collection<Long> ids = authors;
+        if (ids == null) ids = jdbc.sql("SELECT id FROM users WHERE deleted_at IS NULL").query(Long.class).list();
+        for (List<Long> chunk : chunks(ids)) {
+            jdbc.sql(PARTICIPATION).param("ids", chunk).query((rs, i) -> {
+                boolean post = rs.getString("kind").charAt(0) == 'P';
+                long author = rs.getLong("author");
+                for (long topic : topicsOf(rs, topicBySlug)) {
+                    out.computeIfAbsent(new Key(author, topic), k -> new int[2])[post ? 0 : 1]++;
+                }
+                return null;
+            }).list();
+        }
+        return out;
+    }
+
+    /** The community's topic plus any post tag that names a topic; General when there is neither. */
+    private static long[] topicsOf(ResultSet rs, Map<String, Long> topicBySlug) throws SQLException {
+        Set<Long> t = new LinkedHashSet<>();
+        long communityTopic = rs.getLong("topic_id");
+        if (!rs.wasNull()) t.add(communityTopic);
+        for (String tag : tags(rs.getArray("tags"))) {
+            Long id = topicBySlug.get(tag);
+            if (id != null) t.add(id);
+        }
+        Long general = topicBySlug.get("general");
+        if (t.isEmpty() && general != null) t.add(general);
+        return t.stream().mapToLong(Long::longValue).toArray();
     }
 
     private static final String POST_FACTS = """
@@ -183,16 +244,9 @@ public class ReputationService {
     }
 
     private static VoteFact fact(ResultSet rs, Map<String, Long> topicBySlug) throws SQLException {
-        Set<Long> t = new LinkedHashSet<>();
-        long communityTopic = rs.getLong("topic_id");
-        if (!rs.wasNull()) t.add(communityTopic);
-        for (String tag : tags(rs.getArray("tags"))) {
-            Long id = topicBySlug.get(tag);
-            if (id != null) t.add(id);
-        }
         return new VoteFact(rs.getString("kind").charAt(0), rs.getLong("target"), rs.getLong("voter"), rs.getLong("author"),
                 rs.getInt("value"), rs.getObject("at", OffsetDateTime.class).toInstant(), rs.getBoolean("removed"),
-                t.stream().mapToLong(Long::longValue).toArray());
+                topicsOf(rs, topicBySlug));
     }
 
     private static List<String> tags(Array a) throws SQLException {
@@ -251,14 +305,14 @@ public class ReputationService {
     @Transactional(readOnly = true)
     public TopicLeaderboard leaders(String slug, int limit) {
         Topic topic = topics.findBySlug(slug.toLowerCase()).orElseThrow(() -> ApiException.notFound("Topic"));
-        record R(long userId, double points, int up, int down) {}
+        record R(long userId, double points, int up, int down, int posts, int comments) {}
         List<R> rows = jdbc.sql("""
-                        SELECT r.user_id, r.points, r.upvotes_counted, r.downvotes_counted
+                        SELECT r.user_id, r.points, r.upvotes_counted, r.downvotes_counted, r.posts_counted, r.comments_counted
                         FROM topic_reputation r JOIN users u ON u.id = r.user_id
                         WHERE r.topic_id = ? AND r.points >= ? AND u.deleted_at IS NULL
                         ORDER BY r.points DESC, r.user_id LIMIT ?""")
                 .params(topic.getId(), LIST_MIN, Math.max(1, Math.min(limit, 100)))
-                .query((rs, i) -> new R(rs.getLong(1), rs.getDouble(2), rs.getInt(3), rs.getInt(4))).list();
+                .query((rs, i) -> new R(rs.getLong(1), rs.getDouble(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getInt(6))).list();
         long contributors = jdbc.sql("""
                         SELECT count(*) FROM topic_reputation r JOIN users u ON u.id = r.user_id
                         WHERE r.topic_id = ? AND r.points >= ? AND u.deleted_at IS NULL""")
@@ -270,24 +324,27 @@ public class ReputationService {
             rank++;
             if (!u.containsKey(r.userId())) continue;
             entries.add(new LeaderEntry(rank, u.get(r.userId()), round1(r.points()), Tier.of(r.points()).name(),
-                    rank <= ReputationMath.TOP_RANK && r.points() >= ReputationMath.TOP_MIN_POINTS, r.up(), r.down()));
+                    rank <= ReputationMath.TOP_RANK && r.points() >= ReputationMath.TOP_MIN_POINTS, r.up(), r.down(),
+                    r.posts(), r.comments()));
         }
         return new TopicLeaderboard(TopicDto.of(topic), entries, contributors, lastRun(), Policy.current());
     }
 
     @Transactional(readOnly = true)
     public ReputationOverview overview() {
-        record R(long topicId, long userId, double points, int up, int down, int rn, long n) {}
+        record R(long topicId, long userId, double points, int up, int down, int rn, long n, int posts, int comments) {}
         List<R> rows = jdbc.sql("""
-                        SELECT topic_id, user_id, points, upvotes_counted, downvotes_counted, rn, n FROM (
+                        SELECT topic_id, user_id, points, upvotes_counted, downvotes_counted, rn, n, posts_counted, comments_counted FROM (
                           SELECT r.topic_id, r.user_id, r.points, r.upvotes_counted, r.downvotes_counted,
+                                 r.posts_counted, r.comments_counted,
                                  row_number() OVER (PARTITION BY r.topic_id ORDER BY r.points DESC, r.user_id) AS rn,
                                  count(*) OVER (PARTITION BY r.topic_id) AS n
                           FROM topic_reputation r JOIN users u ON u.id = r.user_id
                           WHERE r.points >= ? AND u.deleted_at IS NULL) s
                         WHERE rn <= 3""")
                 .param(LIST_MIN)
-                .query((rs, i) -> new R(rs.getLong(1), rs.getLong(2), rs.getDouble(3), rs.getInt(4), rs.getInt(5), rs.getInt(6), rs.getLong(7)))
+                .query((rs, i) -> new R(rs.getLong(1), rs.getLong(2), rs.getDouble(3), rs.getInt(4), rs.getInt(5), rs.getInt(6),
+                        rs.getLong(7), rs.getInt(8), rs.getInt(9)))
                 .list();
         Map<Long, UserSummary> u = directory.summaries(rows.stream().map(R::userId).toList());
         List<TopicOverview> out = new ArrayList<>();
@@ -295,7 +352,7 @@ public class ReputationService {
             List<R> mine = rows.stream().filter(r -> r.topicId() == t.getId()).sorted(Comparator.comparingInt(R::rn)).toList();
             List<LeaderEntry> leaders = mine.stream().filter(r -> u.containsKey(r.userId()))
                     .map(r -> new LeaderEntry(r.rn(), u.get(r.userId()), round1(r.points()), Tier.of(r.points()).name(),
-                            r.points() >= ReputationMath.TOP_MIN_POINTS, r.up(), r.down()))
+                            r.points() >= ReputationMath.TOP_MIN_POINTS, r.up(), r.down(), r.posts(), r.comments()))
                     .toList();
             out.add(new TopicOverview(TopicDto.of(t), mine.isEmpty() ? 0 : mine.getFirst().n(), leaders));
         }
@@ -308,21 +365,23 @@ public class ReputationService {
                 .orElseThrow(() -> ApiException.notFound("User"));
         boolean self = viewer != null && viewer.id() == user.getId();
         if (!user.isProfilePublic() && !self) return new UserReputation(true, List.of(), null);
-        record R(long topicId, double points, int up, int down, int rank) {}
+        record R(long topicId, double points, int up, int down, int rank, int posts, int comments) {}
         List<R> rows = jdbc.sql("""
                         SELECT r.topic_id, r.points, r.upvotes_counted, r.downvotes_counted,
                                1 + (SELECT count(*) FROM topic_reputation o JOIN users ou ON ou.id = o.user_id
                                     WHERE o.topic_id = r.topic_id AND ou.deleted_at IS NULL
-                                      AND (o.points > r.points OR (o.points = r.points AND o.user_id < r.user_id))) AS rank
+                                      AND (o.points > r.points OR (o.points = r.points AND o.user_id < r.user_id))) AS rank,
+                               r.posts_counted, r.comments_counted
                         FROM topic_reputation r WHERE r.user_id = ? AND r.points >= ?
                         ORDER BY r.points DESC, r.topic_id""")
                 .params(user.getId(), LIST_MIN)
-                .query((rs, i) -> new R(rs.getLong(1), rs.getDouble(2), rs.getInt(3), rs.getInt(4), rs.getInt(5))).list();
+                .query((rs, i) -> new R(rs.getLong(1), rs.getDouble(2), rs.getInt(3), rs.getInt(4), rs.getInt(5), rs.getInt(6), rs.getInt(7))).list();
         Map<Long, Topic> byId = new HashMap<>();
         topics.findAll().forEach(t -> byId.put(t.getId(), t));
         List<TopicStanding> out = rows.stream().filter(r -> byId.containsKey(r.topicId()))
                 .map(r -> new TopicStanding(TopicDto.of(byId.get(r.topicId())), round1(r.points()), Tier.of(r.points()).name(), r.rank(),
-                        r.rank() <= ReputationMath.TOP_RANK && r.points() >= ReputationMath.TOP_MIN_POINTS, r.up(), r.down()))
+                        r.rank() <= ReputationMath.TOP_RANK && r.points() >= ReputationMath.TOP_MIN_POINTS, r.up(), r.down(),
+                        r.posts(), r.comments()))
                 .toList();
         return new UserReputation(false, out, lastRun());
     }

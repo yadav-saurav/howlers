@@ -392,6 +392,42 @@ public class ModerationService {
         return new ModStats(open, appeals, bans, actions, removed, spam.openHoldCount(cid));
     }
 
+    /** Everything a community owner overlooks at a glance. Moderators only, like the rest of Mod tools. */
+    @Transactional(readOnly = true)
+    public ModerationDtos.ModOverview overview(String slug, AuthUser user) {
+        ModStats st = stats(slug, user);
+        long cid = moderatorOf(slug, user).getId();
+        long members = jdbc.sql("SELECT count(*) FROM community_members WHERE community_id = ?").param(cid).query(Long.class).single();
+        long joins7 = jdbc.sql("SELECT count(*) FROM community_members WHERE community_id = ? AND joined_at > now() - interval '7 days'")
+                .param(cid).query(Long.class).single();
+        long posts30 = jdbc.sql("""
+                        SELECT count(*) FROM posts WHERE community_id = ? AND deleted_at IS NULL AND removed = FALSE
+                          AND created_at > now() - interval '30 days'""").param(cid).query(Long.class).single();
+        long comments30 = jdbc.sql("""
+                        SELECT count(*) FROM comments cm JOIN posts p ON p.id = cm.post_id
+                        WHERE p.community_id = ? AND cm.deleted_at IS NULL AND cm.removed = FALSE
+                          AND cm.created_at > now() - interval '30 days'""").param(cid).query(Long.class).single();
+        long hits30 = jdbc.sql("SELECT count(*) FROM automod_hits WHERE community_id = ? AND created_at > now() - interval '30 days'")
+                .param(cid).query(Long.class).single();
+        List<ModerationDtos.DayActivity> days = jdbc.sql("""
+                        SELECT to_char(d, 'YYYY-MM-DD'),
+                          (SELECT count(*) FROM posts p WHERE p.community_id = :c AND p.deleted_at IS NULL
+                             AND p.created_at >= d AND p.created_at < d + interval '1 day'),
+                          (SELECT count(*) FROM comments cm JOIN posts p ON p.id = cm.post_id WHERE p.community_id = :c
+                             AND cm.deleted_at IS NULL AND cm.created_at >= d AND cm.created_at < d + interval '1 day'),
+                          (SELECT count(*) FROM community_members m WHERE m.community_id = :c
+                             AND m.joined_at >= d AND m.joined_at < d + interval '1 day')
+                        FROM generate_series(date_trunc('day', now() AT TIME ZONE 'UTC') - interval '13 days',
+                                             date_trunc('day', now() AT TIME ZONE 'UTC'), interval '1 day') AS g(day)
+                        CROSS JOIN LATERAL (SELECT g.day AT TIME ZONE 'UTC' AS d) x
+                        ORDER BY d""")
+                .param("c", cid)
+                .query((rs, i) -> new ModerationDtos.DayActivity(rs.getString(1), rs.getLong(2), rs.getLong(3), rs.getLong(4)))
+                .list();
+        return new ModerationDtos.ModOverview(members, joins7, posts30, comments30, st.removedLast30Days(), hits30,
+                st.openReports(), st.heldForReview(), st.pendingAppeals(), st.activeBans(), days);
+    }
+
     // ------------------------------------------------------------------ appeals
 
     private Appeal appeal(long appealId) {

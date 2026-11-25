@@ -1,4 +1,5 @@
 import { ExternalLink, FileText, Image as ImageIcon, MessageSquare, Share2 } from 'lucide-react';
+import { PostViews } from './PostViews';
 import { memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/Display';
@@ -58,6 +59,7 @@ export const PostRow = memo(function PostRow({ post, showCommunity = true }: { p
             <Link to={`${href}#comments`} className="inline-flex h-7 items-center gap-1 rounded-full px-2 hover:bg-surface-2 hover:text-text">
               <MessageSquare size={14} /> {compactNumber(post.commentCount)}
             </Link>
+            <PostViews views={post.views} small />
             <button type="button" onClick={() => copyPostLink(post)} aria-label="Copy link" className="hidden h-7 items-center rounded-full px-2 hover:bg-surface-2 hover:text-text sm:inline-flex">
               <Share2 size={14} />
             </button>

@@ -154,7 +154,8 @@ public class UserService {
         return new PublicProfile(u.getId(), u.getUsername(), u.getDisplayName(), u.getAvatarUrl(), u.getBannerUrl(),
                 isPrivate ? null : u.getBio(), u.getCreatedAt(), u.getPostKarma(), u.getCommentKarma(), u.getFollowerCount(),
                 u.getFollowingCount(), following, self, isPrivate, blocked,
-                viewer != null && !self && dmAccess.cannotMessageReason(viewer.id(), u.getId()) == null, joined, moderated);
+                viewer != null && !self && dmAccess.cannotMessageReason(viewer.id(), u.getId()) == null, joined, moderated,
+                "ADMIN".equals(String.valueOf(u.getRole())));
     }
 
     public User requireByUsername(String username) {

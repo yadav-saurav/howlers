@@ -29,7 +29,7 @@ public final class PostDtos {
                               FlairDto flair, List<String> tags, int score, int upvotes, int downvotes,
                               int commentCount, int myVote, boolean saved, boolean pinned, boolean locked,
                               boolean removed, Instant createdAt, Instant editedAt, boolean pending,
-                              SummaryViewer viewer) {}
+                              SummaryViewer viewer, Integer views) {}
 
     /** Per-viewer rights on a feed row, computed for the whole page in one batched query. */
     public record SummaryViewer(boolean canModerate) {}
@@ -41,12 +41,12 @@ public final class PostDtos {
                              FlairDto flair, List<String> tags, int score, int upvotes, int downvotes,
                              int commentCount, int myVote, boolean saved, boolean pinned, boolean locked,
                              boolean removed, Instant createdAt, Instant editedAt, String bodyHtml, PostViewer viewer,
-                             boolean pending) {
+                             boolean pending, Integer views) {
         public static PostDetail of(PostSummary s, String bodyHtml, PostViewer viewer) {
             return new PostDetail(s.id(), s.type(), s.title(), s.bodyPreview(), s.url(), s.linkDomain(), s.media(),
                     s.poll(), s.author(), s.community(), s.flair(), s.tags(), s.score(), s.upvotes(), s.downvotes(),
                     s.commentCount(), s.myVote(), s.saved(), s.pinned(), s.locked(), s.removed(), s.createdAt(),
-                    s.editedAt(), bodyHtml, viewer, s.pending());
+                    s.editedAt(), bodyHtml, viewer, s.pending(), s.views());
         }
     }
 

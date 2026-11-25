@@ -73,6 +73,11 @@ public class ModerationController {
         return mod.stats(slug, require(user));
     }
 
+    @GetMapping("/communities/{slug}/mod/overview")
+    public ModerationDtos.ModOverview overview(@PathVariable String slug, @AuthenticationPrincipal AuthUser user) {
+        return mod.overview(slug, require(user));
+    }
+
     @GetMapping("/communities/{slug}/mod/log")
     public CursorPage<ModAction> log(@PathVariable String slug, @RequestParam(required = false) String cursor,
                                      @RequestParam(required = false) Integer limit, @AuthenticationPrincipal AuthUser user) {

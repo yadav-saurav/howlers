@@ -147,6 +147,8 @@ export interface PostSummary {
   pending?: boolean;
   /** Per-viewer rights on feed rows (one batched query per page). */
   viewer?: { canModerate: boolean } | null;
+  /** How many members opened the post. Only present for the post's author. */
+  views?: number | null;
 }
 export interface PostDetail extends PostSummary {
   bodyHtml: string;
@@ -231,6 +233,8 @@ export interface PublicProfile {
   canMessage?: boolean;
   communities: CommunityRef[];
   moderatorOf: CommunityRef[];
+  /** The platform's super admin. */
+  superAdmin?: boolean;
 }
 export interface AuthResponse {
   accessToken: string;

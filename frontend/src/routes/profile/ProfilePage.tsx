@@ -24,6 +24,27 @@ import { compactNumber, displayName, formatDate, timeAgo } from '@/utils/format'
 
 type Tab = 'posts' | 'comments' | 'about';
 
+/** The profile banner: tap it to see it full size, like the profile picture. */
+function ProfileBanner({ p }: { p: PublicProfile }) {
+  const [open, setOpen] = useState(false);
+  const cls = 'block h-24 w-full bg-surface-2 sm:h-32';
+  if (!p.bannerUrl) return <div className={cls} aria-hidden="true" />;
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={`View u/${p.username}'s banner`}
+        className={`${cls} transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent`}
+        style={{ backgroundImage: `url(${p.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      />
+      <Dialog open={open} onOpenChange={setOpen} title={`u/${p.username} · banner`} size="lg">
+        <img src={p.bannerUrl} alt={`Banner of u/${p.username}`} className="mx-auto max-h-[70vh] w-full rounded-lg object-contain" />
+      </Dialog>
+    </>
+  );
+}
+
 /** The profile picture: tap it to see it full size. */
 function ProfileAvatar({ p }: { p: PublicProfile }) {
   const [open, setOpen] = useState(false);
@@ -51,16 +72,15 @@ function Header({ p }: { p: PublicProfile }) {
   const follow = useFollow(p.username);
   return (
     <div className="mb-4 overflow-hidden border-b border-border bg-surface sm:rounded-lg sm:border">
-      <div
-        className="h-24 bg-surface-2 sm:h-32"
-        style={p.bannerUrl ? { backgroundImage: `url(${p.bannerUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
-        aria-hidden="true"
-      />
+      <ProfileBanner p={p} />
       <div className="flex flex-wrap items-end gap-4 px-4 pb-4">
         <ProfileAvatar p={p} />
         <div className="min-w-0 flex-1">
           <h1 className="truncate font-serif text-2xl font-semibold">{displayName(p)}</h1>
-          <p className="text-sm text-muted">u/{p.username}</p>
+          <p className="flex flex-wrap items-center gap-1.5 text-sm text-muted">
+            u/{p.username}
+            {p.superAdmin && <Badge tone="accent" className="rounded-full px-2">Super admin</Badge>}
+          </p>
         </div>
         {p.isSelf ? (
           <Link to="/settings" className={buttonClasses('outline', 'sm')}><Settings size={15} /> Edit profile</Link>

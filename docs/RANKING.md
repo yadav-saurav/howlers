@@ -41,5 +41,7 @@ Private communities appear only to members; hidden posts never appear to the use
 ## Live leaderboards
 - **Members**: computed on request from posts, comments and upvotes this month.
 - **Moderators**: recomputed within ~15 s of any removal, ban, handled report, appeal or endorsement.
-- **Topics**: authors are recomputed within ~5 s of receiving a vote.
+- **Topics**: 2 points per published post and 1 per published comment in the topic, plus quality-weighted votes
+  (see `ReputationMath`). Communities without a topic count under **General**. Authors are recomputed within ~5 s of
+  posting, commenting, deleting or receiving a vote.
 - The leaderboard pages refetch every 15 s while open.

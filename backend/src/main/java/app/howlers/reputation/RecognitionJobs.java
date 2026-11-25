@@ -17,7 +17,8 @@ import org.springframework.stereotype.Component;
  *       reputation rebuild and this month's and last month's moderator scores, so pages reflect the existing rows.</li>
  *   <li>Every few seconds: recompute authors whose content received votes (the vote only queued them).</li>
  *   <li>Every 15 seconds: refresh moderator scores when any moderation data changed (removals, bans, reports,
- *       appeals, endorsements, moderator roles), so the board is live; plus a full refresh every 10 minutes.</li>
+ *       appeals, endorsements, moderator roles, site-admin actions), so the board is live; plus a full refresh every
+ *       10 minutes.</li>
  *   <li>Nightly: full deterministic reputation rebuild (refreshes the voter weights the incremental job reuses).</li>
  * </ul>
  */
@@ -38,7 +39,8 @@ public class RecognitionJobs {
               (SELECT count(*) || ':' || coalesce(max(resolved_at)::text, '') FROM reports),
               (SELECT count(*) || ':' || coalesce(max(resolved_at)::text, '') FROM appeals),
               (SELECT count(*) || ':' || coalesce(max(id), 0) FROM moderator_endorsements),
-              (SELECT count(*) FROM community_members WHERE role IN ('OWNER', 'ADMIN', 'MODERATOR')))
+              (SELECT count(*) FROM community_members WHERE role IN ('OWNER', 'ADMIN', 'MODERATOR')),
+              (SELECT count(*) || ':' || coalesce(max(id), 0) FROM admin_actions))
             """;
 
     public RecognitionJobs(ReputationService reputation, RecognitionService recognition, JdbcClient jdbc) {

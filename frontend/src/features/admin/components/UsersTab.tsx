@@ -19,7 +19,7 @@ import { ActionDialog } from './ActionDialog';
 function StatusBadges({ u }: { u: Pick<AdminUser, 'role' | 'status'> }) {
   return (
     <>
-      {u.role === 'ADMIN' && <Badge tone="info" className="rounded-full px-2">Admin</Badge>}
+      {u.role === 'ADMIN' && <Badge tone="info" className="rounded-full px-2">Super admin</Badge>}
       {u.status === 'SUSPENDED' && <Badge tone="danger" className="rounded-full px-2">Suspended</Badge>}
       {u.status === 'DEACTIVATED' && <Badge className="rounded-full px-2">Deactivated</Badge>}
       {u.status === 'DELETED' && <Badge className="rounded-full px-2">Deleted</Badge>}

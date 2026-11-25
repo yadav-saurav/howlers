@@ -43,7 +43,9 @@ public class PostController {
 
     @GetMapping("/posts/{id}")
     public PostDetail get(@PathVariable long id, @AuthenticationPrincipal AuthUser user) {
-        return posts.detail(id, user);
+        PostDetail d = posts.detail(id, user); // checks access first
+        posts.recordView(id, user);
+        return d;
     }
 
     @PatchMapping("/posts/{id}")

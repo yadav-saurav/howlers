@@ -271,7 +271,7 @@ function Rail({ tab }: { tab: Tab }) {
     return (
       <Explainer title="Topic reputation">
         <div className="space-y-2 p-4 text-sm text-muted">
-          <p>Members earn reputation in a topic when others upvote their posts and comments there. A post’s topics are its community’s topic plus any tags that name a topic.</p>
+          <p>Members earn topic points by taking part: <strong className="text-text">2 for each post</strong> and <strong className="text-text">1 for each comment</strong> in the topic, plus points for upvotes from others. A post’s topics are its community’s topic plus any tags that name a topic; communities without a topic count under General.</p>
           <p>Upvotes from people who already know the topic count more; brand-new and low-karma accounts count less; self-votes never count.</p>
           <p>Open a topic to see the exact caps and weights.</p>
         </div>
@@ -294,7 +294,7 @@ export default function LeaderboardPage() {
   const description = {
     members: 'The most active members this month: posts, comments and the upvotes they earn.',
     moderators: 'Moderators recognised for careful, timely, fair moderation, not for how much they removed.',
-    topics: 'Who members trust in each topic, from quality-weighted votes.',
+    topics: 'The most active and trusted members in each topic, from posts, comments and quality-weighted votes.',
   }[tab];
   return (
     <PageColumns rail={<Rail tab={tab} />}>

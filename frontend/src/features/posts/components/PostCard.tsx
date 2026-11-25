@@ -1,4 +1,5 @@
 import { Bookmark, BookmarkCheck, ExternalLink, Lock, MessageSquare, Pin, Share2, ShieldAlert } from 'lucide-react';
+import { PostViews } from './PostViews';
 import { memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, Badge } from '@/components/ui/Display';
@@ -158,6 +159,7 @@ export const PostCard = memo(function PostCard({ post, showCommunity = true }: {
         <ActionPill to={`${href}#comments`} label={`${post.commentCount} comments`}>
           <MessageSquare size={15} /> {compactNumber(post.commentCount)}
         </ActionPill>
+        <PostViews views={post.views} />
         {isAuthed && (
           <ActionPill
             pressed={post.saved}

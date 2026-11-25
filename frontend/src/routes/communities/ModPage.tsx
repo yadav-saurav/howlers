@@ -12,26 +12,18 @@ import { QueueTab } from '@/features/moderation/components/QueueTab';
 import { PeerEndorsements } from '@/features/reputation/components/PeerEndorsements';
 import { HeldTab } from '@/features/moderation/components/HeldTab';
 import { AutomodTab } from '@/features/automod/components/AutomodTab';
+import { CommunityDashboard } from '@/features/moderation/components/CommunityDashboard';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { ApiError } from '@/services/apiError';
 import { cn } from '@/utils/format';
 
-type Tab = 'queue' | 'held' | 'automod' | 'appeals' | 'bans' | 'log' | 'team';
-
-function Tile({ label, value }: { label: string; value: number | undefined }) {
-  return (
-    <div className="rounded-xl bg-surface-2/60 px-4 py-3">
-      <div className="text-xl font-bold tabular-nums">{value ?? '–'}</div>
-      <div className="text-xs text-muted">{label}</div>
-    </div>
-  );
-}
+type Tab = 'dashboard' | 'queue' | 'held' | 'automod' | 'appeals' | 'bans' | 'log' | 'team';
 
 /** Community moderation dashboard: queue, appeals, bans and the audit log. Server enforces moderator rights. */
 export default function ModPage() {
   const { slug = '' } = useParams();
   const [params, setParams] = useSearchParams();
-  const tab = (params.get('tab') as Tab) || 'queue';
+  const tab = (params.get('tab') as Tab) || 'dashboard';
   const community = useCommunity(slug);
   const stats = useModStats(slug);
   useDocumentTitle(`Mod tools · c/${slug}`);
@@ -57,6 +49,7 @@ export default function ModPage() {
 
   const s = stats.data;
   const tabs: { v: Tab; label: string; badge?: number }[] = [
+    { v: 'dashboard', label: 'Dashboard' },
     { v: 'queue', label: 'Queue', badge: s?.openReports },
     { v: 'held', label: 'Held', badge: s?.heldForReview },
     { v: 'automod', label: 'Automod' },
@@ -73,15 +66,8 @@ export default function ModPage() {
         {community.data ? <Avatar src={community.data.iconUrl} name={slug} size="md" /> : <Skeleton className="h-9 w-9 rounded-full" />}
         <div>
           <h1 className="text-2xl font-bold">Mod tools</h1>
-          <p className="text-sm text-muted">c/{slug}. Every action here is logged.</p>
+          <p className="text-sm text-muted">Your dashboard for c/{slug}. Every action here is logged.</p>
         </div>
-      </div>
-      <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-5">
-        <Tile label="Open reports" value={s?.openReports} />
-        <Tile label="Pending appeals" value={s?.pendingAppeals} />
-        <Tile label="Active bans" value={s?.activeBans} />
-        <Tile label="Actions (30d)" value={s?.actionsLast30Days} />
-        <Tile label="Removals (30d)" value={s?.removedLast30Days} />
       </div>
       <div role="tablist" aria-label="Moderation sections" className="mb-4 flex gap-1 overflow-x-auto">
         {tabs.map((t) => (
@@ -93,6 +79,7 @@ export default function ModPage() {
         ))}
       </div>
       <div role="tabpanel">
+        {tab === 'dashboard' && <CommunityDashboard slug={slug} go={(v) => setParams({ tab: v }, { replace: true })} />}
         {tab === 'queue' && <QueueTab slug={slug} />}
         {tab === 'held' && <HeldTab slug={slug} />}
         {tab === 'automod' && <AutomodTab slug={slug} />}

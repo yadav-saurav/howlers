@@ -81,6 +81,28 @@ export interface Appeal {
   resolvedAt: string | null;
 }
 
+export interface DayActivity {
+  day: string;
+  posts: number;
+  comments: number;
+  joins: number;
+}
+
+/** The community owner's dashboard (Mod tools → Dashboard). */
+export interface ModOverview {
+  members: number;
+  newMembers7d: number;
+  posts30d: number;
+  comments30d: number;
+  removals30d: number;
+  automodHits30d: number;
+  openReports: number;
+  heldForReview: number;
+  pendingAppeals: number;
+  activeBans: number;
+  days: DayActivity[];
+}
+
 export interface ModStats {
   openReports: number;
   pendingAppeals: number;

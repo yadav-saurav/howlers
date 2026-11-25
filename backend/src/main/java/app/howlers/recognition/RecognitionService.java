@@ -135,6 +135,31 @@ public class RecognitionService {
                 .param("s", s).param("e", e).param("cid", communityId)
                 .query((rs, i) -> handled.put(pair(rs), new Handled(rs.getInt(3), rs.getDouble(4)))).list();
 
+        // Site admins moderate too: banning or quarantining a community and removing content held by the spam checks
+        // count as decisions in that community (undone later by a restore = reversed); approving held content counts as
+        // a handled report.
+        jdbc.sql("""
+                        SELECT a.target_community_id, a.admin_id,
+                               count(*) FILTER (WHERE a.action IN ('BAN_COMMUNITY', 'QUARANTINE_COMMUNITY', 'REMOVE_FLAG')),
+                               count(*) FILTER (WHERE a.action IN ('BAN_COMMUNITY', 'QUARANTINE_COMMUNITY') AND EXISTS (
+                                   SELECT 1 FROM admin_actions r WHERE r.target_community_id = a.target_community_id
+                                     AND r.action = 'RESTORE_COMMUNITY' AND r.id > a.id AND r.admin_id <> a.admin_id)),
+                               count(*) FILTER (WHERE a.action = 'APPROVE_FLAG')
+                        FROM admin_actions a
+                        WHERE a.target_community_id IS NOT NULL
+                          AND a.action IN ('BAN_COMMUNITY', 'QUARANTINE_COMMUNITY', 'REMOVE_FLAG', 'APPROVE_FLAG')
+                          AND a.created_at >= :s AND a.created_at < :e AND (:cid = 0 OR a.target_community_id = :cid)
+                        GROUP BY 1, 2""")
+                .param("s", s).param("e", e).param("cid", communityId)
+                .query((rs, i) -> {
+                    Pair key = pair(rs);
+                    int made = rs.getInt(3), undone = rs.getInt(4), approved = rs.getInt(5);
+                    if (made > 0) decisions.merge(key, new int[]{made, undone}, (x, y) -> new int[]{x[0] + y[0], x[1] + y[1]});
+                    if (approved > 0) handled.merge(key, new Handled(approved, null),
+                            (x, y) -> new Handled(x.n() + y.n(), x.median()));
+                    return null;
+                }).list();
+
         Map<Pair, int[]> appeals = new HashMap<>();
         jdbc.sql("""
                         SELECT m.community_id, m.moderator_id,

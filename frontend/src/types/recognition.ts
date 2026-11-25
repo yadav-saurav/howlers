@@ -33,6 +33,8 @@ export interface LeaderEntry {
   topContributor: boolean;
   upvotes: number;
   downvotes: number;
+  posts: number;
+  comments: number;
 }
 
 export interface TopicLeaderboard {
@@ -62,6 +64,8 @@ export interface TopicStanding {
   topContributor: boolean;
   upvotes: number;
   downvotes: number;
+  posts: number;
+  comments: number;
 }
 
 export interface UserReputation {

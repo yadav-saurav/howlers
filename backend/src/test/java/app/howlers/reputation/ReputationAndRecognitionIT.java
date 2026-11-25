@@ -76,9 +76,18 @@ class ReputationAndRecognitionIT extends IntegrationTest {
         return posts.create(author, new CreatePostRequest(slug, "TEXT", "Post " + uniq(), "<p>body</p>", null, null, null, tags, null));
     }
 
+    /** Points from votes only: the stored total minus the fixed points for taking part (posts and comments). */
     private double points(AuthUser u, String topicSlug) {
-        return jdbc.sql("SELECT coalesce(max(points), 0) FROM topic_reputation WHERE user_id = ? AND topic_id = ?")
-                .params(u.id(), topic(topicSlug)).query(Double.class).single();
+        return jdbc.sql("""
+                        SELECT coalesce(max(points - ? * posts_counted - ? * comments_counted), 0)
+                        FROM topic_reputation WHERE user_id = ? AND topic_id = ?""")
+                .params(ReputationService.POST_POINTS, ReputationService.COMMENT_POINTS, u.id(), topic(topicSlug))
+                .query(Double.class).single();
+    }
+
+    private int counted(AuthUser u, String topicSlug, String column) {
+        return jdbc.sql("SELECT coalesce(max(" + column + "), 0) FROM topic_reputation WHERE user_id = ? AND topic_id = ?")
+                .params(u.id(), topic(topicSlug)).query(Integer.class).single();
     }
 
     private void drain() {
@@ -106,6 +115,8 @@ class ReputationAndRecognitionIT extends IntegrationTest {
         double expected = 1.0 + 0.25 - 0.5;
         assertThat(points(author, "gaming")).isCloseTo(expected, within(1e-9));
         assertThat(points(author, "science")).isCloseTo(expected, within(1e-9));
+        assertThat(counted(author, "gaming", "posts_counted")).isEqualTo(1);   // +2 for posting, in both topics
+        assertThat(counted(author, "science", "posts_counted")).isEqualTo(1);
         assertThat(points(v1, "gaming")).isZero();
 
         // A moderator removes the post: its votes stop counting. Approving it restores them.
@@ -117,7 +128,9 @@ class ReputationAndRecognitionIT extends IntegrationTest {
         assertThat(points(author, "gaming")).isCloseTo(expected, within(1e-9));
 
         // Surfaces: leaderboard and profile read the same totals.
-        assertThat(reputation.forUser(author.username(), null).topics()).isEmpty(); // < 1 point isn't listed
+        // The post itself earns 2 points, so the author is listed in both topics with one post counted.
+        assertThat(reputation.forUser(author.username(), null).topics())
+                .hasSize(2).allSatisfy(t -> assertThat(t.posts()).isEqualTo(1));
     }
 
     @Test
@@ -140,7 +153,8 @@ class ReputationAndRecognitionIT extends IntegrationTest {
         var board = reputation.leaders("fitness", 100);
         assertThat(board.entries()).anySatisfy(e -> {
             assertThat(e.user().id()).isEqualTo(author.id());
-            assertThat(e.points()).isEqualTo(3.0);
+            assertThat(e.points() - ReputationService.POST_POINTS * e.posts() - ReputationService.COMMENT_POINTS * e.comments())
+                    .isEqualTo(3.0);
         });
         var mine = reputation.forUser(author.username(), null).topics();
         assertThat(mine).singleElement().satisfies(t -> {
