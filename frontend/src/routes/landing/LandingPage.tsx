@@ -84,7 +84,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <PackMarquee isAuthed={isAuthed} />
+      <PackMarquee />
       <FeatureSections />
       <SafetySection />
       <FaqSection />

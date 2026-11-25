@@ -2,7 +2,6 @@ import { useId, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight, ChevronDown, Gavel, KeyRound, Search, ShieldCheck, VolumeX } from 'lucide-react';
 import { withNext } from '@/app/guards';
-import { useCommunities } from '@/features/communities/hooks';
 import { FAQ, filterFaq } from './faq';
 import { Moon, Stars } from './NightSky';
 import { Paw, Pup, Sparkle } from '@/design-system/Pups';
@@ -11,30 +10,26 @@ const v = (vars: Record<string, string | number>) => vars as CSSProperties;
 
 /* ---------------------------------------------------------------------------------------------------------- */
 
-const FALLBACK = ['Communities', 'Threads', 'Polls', 'Pulse', 'Messages', 'Pack rooms', 'Voice notes', 'Chat themes', 'Reactions', 'Leaderboard'];
+/** Generic kinds of packs, shown on the public page. Never real community names from this site. */
+const PACKS = [
+  'Book clubs', 'Gamers', 'Coders', 'Movie nights', 'Hikers', 'Artists', 'Music lovers', 'Study groups',
+  'Founders', 'Pet people', 'Foodies', 'Night owls',
+];
 
-/**
- * A slow marquee of real community names from this instance's API. If the list can't load, it shows the feature
- * names instead (decorative), never invented communities. Names link to the community only for signed-in visitors:
- * signed-out visitors can't browse inside the app, so for them the names are plain text.
- */
-export function PackMarquee({ isAuthed }: { isAuthed: boolean }) {
-  const q = useCommunities({ sort: 'popular', page: 0, size: 12 });
-  const comms = q.data?.items ?? [];
-  const real = comms.length > 0;
-  const items = real ? comms.map((c) => ({ key: c.slug, label: `c/${c.slug}`, to: isAuthed ? `/c/${c.slug}` : null })) : FALLBACK.map((f) => ({ key: f, label: f, to: null }));
+/** A slow, decorative marquee of the kinds of packs people start. Purely illustrative, so screen readers skip it. */
+export function PackMarquee() {
   const row = (copy: number) =>
-    items.map((it) => (
-      <li key={`${copy}-${it.key}`} className="mq-item">
+    PACKS.map((label) => (
+      <li key={`${copy}-${label}`} className="mq-item">
         <Paw className="mq-paw" color={copy % 2 ? '#b8a8ff' : '#ff9fc6'} />
-        {it.to && copy === 0 ? <Link to={it.to}>{it.label}</Link> : <span>{it.label}</span>}
+        <span>{label}</span>
       </li>
     ));
   return (
-    <section className="marquee" data-play aria-label={real ? 'Some communities on Howlers' : undefined} aria-hidden={real ? undefined : true}>
+    <section className="marquee" data-play aria-hidden="true">
       <div className="mq-track">
         <ul className="mq-list">{row(0)}</ul>
-        <ul className="mq-list" aria-hidden="true">{row(1)}</ul>
+        <ul className="mq-list">{row(1)}</ul>
       </div>
     </section>
   );

@@ -1,8 +1,8 @@
-import { usePushSync } from '@/features/push/hooks';
+import { useRetirePush } from '@/features/push/hooks';
 import { UpdatePrompt } from './UpdatePrompt';
 
-/** App-wide PWA pieces: the update prompt and keeping this browser's push subscription current (D-039, D-040). */
+/** App-wide PWA pieces: the update prompt, and switching off push for browsers that enabled it earlier. */
 export function PwaRoot() {
-  usePushSync();
+  useRetirePush();
   return <UpdatePrompt />;
 }
