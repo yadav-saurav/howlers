@@ -80,8 +80,7 @@ function UserDetail({ id, onClose }: { id: number; onClose: () => void }) {
             {[
               ['Posts', d.user.postCount],
               ['Comments', d.user.commentCount],
-              ['Post karma', d.user.postKarma],
-              ['Comment karma', d.user.commentKarma],
+              ['Karma', d.user.postKarma + d.user.commentKarma],
             ].map(([k, v]) => (
               <div key={k} className="rounded-xl bg-surface-2/60 px-3 py-2">
                 <dt className="text-xs text-muted">{k}</dt>

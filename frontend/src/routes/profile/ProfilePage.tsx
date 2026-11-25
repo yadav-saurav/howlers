@@ -104,8 +104,7 @@ function Header({ p }: { p: PublicProfile }) {
       </div>
       {p.bio && <p className="px-4 pb-3 text-sm leading-relaxed text-muted">{p.bio}</p>}
       <dl className="flex flex-wrap gap-x-6 gap-y-2 border-t border-border px-4 py-3 text-sm">
-        <div><dt className="text-xs text-faint">Post karma</dt><dd className="font-semibold tabular-nums">{compactNumber(p.postKarma)}</dd></div>
-        <div><dt className="text-xs text-faint">Comment karma</dt><dd className="font-semibold tabular-nums">{compactNumber(p.commentKarma)}</dd></div>
+        <div title="Posts and comments together: +2 per post, +1 per comment, plus upvotes"><dt className="text-xs text-faint">Karma</dt><dd className="font-semibold tabular-nums">{compactNumber(p.postKarma + p.commentKarma)}</dd></div>
         <div><dt className="text-xs text-faint">Followers</dt><dd className="font-semibold tabular-nums">{compactNumber(p.followerCount)}</dd></div>
         <div><dt className="text-xs text-faint">Following</dt><dd className="font-semibold tabular-nums">{compactNumber(p.followingCount)}</dd></div>
         <div><dt className="text-xs text-faint">Joined</dt><dd className="font-semibold">{formatDate(p.createdAt)}</dd></div>
