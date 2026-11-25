@@ -6,13 +6,15 @@
 .mascot {
   --pup-fur: #6f66d9;
   --pup-shade: #5249bd;
+  --pup-dark: #3a3290;
   --pup-light: #f1efff;
   --pup-band: #2b2468;
   --pup-shadow: #1d1840;
 }
 .dark .mascot {
-  --pup-fur: #c9d3f7;
-  --pup-shade: #a3afe0;
+  --pup-fur: #c3cbe8;
+  --pup-shade: #939dc8;
+  --pup-dark: #646d9b;
   --pup-light: #ffffff;
   --pup-band: #9a93f5;
   --pup-shadow: #000000;
