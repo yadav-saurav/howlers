@@ -85,7 +85,7 @@ export function PublicFooter({ landing = false }: { landing?: boolean }) {
             <p className="mt-1.5 text-muted">{HOWLERS.tagline}.</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
           <nav aria-label="Product" className={col}>
             <span className={head}>Product</span>
             <SectionLink id="features" className={a}>Features</SectionLink>
@@ -102,10 +102,6 @@ export function PublicFooter({ landing = false }: { landing?: boolean }) {
             <span className={head}>Trust</span>
             <Link to="/terms" className={a}>Terms</Link>
             <Link to="/privacy" className={a}>Privacy</Link>
-          </nav>
-          <nav aria-label="Developers" className={col}>
-            <span className={head}>Developers</span>
-            <Link to="/developers" className={a}>API docs</Link>
           </nav>
         </div>
       </div>
