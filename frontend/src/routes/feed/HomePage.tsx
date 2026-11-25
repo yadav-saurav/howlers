@@ -1,5 +1,5 @@
 import type { MascotPose } from '@/design-system/Mascot';
-import { Clock, Flame, Sparkles, TrendingUp, Trophy, Users } from 'lucide-react';
+import { Clock, Flame, Trophy, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { buttonClasses } from '@/components/ui/Button';
@@ -18,19 +18,17 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { qk } from '@/services/queryKeys';
 
 const TABS: { value: FeedTab; label: string; icon: JSX.Element; auth?: boolean }[] = [
-  { value: 'foryou', label: 'Best', icon: <Sparkles size={15} />, auth: true },
   { value: 'popular', label: 'Hot', icon: <Flame size={15} /> },
   { value: 'latest', label: 'New', icon: <Clock size={15} /> },
   { value: 'following', label: 'Following', icon: <Users size={15} />, auth: true },
-  { value: 'rising', label: 'Rising', icon: <TrendingUp size={15} /> },
   { value: 'top', label: 'Top', icon: <Trophy size={15} /> },
 ];
 const RANGES: { value: TimeRange; label: string }[] = [
   { value: 'day', label: 'Today' },
-  { value: 'week', label: 'This week' },
-  { value: 'month', label: 'This month' },
-  { value: 'year', label: 'This year' },
-  { value: 'all', label: 'All time' },
+  { value: 'week', label: 'Week' },
+  { value: 'month', label: 'Month' },
+  { value: 'year', label: 'Year' },
+  { value: 'all', label: 'All' },
 ];
 
 const EMPTY: Record<FeedTab, { title: string; description: string; mascot: MascotPose }> = {
@@ -58,7 +56,8 @@ export default function HomePage() {
   const [params, setParams] = useSearchParams();
   const tabs = TABS.filter((t) => !t.auth || isAuthed);
   const requested = params.get('tab') as FeedTab | null;
-  const tab: FeedTab = tabs.some((t) => t.value === requested) ? requested! : isAuthed ? 'foryou' : 'popular';
+  // Hot, New, Following and Top. Hot is the default; old links to Best or Rising open Hot.
+  const tab: FeedTab = tabs.some((t) => t.value === requested) ? requested! : 'popular';
   const t = (params.get('t') as TimeRange) || 'week';
   const feed = useFeed(tab, t);
   const mine = useMyCommunities();

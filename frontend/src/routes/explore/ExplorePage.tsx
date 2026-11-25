@@ -55,10 +55,10 @@ function PopularCommunities() {
 
 export default function ExplorePage() {
   useDocumentTitle('Explore');
-  const rising = useFeed('rising', 'day');
+  const hot = useFeed('popular', 'day');
   return (
     <PageColumns rail={<TrendingCommunitiesCard />}>
-      <PageHeader title="Explore" description="Browse topics, find communities, and see what is gaining momentum." />
+      <PageHeader title="Explore" description="Browse topics, find communities, and see what is hot right now." />
       <section aria-labelledby="topics-h" className="mb-8 px-4 sm:px-0">
         <h2 id="topics-h" className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">Topics</h2>
         <TopicsGrid />
@@ -68,8 +68,8 @@ export default function ExplorePage() {
         <PopularCommunities />
       </section>
       <section aria-labelledby="rising-h">
-        <h2 id="rising-h" className="mb-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted sm:px-0">Rising now</h2>
-        <PostList query={rising} empty={{ title: 'Nothing rising right now', description: 'New posts gaining traction will appear here.' }} />
+        <h2 id="rising-h" className="mb-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted sm:px-0">Hot</h2>
+        <PostList query={hot} empty={{ title: 'Nothing hot right now', description: 'Posts people are upvoting and talking about appear here.' }} />
       </section>
     </PageColumns>
   );

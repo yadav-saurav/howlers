@@ -1,4 +1,4 @@
-import { Ban, Clock, Flame, Lock, Plus, Settings, ShieldAlert, ShieldCheck, TrendingUp, Trophy, UsersRound } from 'lucide-react';
+import { Ban, Clock, Flame, Lock, Plus, Settings, ShieldAlert, ShieldCheck, Trophy, UsersRound } from 'lucide-react';
 import { MuteCommunityButton } from '@/features/mutes/components/MuteControls';
 import { useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
@@ -119,7 +119,6 @@ function ModToolsLink({ slug }: { slug: string }) {
 const SORTS: { value: CommunitySort; label: string; icon: JSX.Element }[] = [
   { value: 'hot', label: 'Hot', icon: <Flame size={15} /> },
   { value: 'new', label: 'New', icon: <Clock size={15} /> },
-  { value: 'rising', label: 'Rising', icon: <TrendingUp size={15} /> },
   { value: 'top', label: 'Top', icon: <Trophy size={15} /> },
 ];
 
@@ -127,7 +126,9 @@ const ALL = { kind: 'all' } as const;
 
 function Posts({ c }: { c: CommunityDetail }) {
   const [params, setParams] = useSearchParams();
-  const sort = (params.get('sort') as CommunitySort) || 'hot';
+  const requestedSort = params.get('sort') as CommunitySort | null;
+  // Hot, New and Top; an old link to Rising opens Hot.
+  const sort: CommunitySort = SORTS.some((s) => s.value === requestedSort) ? requestedSort! : 'hot';
   const t = (params.get('t') as TimeRange) || 'week';
   const posts = useCommunityPosts(c.slug, sort, t, c.viewer.canView);
   const { isAuthed } = useAuth();
@@ -153,10 +154,10 @@ function Posts({ c }: { c: CommunityDetail }) {
             onChange={(v) => set('t', v)}
             options={[
               { value: 'day', label: 'Today' },
-              { value: 'week', label: 'This week' },
-              { value: 'month', label: 'This month' },
-              { value: 'year', label: 'This year' },
-              { value: 'all', label: 'All time' },
+              { value: 'week', label: 'Week' },
+              { value: 'month', label: 'Month' },
+              { value: 'year', label: 'Year' },
+              { value: 'all', label: 'All' },
             ]}
           />
         )}
