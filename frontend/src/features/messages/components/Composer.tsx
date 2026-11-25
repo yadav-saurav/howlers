@@ -1,4 +1,5 @@
 import { ImagePlus, Mic, SendHorizontal, Trash2, X } from 'lucide-react';
+import { EmojiButton, insertAtCaret } from '@/components/ui/EmojiButton';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from '@/components/ui/Toast';
 import { publishRealtime } from '@/features/realtime/RealtimeProvider';
@@ -209,6 +210,11 @@ export function Composer({
             >
               <ImagePlus size={20} />
             </button>
+            <EmojiButton
+              size={20}
+              className="m-0.5 h-10 w-10"
+              onPick={(emoji) => setBody((b) => insertAtCaret(ta.current, b, emoji))}
+            />
             <label className="sr-only" htmlFor={`composer-${conversationId}`}>Message</label>
             <textarea
               id={`composer-${conversationId}`}

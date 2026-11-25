@@ -4,6 +4,7 @@ import { EditorContent, useEditor, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Bold, Code, Heading2, Italic, Link2, List, ListOrdered, Quote, Redo2, SquareCode, Strikethrough, Undo2 } from 'lucide-react';
 import { useEffect, type ReactNode } from 'react';
+import { EmojiButton } from '@/components/ui/EmojiButton';
 import { cn } from '@/utils/format';
 
 function Tool({ label, active, onClick, children, disabled }: { label: string; active?: boolean; onClick: () => void; children: ReactNode; disabled?: boolean }) {
@@ -48,6 +49,8 @@ function Toolbar({ editor }: { editor: Editor }) {
       <Tool label="Numbered list" active={editor.isActive('orderedList')} onClick={() => editor.chain().focus().toggleOrderedList().run()}><ListOrdered size={15} /></Tool>
       <Tool label="Quote" active={editor.isActive('blockquote')} onClick={() => editor.chain().focus().toggleBlockquote().run()}><Quote size={15} /></Tool>
       <Tool label="Code block" active={editor.isActive('codeBlock')} onClick={() => editor.chain().focus().toggleCodeBlock().run()}><SquareCode size={15} /></Tool>
+      <span className="mx-1 w-px bg-border" aria-hidden="true" />
+      <EmojiButton size={15} className="h-8 w-8 rounded-md" onPick={(emoji) => editor.chain().focus().insertContent(emoji).run()} />
       <span className="ml-auto" />
       <Tool label="Undo" disabled={!editor.can().undo()} onClick={() => editor.chain().focus().undo().run()}><Undo2 size={15} /></Tool>
       <Tool label="Redo" disabled={!editor.can().redo()} onClick={() => editor.chain().focus().redo().run()}><Redo2 size={15} /></Tool>

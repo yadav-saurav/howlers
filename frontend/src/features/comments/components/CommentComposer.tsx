@@ -1,5 +1,6 @@
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { EmojiButton, insertAtCaret } from '@/components/ui/EmojiButton';
 import { Textarea } from '@/components/ui/Field';
 import { cn } from '@/utils/format';
 
@@ -25,6 +26,7 @@ export function CommentComposer({
 }) {
   const [body, setBody] = useState(initial);
   const id = useId();
+  const box = useRef<HTMLTextAreaElement>(null);
   const trimmed = body.trim();
   const tooLong = body.length > MAX;
   return (
@@ -38,6 +40,7 @@ export function CommentComposer({
     >
       <label htmlFor={id} className="sr-only">{submitLabel}</label>
       <Textarea
+        ref={box}
         id={id}
         // eslint-disable-next-line jsx-a11y/no-autofocus -- only set by callers that open the composer on an explicit Reply/Edit click
         autoFocus={autoFocus}
@@ -50,8 +53,11 @@ export function CommentComposer({
         }}
       />
       <div className="flex items-center justify-between gap-2 border-t border-border bg-surface-2/40 px-2 py-1.5">
-        <span className={cn('text-[11px]', tooLong ? 'text-danger' : 'text-faint')}>
+        <span className="flex items-center gap-1">
+          <EmojiButton onPick={(emoji) => setBody((b) => insertAtCaret(box.current, b, emoji))} />
+          <span className={cn('text-[11px]', tooLong ? 'text-danger' : 'text-faint')}>
           {tooLong ? `${body.length - MAX} characters over the limit` : 'Ctrl+Enter to submit'}
+          </span>
         </span>
         <div className="flex gap-1.5">
           {onCancel && <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>}
