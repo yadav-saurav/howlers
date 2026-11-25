@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   Award,
   ArrowBigDown,
@@ -85,8 +85,29 @@ const INBOX = [
   { name: 'river.wolf', last: 'see you saturday', time: 'Tue', c: '#69b4ff', l: 'R', fav: true },
 ];
 
-/** WhatsApp-style inbox next to a themed pack room (Golden Hour), plus the twelve shared chat themes. */
+const START_THEME = Math.max(0, CHAT_THEMES.findIndex((t) => t.id === 'sunset'));
+const THEME_STEP_MS = 2600;
+
+/**
+ * Walks through the chat themes one by one: the ring moves to the next swatch and the chat above repaints in it.
+ * Pauses while hovered or focused, and stays on Golden Hour for people who prefer reduced motion. A tap on a swatch
+ * shows that theme.
+ */
+function useThemeCycle() {
+  const [i, setI] = useState(START_THEME);
+  const [paused, setPaused] = useState(false);
+  useEffect(() => {
+    if (paused || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    const id = window.setInterval(() => setI((x) => (x + 1) % CHAT_THEMES.length), THEME_STEP_MS);
+    return () => window.clearInterval(id);
+  }, [paused]);
+  return { i, setI, setPaused };
+}
+
+/** WhatsApp-style inbox next to a themed pack room, plus the twelve shared chat themes taking turns. */
 function MessagesMock() {
+  const { i, setI, setPaused } = useThemeCycle();
+  const current = CHAT_THEMES[i];
   return (
     <div className="msg-wrap">
       <div className="tilt mock app msg-mock">
@@ -116,7 +137,7 @@ function MessagesMock() {
             </div>
           ))}
         </div>
-        <ChatMock theme="sunset" name="Ridge crew" status="5 members" avatar={{ letter: 'R', color: '#8c80ff' }} className="msg-chat">
+        <ChatMock theme={current.id} name="Ridge crew" status="5 members" avatar={{ letter: 'R', color: '#8c80ff' }} className="msg-chat">
           <div className="tb in m1">
             <span className="tb-sender">kai_moon</span>
             clear skies tonight, who&apos;s in?
@@ -133,17 +154,29 @@ function MessagesMock() {
         </ChatMock>
         <Pup pose="wave" fur="sand" className="mock-pup side hop" />
       </div>
-      <div className="swatches">
-        <div className="sw-row">
-          {CHAT_THEMES.map((t) => (
-            <span
+      <div
+        className="swatches"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={() => setPaused(false)}
+      >
+        <div className="sw-row" role="group" aria-label="Chat themes">
+          {CHAT_THEMES.map((t, n) => (
+            <button
+              type="button"
               key={t.id}
-              className={`sw${t.id === 'sunset' ? ' on' : ''}`}
+              aria-label={`${t.name} theme`}
+              aria-pressed={n === i}
+              onClick={() => setI(n)}
+              className={`sw${n === i ? ' on' : ''}`}
               style={{ background: `linear-gradient(135deg, ${t.dark.out[0]}, ${t.dark.out[1]} 50%, ${t.dark.out[2]})` }}
             />
           ))}
         </div>
-        <div className="sw-cap"><b>Golden Hour</b> · one of {CHAT_THEMES.length} themes, shared by everyone in the chat</div>
+        <div className="sw-cap" aria-live="polite">
+          <b key={current.id} className="sw-name">{current.name}</b> · one of {CHAT_THEMES.length} themes, shared by everyone in the chat
+        </div>
       </div>
     </div>
   );
